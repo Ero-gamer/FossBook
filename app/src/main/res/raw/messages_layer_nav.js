@@ -1,16 +1,20 @@
 // Messages layer only. The desktop site moves between its pages in-page (history.pushState)
 // rather than loading them, which the layer's request interceptor never sees. Report every
-// URL change to LayerBridge, which closes the layer when it's one of Facebook's own sections
+// URL change to the app (AstryxPage, or LayerBridge on older WebViews), which closes the layer when it's one of Facebook's own sections
 // (messagesLayerExit). ES5, like the PiP scripts.
 (function () {
-  if (window.__astryxLayerNavInstalled || !window.LayerBridge) return;
+  if (window.__astryxLayerNavInstalled || !(window.AstryxPage || window.LayerBridge)) return;
   window.__astryxLayerNavInstalled = true;
 
   var last = location.href;
   function check() {
     if (location.href === last) return;
     last = location.href;
-    window.LayerBridge.onUrlChanged(last);
+    if (window.AstryxPage) {
+      window.AstryxPage.postMessage(JSON.stringify({ call: 'layerUrl', url: last }));
+    } else {
+      window.LayerBridge.onUrlChanged(last);
+    }
   }
 
   ['pushState', 'replaceState'].forEach(function (name) {

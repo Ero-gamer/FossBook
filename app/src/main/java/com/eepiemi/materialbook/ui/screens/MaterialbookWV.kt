@@ -60,6 +60,8 @@ import com.eepiemi.materialbook.utils.appWebViewParams
 import com.eepiemi.materialbook.utils.clearWebData
 import com.eepiemi.materialbook.utils.jsBridge.installClipboardBridge
 import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
+import com.eepiemi.materialbook.utils.jsBridge.installPageBridges
+import com.eepiemi.materialbook.utils.jsBridge.PageBridges
 import com.eepiemi.materialbook.utils.jsBridge.MaterialbookSettings
 import com.eepiemi.materialbook.utils.jsBridge.ThemeChange
 import com.eepiemi.materialbook.utils.jsBridge.MaterialYouBridge
@@ -356,7 +358,9 @@ internal const val PIP_FOCUS_MODE_JS = """
     leaked.push(desc);
     if (leaked.length >= 8) break;
   }
-  if (leaked.length && window.PipBridge && window.PipBridge.logPipAnomaly) {
+  if (leaked.length && window.AstryxPage) {
+    window.AstryxPage.postMessage(JSON.stringify({ call: 'pipAnomaly', message: leaked.join(' | ') }));
+  } else if (leaked.length && window.PipBridge && window.PipBridge.logPipAnomaly) {
     window.PipBridge.logPipAnomaly(leaked.join(' | '));
   }
 })();
@@ -673,14 +677,18 @@ internal const val PIP_RELAYOUT_AFTER_FULLSCREEN_JS = PIP_RELEASE_FULLSCREENCHAN
 // after that, so the live `paused` is always true by then. This capture-phase
 // listener snapshots the PiP target video (same selection as PIP_TOGGLE_JS)
 // at the moment the page is hidden. On the way back (visible) it reports to
-// PipBridge while a handoff is active, one of MainActivity's handback signals.
+// the app (AstryxPage, or PipBridge on older WebViews) while a handoff is active, one of
+// MainActivity's handback signals.
 internal const val PIP_HANDOFF_ARM_JS = """
 (function() {
   if (window.__astryxHandoffListener) return;
   var listener = function() {
     if (document.visibilityState !== 'hidden') {
       if (document.querySelector('[data-astryx-handoff-muted]')) {
-        try { PipBridge.onPageVisible(); } catch (e) {}
+        try {
+          if (window.AstryxPage) window.AstryxPage.postMessage(JSON.stringify({ call: 'pageVisible' }));
+          else PipBridge.onPageVisible();
+        } catch (e) {}
       }
       return;
     }
@@ -1425,7 +1433,9 @@ fun MaterialbookWebView(
 
             val cookieManager = CookieManager.getInstance()
             cookieManager.setAcceptCookie(true)
-            cookieManager.setAcceptThirdPartyCookies(webView, true)
+            // Facebook and Messenger are first-party; refusing other sites' cookies in embeds
+            // (ads, link previews) keeps them from tracking across pages.
+            cookieManager.setAcceptThirdPartyCookies(webView, false)
             cookieManager.flush()
 
             state.webSettings.apply {
@@ -1440,30 +1450,24 @@ fun MaterialbookWebView(
             }
 
             webView.apply {
-                addJavascriptInterface(
-                    MaterialbookSettings { settingsToggle = true },
-                    "SettingsBridge"
+                // Page -> app calls, downloads and copy to clipboard: Facebook's own main
+                // frame only.
+                installPageBridges(
+                    this,
+                    PageBridges(
+                        settings = MaterialbookSettings { settingsToggle = true },
+                        theme = ThemeChange { if (!settingsToggle) viewModel.setThemeColor(Color(it)) },
+                        pip = PipBridge(onVideoPlayingChanged, onPipPageVisible),
+                        screen = ScreenBridge { mainVideoPlaying = it },
+                    )
                 )
-                addJavascriptInterface(
-                    ThemeChange { if (!settingsToggle) viewModel.setThemeColor(Color(it)) },
-                    "ThemeBridge"
-                )
-                // Download and copy to clipboard: Facebook's own main frame only.
                 installDownloadBridge(this, context)
                 installClipboardBridge(this, context)
                 addJavascriptInterface(
                     MaterialYouBridge(primaryColor, onPrimaryColor),
                     "MaterialYouBridge"
                 )
-                addJavascriptInterface(
-                    PipBridge(onVideoPlayingChanged, onPipPageVisible),
-                    "PipBridge"
-                )
                 installPipVisibilityScript(this)
-                addJavascriptInterface(
-                    ScreenBridge { mainVideoPlaying = it },
-                    "ScreenBridge"
-                )
 
                 setLayerType(View.LAYER_TYPE_HARDWARE, null)
 

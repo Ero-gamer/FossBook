@@ -71,7 +71,10 @@
       lastWidth = videoWidth;
       lastHeight = videoHeight;
 
-      if (window.PipBridge && window.PipBridge.setVideoState) {
+      // AstryxPage: the app's Facebook-only message listener; PipBridge: older WebViews.
+      if (window.AstryxPage) {
+        window.AstryxPage.postMessage(JSON.stringify({ call: 'videoState', playing: playing, width: videoWidth, height: videoHeight }));
+      } else if (window.PipBridge && window.PipBridge.setVideoState) {
         window.PipBridge.setVideoState(playing, videoWidth, videoHeight);
       } else if (window.PipBridge && window.PipBridge.setVideoPlaying) {
         window.PipBridge.setVideoPlaying(playing);

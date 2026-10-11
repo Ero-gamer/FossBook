@@ -28,6 +28,8 @@ import com.eepiemi.materialbook.utils.appWebViewParams
 import com.eepiemi.materialbook.utils.hardenWebView
 import com.eepiemi.materialbook.utils.jsBridge.installClipboardBridge
 import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
+import com.eepiemi.materialbook.utils.jsBridge.installPageBridges
+import com.eepiemi.materialbook.utils.jsBridge.PageBridges
 import com.eepiemi.materialbook.utils.jsBridge.LayerBridge
 import com.eepiemi.materialbook.utils.jsBridge.MaterialYouBridge
 import com.eepiemi.materialbook.utils.jsBridge.MaterialbookSettings
@@ -149,7 +151,7 @@ fun MessagesLayer(
     }
 
     // PiP for videos in the layer (a shared reel, a video in a chat): the same detector as the
-    // main view reports them through PipBridge, and while the layer is open PiP acts on its
+    // main view reports them (AstryxPage, or PipBridge on old WebViews), and while the layer is open PiP acts on its
     // page. When it closes, its videos are gone: say so, or leaving the app afterwards would
     // still count as "video playing".
     LaunchedEffect(loadingState, pipEnabled) {
@@ -193,7 +195,7 @@ fun MessagesLayer(
             onCreated = { webView ->
                 hardenWebView(state, webView)
                 state.webSettings.androidWebSettings.textZoom = textZoom
-                CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
+                CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false)
                 state.webSettings.apply {
                     isJavaScriptEnabled = true
                     androidWebSettings.apply {
@@ -206,28 +208,24 @@ fun MessagesLayer(
                     installDownloadBridge(this, context)
                     installClipboardBridge(this, context)
                     addJavascriptInterface(MaterialYouBridge(primaryColor, onPrimaryColor), "MaterialYouBridge")
-                    addJavascriptInterface(
-                        PipBridge(
-                            { playing, width, height -> currentOnVideoPlayingChanged(playing, width, height) },
-                            onPipPageVisible
-                        ),
-                        "PipBridge"
+                    installPageBridges(
+                        this,
+                        PageBridges(
+                            // The gear scripts.js adds to the desktop header opens the app's Settings.
+                            settings = MaterialbookSettings { currentOnOpenSettings() },
+                            pip = PipBridge(
+                                { playing, width, height -> currentOnVideoPlayingChanged(playing, width, height) },
+                                onPipPageVisible
+                            ),
+                            screen = ScreenBridge { currentOnScreenVideoPlayingChanged(it) },
+                            layer = LayerBridge { pageUrl ->
+                                messagesLayerExit(pageUrl)?.let { exit ->
+                                    ContextCompat.getMainExecutor(context).execute { currentOnLeave(exit.mainUrl) }
+                                }
+                            },
+                        )
                     )
                     installPipVisibilityScript(this)
-                    // The gear scripts.js adds to the desktop header opens the app's Settings.
-                    addJavascriptInterface(MaterialbookSettings { currentOnOpenSettings() }, "SettingsBridge")
-                    addJavascriptInterface(
-                        LayerBridge { pageUrl ->
-                            messagesLayerExit(pageUrl)?.let { exit ->
-                                ContextCompat.getMainExecutor(context).execute { currentOnLeave(exit.mainUrl) }
-                            }
-                        },
-                        "LayerBridge"
-                    )
-                    addJavascriptInterface(
-                        ScreenBridge { currentOnScreenVideoPlayingChanged(it) },
-                        "ScreenBridge"
-                    )
                     setLayerType(View.LAYER_TYPE_HARDWARE, null)
                     overScrollMode = View.OVER_SCROLL_NEVER
                     isVerticalScrollBarEnabled = false

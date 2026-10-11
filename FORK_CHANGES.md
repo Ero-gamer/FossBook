@@ -489,6 +489,16 @@ with the window flag fullscreen video already sets.
   takes messages only from the main frame of a Facebook or Messenger page
   (`AstryxClipboard`, a web message listener), so an ad or embed can't fill the clipboard.
   WebViews without message listeners keep the old interface.
+- **The rest of the page bridges are for Facebook itself too.** Opening Settings, the
+  status bar colour, the video state behind PiP and "Keep screen on", and the Messages
+  layer's navigation now go through one message listener (`AstryxPage`) that only the main
+  frame of a Facebook or Messenger page can reach. Before, any ad or embed could open
+  Settings, change the bar colour, keep the screen on by faking a playing video, or reshape
+  the PiP window. WebViews without message listeners keep the old interfaces. The Material
+  You colours stay a plain interface: they're read-only and only give out the theme colour.
+- **No third-party cookies**: embeds from other sites (ads, link previews) can't set or read
+  their cookies inside the app, so they can't track you across pages. Facebook and
+  Messenger themselves are unaffected.
 - **Iframes can't open other apps.** Only the page itself can send a link out of the app;
   a navigation inside an ad or embed frame stays in that frame, so it can't open the
   browser or another app without a tap.

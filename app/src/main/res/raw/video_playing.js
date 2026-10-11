@@ -1,9 +1,10 @@
-// "Keep screen on: while a video plays". Reports through ScreenBridge whether any video on
+// "Keep screen on: while a video plays". Reports to the app (AstryxPage, the app's
+// Facebook-only message listener, or ScreenBridge on older WebViews) whether any video on
 // the page is playing and shown, muted or not (the PiP detector only counts videos with
 // sound). Event-driven, plus a slow poll for what the events miss (a video removed while
 // playing). ES5, like the PiP scripts.
 (function () {
-  if (window.__astryxVideoPlayingInstalled || !window.ScreenBridge) return;
+  if (window.__astryxVideoPlayingInstalled || !(window.AstryxPage || window.ScreenBridge)) return;
   window.__astryxVideoPlayingInstalled = true;
 
   var last = null;
@@ -23,7 +24,11 @@
     var playing = document.visibilityState !== 'hidden' && anyPlaying();
     if (playing !== last) {
       last = playing;
-      window.ScreenBridge.setVideoPlaying(playing);
+      if (window.AstryxPage) {
+        window.AstryxPage.postMessage(JSON.stringify({ call: 'screenVideoPlaying', playing: playing }));
+      } else {
+        window.ScreenBridge.setVideoPlaying(playing);
+      }
     }
   }
 

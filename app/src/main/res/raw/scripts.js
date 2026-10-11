@@ -369,7 +369,9 @@ observer.observe(document.body, { childList: true, subtree: true });
         pointer-events: auto;
       `);
       btn.innerHTML = ICON_SVG.replace('%FILL%', getFillColor());
-      btn.onclick = () => SettingsBridge?.onSettingsToggle?.();
+      btn.onclick = () => window.AstryxPage
+        ? window.AstryxPage.postMessage(JSON.stringify({ call: 'openSettings' }))
+        : window.SettingsBridge?.onSettingsToggle?.();
       return btn;
     };
 
@@ -431,7 +433,9 @@ observer.observe(document.body, { childList: true, subtree: true });
       `);
       // The reels bar is always dark.
       btn.innerHTML = ICON_SVG.replace('%FILL%', '#ffffff');
-      btn.onclick = () => SettingsBridge?.onSettingsToggle?.();
+      btn.onclick = () => window.AstryxPage
+        ? window.AstryxPage.postMessage(JSON.stringify({ call: 'openSettings' }))
+        : window.SettingsBridge?.onSettingsToggle?.();
       document.body.appendChild(btn);
     };
     updateReelsButton();
@@ -452,7 +456,10 @@ observer.observe(document.body, { childList: true, subtree: true });
 // Color Extraction Script
 (function() {
     const meta = document.querySelector('meta[name="theme-color"]');
-    const notify = () => window.ThemeBridge?.onThemeColorChanged?.(meta?.content ?? "null");
+    // AstryxPage: the app's Facebook-only message listener; ThemeBridge: older WebViews.
+    const notify = () => window.AstryxPage
+        ? window.AstryxPage.postMessage(JSON.stringify({ call: 'themeColor', color: meta?.content ?? '' }))
+        : window.ThemeBridge?.onThemeColorChanged?.(meta?.content ?? "null");
     if (meta) {
         notify();
         new MutationObserver(() => notify())
