@@ -107,6 +107,7 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.webkit)
+    implementation(libs.androidx.browser)
     testImplementation(libs.playwright)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

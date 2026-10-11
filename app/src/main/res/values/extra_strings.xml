@@ -24,4 +24,17 @@
     <string name="external_link_open">Open</string>
     <string name="open_links_title">Open Facebook links here</string>
     <string name="open_links_summary">Choose which Facebook links open in this app instead of the browser</string>
+    <string name="open_web_links_in_app_title">Open web links in the app</string>
+    <string name="open_web_links_in_app_summary">Show them in a browser tab over the app instead of switching apps. The tab doesn\'t use your Facebook login here.</string>
+    <string name="export_settings_title">Export settings</string>
+    <string name="export_settings_summary">Save your settings to a file</string>
+    <string name="import_settings_title">Import settings</string>
+    <string name="import_settings_summary">Restore settings from an exported file</string>
+    <string name="settings_exported">Settings exported</string>
+    <string name="settings_export_failed">Couldn\'t export the settings</string>
+    <string name="settings_import_failed">That isn\'t an Astryxbook settings file</string>
+    <plurals name="settings_imported">
+        <item quantity="one">Imported %1$d setting</item>
+        <item quantity="other">Imported %1$d settings</item>
+    </plurals>
 </resources>

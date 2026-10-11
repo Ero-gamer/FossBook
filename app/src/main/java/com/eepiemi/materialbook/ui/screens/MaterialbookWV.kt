@@ -72,6 +72,8 @@ import com.eepiemi.materialbook.utils.intentFallbackUrl
 import com.eepiemi.materialbook.utils.KeepScreenOn
 import com.eepiemi.materialbook.utils.TextZoom
 import com.eepiemi.materialbook.utils.isMessagesLink
+import com.eepiemi.materialbook.utils.isWebUrl
+import com.eepiemi.materialbook.utils.openInCustomTab
 import com.eepiemi.materialbook.utils.messagesDesktopUrl
 import com.eepiemi.materialbook.utils.shareablePageUrl
 import com.eepiemi.materialbook.utils.rememberAutoDesktop
@@ -796,7 +798,13 @@ fun MaterialbookWebView(
             Toast.LENGTH_SHORT
         ).show()
     }
-    val launchExternalUrl: (String) -> Unit = { target ->
+    // "Open links in the app": web links open in a Custom Tab (the browser's own tab, drawn
+    // over this app, without its Facebook login). Read at call time: the request interceptor
+    // keeps the first composition's lambdas.
+    val openLinksInApp by settingsVM.openLinksInApp.collectAsState()
+    val currentOpenLinksInApp by rememberUpdatedState(openLinksInApp)
+    val launchExternalUrl: (String) -> Unit = launch@{ target ->
+        if (currentOpenLinksInApp && isWebUrl(target) && openInCustomTab(context, target)) return@launch
         // BROWSABLE and no selector: the link only reaches activities that accept links from
         // a browser, as it would from Chrome.
         val intent = Intent(Intent.ACTION_VIEW, target.toUri())

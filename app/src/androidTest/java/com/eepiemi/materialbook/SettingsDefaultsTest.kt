@@ -92,4 +92,12 @@ class SettingsDefaultsTest {
         val viewModel = SettingsViewModel(app)
         assertEquals(TextZoom.DEFAULT, viewModel.textZoom.value)
     }
+
+    @Test
+    fun openLinksInAppIsOffByDefault() {
+        // Web links keep going to the browser unless the user picks Custom Tabs.
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val viewModel = SettingsViewModel(app)
+        assertFalse("openLinksInApp should default to false", viewModel.openLinksInApp.value)
+    }
 }

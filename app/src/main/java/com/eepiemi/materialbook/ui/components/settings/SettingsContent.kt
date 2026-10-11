@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Message
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.filled.BurstMode
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Diversity1
@@ -26,6 +29,7 @@ import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.DesktopWindows
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.GridView
@@ -37,6 +41,7 @@ import androidx.compose.material.icons.outlined.PanoramaWideAngle
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
 import androidx.compose.material.icons.outlined.Pinch
 import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -98,6 +103,33 @@ fun SettingsContent(
     val textZoomLabels = TextZoom.ALL.associateWith { textZoomLabel(it) }
     val developerOptions = viewModel.developerOptions.collectAsState()
     val webViewDebugging = viewModel.webViewDebugging.collectAsState()
+    val openLinksInApp = viewModel.openLinksInApp.collectAsState()
+
+    // Settings export and import go through the system file picker (no storage permission).
+    val toastContext = LocalContext.current
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        viewModel.exportSettings(uri) { ok ->
+            Toast.makeText(
+                toastContext,
+                if (ok) R.string.settings_exported else R.string.settings_export_failed,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        viewModel.importSettings(uri) { applied ->
+            val message = if (applied == null) {
+                toastContext.getString(R.string.settings_import_failed)
+            } else {
+                toastContext.resources.getQuantityString(R.plurals.settings_imported, applied, applied)
+            }
+            Toast.makeText(toastContext, message, Toast.LENGTH_LONG).show()
+        }
+    }
 
     val isAutoDesktop = rememberAutoDesktop()
 
@@ -274,6 +306,32 @@ fun SettingsContent(
                 )
             )
         }
+
+        SettingsGroup(
+            items = listOf(
+                SettingsItem(
+                    icon = Icons.AutoMirrored.Outlined.OpenInNew,
+                    title = stringResource(R.string.open_web_links_in_app_title),
+                    supportingText = stringResource(R.string.open_web_links_in_app_summary),
+                    isActive = openLinksInApp.value,
+                    onClick = { viewModel.setOpenLinksInApp(!openLinksInApp.value) }
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.Upload,
+                    title = stringResource(R.string.export_settings_title),
+                    supportingText = stringResource(R.string.export_settings_summary),
+                    isActive = null,
+                    onClick = { runCatching { exportLauncher.launch(SETTINGS_FILE_NAME) } }
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.Download,
+                    title = stringResource(R.string.import_settings_title),
+                    supportingText = stringResource(R.string.import_settings_summary),
+                    isActive = null,
+                    onClick = { runCatching { importLauncher.launch(SETTINGS_FILE_TYPES) } }
+                )
+            )
+        )
 
         // Hidden until the version below is tapped seven times.
         if (developerOptions.value) {
@@ -494,6 +552,11 @@ private fun textZoomLabel(zoom: String): String =
     else stringResource(R.string.text_size_percent, TextZoom.percent(zoom))
 
 private const val DEVELOPER_TAPS = 7
+
+private const val SETTINGS_FILE_NAME = "astryxbook-settings.json"
+// What the import picker shows: some file managers label .json files as text or as
+// generic binary.
+private val SETTINGS_FILE_TYPES = arrayOf("application/json", "text/*", "application/octet-stream")
 
 // The app's version; tapping it seven times shows the developer options.
 @Composable
