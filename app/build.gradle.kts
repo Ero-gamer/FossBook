@@ -2,6 +2,15 @@ import com.android.build.api.dsl.ApplicationExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
 import org.gradle.testing.jacoco.tasks.JacocoReport
+// Imported: inside the build script, a bare `java.` resolves to the `java` extension, not
+// the package (used by the script-signing tasks).
+import java.security.KeyFactory
+import java.security.KeyPairGenerator
+import java.security.Signature
+import java.security.spec.ECGenParameterSpec
+import java.security.spec.PKCS8EncodedKeySpec
+import java.security.spec.X509EncodedKeySpec
+import java.util.Base64
 
 plugins {
     alias(libs.plugins.android.application)
@@ -42,10 +51,10 @@ tasks.register("generateScriptSigningKey") {
         check(!privateKeyFile.canonicalPath.startsWith(repoDir.canonicalPath + File.separator)) {
             "Keep the private key outside the repository (got $privateKeyFile)"
         }
-        val generator = java.security.KeyPairGenerator.getInstance("EC")
-        generator.initialize(java.security.spec.ECGenParameterSpec("secp256r1"))
+        val generator = KeyPairGenerator.getInstance("EC")
+        generator.initialize(ECGenParameterSpec("secp256r1"))
         val pair = generator.generateKeyPair()
-        val encoder = java.util.Base64.getEncoder()
+        val encoder = Base64.getEncoder()
         privateKeyFile.absoluteFile.parentFile.mkdirs()
         privateKeyFile.writeText(encoder.encodeToString(pair.private.encoded) + "\n")
         publicKeyFile.writeText(encoder.encodeToString(pair.public.encoded) + "\n")
@@ -64,13 +73,13 @@ tasks.register("signScripts") {
     val messagePrefix = SCRIPT_SIGNING_MESSAGE_PREFIX
     doLast {
         val privateKeyFile = File(privateKeyPath.orNull ?: error("Pass -PscriptSigningKey=<private key file>"))
-        val decoder = java.util.Base64.getDecoder()
-        val keyFactory = java.security.KeyFactory.getInstance("EC")
+        val decoder = Base64.getDecoder()
+        val keyFactory = KeyFactory.getInstance("EC")
         val privateKey = keyFactory.generatePrivate(
-            java.security.spec.PKCS8EncodedKeySpec(decoder.decode(privateKeyFile.readText().trim()))
+            PKCS8EncodedKeySpec(decoder.decode(privateKeyFile.readText().trim()))
         )
         val publicKey = keyFactory.generatePublic(
-            java.security.spec.X509EncodedKeySpec(decoder.decode(publicKeyFile.readText().trim()))
+            X509EncodedKeySpec(decoder.decode(publicKeyFile.readText().trim()))
         )
         signaturesDir.mkdirs()
         signaturesDir.listFiles { f -> f.name.endsWith(".sig") }?.forEach { it.delete() }
@@ -78,20 +87,20 @@ tasks.register("signScripts") {
         scripts.forEach { script ->
             val message = (messagePrefix + script.name + "\n" + script.readText().replace("\r\n", "\n"))
                 .toByteArray(Charsets.UTF_8)
-            val signature = java.security.Signature.getInstance("SHA256withECDSA").run {
+            val signature = Signature.getInstance("SHA256withECDSA").run {
                 initSign(privateKey)
                 update(message)
                 sign()
             }
             // Checked against the committed public key, so a mismatched key pair fails here.
-            val verified = java.security.Signature.getInstance("SHA256withECDSA").run {
+            val verified = Signature.getInstance("SHA256withECDSA").run {
                 initVerify(publicKey)
                 update(message)
                 verify(signature)
             }
             check(verified) { "The private key doesn't match $publicKeyFile" }
             File(signaturesDir, script.name + ".sig")
-                .writeText(java.util.Base64.getEncoder().encodeToString(signature) + "\n")
+                .writeText(Base64.getEncoder().encodeToString(signature) + "\n")
         }
         println("Signed ${scripts.size} scripts into $signaturesDir")
     }
