@@ -17,6 +17,7 @@
     <string name="saved_to_downloads">נשמר בהורדות</string>
     <string name="download_failed_invalid_data">ההורדה נכשלה: נתונים שגויים</string>
     <string name="failed_to_save_file">שמירת הקובץ נכשלה</string>
+    <string name="video_download_unavailable">לא ניתן להוריד את הסרטון הזה</string>
     <string name="image_copied_to_clipboard">התמונה הועתקה ללוח</string>
     <string name="copy_failed_invalid_data">ההעתקה נכשלה: נתונים שגויים</string>
     <string name="copy_failed_invalid_image">ההעתקה נכשלה: תמונה שגויה</string>

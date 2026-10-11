@@ -126,10 +126,34 @@
     return false;
   };
 
+  // Facebook plays videos through Media Source Extensions, so a <video>'s src is a blob: URL
+  // that fetch() can't read. The player around it (data-mcomponent="MVideo") carries the whole
+  // file, video and audio in one MP4, in data-video-url: download that instead.
+  const mediaUrl = (element) => {
+    if (element.tagName !== "VIDEO" || !element.src.startsWith("blob:")) return element.src;
+    const player = element.closest("[data-video-url]");
+    const url = player && player.getAttribute("data-video-url");
+    return url && url.startsWith("https://") ? url : null;
+  };
+
+  // Tells the app a video couldn't be downloaded, so the user sees a message instead of nothing.
+  const reportVideoFailure = () => {
+    const listener = window.AstryxDownloads;
+    const bridge = window.DownloadBridge;
+    if (listener) {
+      listener.postMessage(JSON.stringify({ failed: "video" }));
+    } else if (bridge && bridge.downloadFailed) {
+      bridge.downloadFailed();
+    }
+  };
+
   // Download media from URL
-  const downloadMedia = (url) => {
+  const downloadMedia = (url, isVideo) => {
     fetch(url)
-      .then(response => response.blob())
+      .then(response => {
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        return response.blob();
+      })
       .then(blob => {
         // AstryxDownloads: the app's Facebook-only message listener;
         // DownloadBridge: older WebViews and older app versions.
@@ -139,7 +163,7 @@
           const reader = new FileReader();
           reader.onloadend = function() {
             if (!reader.result) return;
-            const mimeType = blob.type || "image/jpeg";
+            const mimeType = blob.type || (isVideo ? "video/mp4" : "image/jpeg");
             if (listener) {
               listener.postMessage(JSON.stringify({ data: reader.result, mimeType: mimeType }));
             } else {
@@ -151,7 +175,21 @@
       })
       .catch(err => {
         console.error("Error downloading media:", err);
+        if (isVideo) reportVideoFailure();
       });
+  };
+
+  // Downloads a <video> or <img>; false when it's the one just downloaded.
+  const downloadElement = (element) => {
+    const url = mediaUrl(element);
+    if (!url) {
+      reportVideoFailure();
+      return true;
+    }
+    if (url === lastDownloadedUrl) return false;
+    downloadMedia(url, element.tagName === "VIDEO");
+    lastDownloadedUrl = url;
+    return true;
   };
 
   // Extract and download videos or images
@@ -159,22 +197,14 @@
     // Find current media element
     const mediaElement = getCurrentMediaElement();
 
-    if (mediaElement && mediaElement.src && mediaElement.src !== lastDownloadedUrl) {
-      downloadMedia(mediaElement.src);
-      lastDownloadedUrl = mediaElement.src;
-      return;
-    }
+    if (mediaElement && mediaElement.src && downloadElement(mediaElement)) return;
 
     // Get container to search in
     const container = currentContentContainer || document.body;
 
     // Find videos first
     const videoElement = container.querySelector("video:not([hidden])");
-    if (videoElement && videoElement.src && videoElement.src !== lastDownloadedUrl) {
-      downloadMedia(videoElement.src);
-      lastDownloadedUrl = videoElement.src;
-      return;
-    }
+    if (videoElement && videoElement.src && downloadElement(videoElement)) return;
 
     // If no video, try with images
     const images = Array.from(container.querySelectorAll("img"))
@@ -194,7 +224,7 @@
       });
 
     if (images.length > 0) {
-      downloadMedia(images[0].src);
+      downloadMedia(images[0].src, false);
       lastDownloadedUrl = images[0].src;
       return;
     }
@@ -214,7 +244,7 @@
         const imageUrl = bgImage.replace(/^url\(['"](.+)['"]\)$/, "$1");
 
         if (imageUrl !== lastDownloadedUrl) {
-          downloadMedia(imageUrl);
+          downloadMedia(imageUrl, false);
           lastDownloadedUrl = imageUrl;
           return;
         }

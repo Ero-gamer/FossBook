@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-   Auto Backup rules for Android 11 and lower (API 23-30), also used by `adb backup`.
+   Auto Backup rules for Android 11 and lower (API 23-30), also used by `adb backup` there.
+   On Android 12+ `adb backup` skips release builds altogether and ignores these rules for
+   debuggable (debug) builds, so a debug build's adb backup includes the WebView profile.
    Only the settings DataStore is backed up. Everything else in the data dir stays on the
    device, in particular the WebView's profile (app_webview/), which holds the Facebook
    session cookies, and its caches. With an <include>, anything not listed is excluded.

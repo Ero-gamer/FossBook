@@ -61,6 +61,10 @@ fun installDownloadBridge(webView: WebView, context: Context) {
         if (!isMainFrame || !isFacebookWebUrl(sourceOrigin.toString())) return@addWebMessageListener
         val payload = message.data?.let { runCatching { JSONObject(it) }.getOrNull() }
             ?: return@addWebMessageListener
+        if (payload.has("failed")) {
+            bridge.downloadFailed()
+            return@addWebMessageListener
+        }
         val data = payload.optString("data")
         val mimeType = payload.optString("mimeType")
         // The listener runs on the UI thread; decoding and writing a video doesn't belong there.
@@ -131,6 +135,11 @@ class DownloadBridge(private val context: Context) {
             toast(R.string.failed_to_save_file)
         }
     }
+
+    // The page found no file it could download for the video on screen (download_content.js).
+    @JavascriptInterface
+    @Suppress("unused")
+    fun downloadFailed() = toast(R.string.video_download_unavailable)
 
     private fun toast(message: Int) {
         ContextCompat.getMainExecutor(context).execute {
