@@ -1,6 +1,8 @@
 package com.eepiemi.materialbook.ui.components.settings
 
+import android.content.Intent
 import android.os.Build
+import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,6 +31,7 @@ import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PanoramaWideAngle
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
@@ -56,6 +59,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.eepiemi.materialbook.BuildConfig
 import com.eepiemi.materialbook.R
@@ -240,6 +244,32 @@ fun SettingsContent(
                         supportingText = stringResource(R.string.pip_lockscreen_audio_summary),
                         isActive = pipLockscreenAudio.value,
                         onClick = { viewModel.setPipLockscreenAudio(!pipLockscreenAudio.value) }
+                    )
+                )
+            )
+        }
+
+        // Android 12+ opens Facebook links in the browser until the user allows them for this
+        // app (facebook.com can't verify for it); this opens that system page.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val context = LocalContext.current
+            SettingsGroup(
+                items = listOf(
+                    SettingsItem(
+                        icon = Icons.Outlined.Link,
+                        title = stringResource(R.string.open_links_title),
+                        supportingText = stringResource(R.string.open_links_summary),
+                        isActive = null,
+                        onClick = {
+                            runCatching {
+                                context.startActivity(
+                                    Intent(
+                                        Settings.ACTION_APP_OPEN_BY_DEFAULT_SETTINGS,
+                                        "package:${context.packageName}".toUri()
+                                    )
+                                )
+                            }
+                        }
                     )
                 )
             )

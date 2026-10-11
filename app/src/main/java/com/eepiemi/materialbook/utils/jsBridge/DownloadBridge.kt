@@ -119,7 +119,7 @@ class DownloadBridge(private val context: Context) {
                     resolver.update(uri, contentValues, null, null)
 
                     toast(R.string.saved_to_downloads)
-                }
+                } ?: toast(R.string.failed_to_save_file)
             } else {
                 val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 val file = File(downloadsDir, fileName)

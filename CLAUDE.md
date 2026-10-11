@@ -57,6 +57,9 @@ user-visible change.
 - `m.facebook.com` redirects full loads of some pages (profiles) to
   `intent://…;package=com.facebook.katana;S.browser_fallback_url=…`; the interceptors open
   the web fallback (`intentFallbackUrl`). Never launch the app an `intent://` link names.
+- `MainActivity` is `singleTask`: a link sent while the app runs arrives in `onNewIntent`
+  and reaches the WebView as `openLinkRequest`. Start links are checked with `appLinkUrl`
+  (the start page skips the request interceptor); outgoing links with `externalLinkAction`.
 - `state.nativeWebView` throws until the WebView exists (it's created during layout, which
   doesn't happen with the screen off): guard it in effects.
 - Instrumented tests reset the debug app's settings (not its Facebook login).

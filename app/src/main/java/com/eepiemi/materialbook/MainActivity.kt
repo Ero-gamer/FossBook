@@ -41,6 +41,8 @@ import com.eepiemi.materialbook.audio.PipHandback
 import com.eepiemi.materialbook.audio.isHandoffEligible
 import com.eepiemi.materialbook.audio.parseHandoffRead
 import com.eepiemi.materialbook.ui.screens.MaterialbookWebView
+import com.eepiemi.materialbook.ui.screens.OpenLinkRequest
+import com.eepiemi.materialbook.utils.appLinkUrl
 import com.eepiemi.materialbook.utils.appOrientation
 import com.eepiemi.materialbook.utils.facebookShareUrl
 import com.eepiemi.materialbook.utils.publishAppShortcuts
@@ -130,6 +132,9 @@ class MainActivity : ComponentActivity() {
     // Latest handback request for the composable to run (pipHandbackJs).
     private var pipHandback by mutableStateOf<PipHandback?>(null)
     private var pipHandbackSeq = 0
+
+    // A link sent while the app runs (singleTask: onNewIntent) opens in the existing WebView.
+    private var openLinkRequest by mutableStateOf<OpenLinkRequest?>(null)
 
     // Bound at PiP entry (option B: binding creates the service idle, not in
     // the foreground), used at screen-off to start playback and at handback
@@ -312,15 +317,7 @@ class MainActivity : ComponentActivity() {
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
 
-        // A link shared from another app opens Facebook's share dialog; shared text without
-        // a link can't be shared to Facebook's web share, so the app just opens.
-        val intentUrl = if (intent?.action == Intent.ACTION_SEND) {
-            facebookShareUrl(intent.getStringExtra(Intent.EXTRA_TEXT)).also {
-                if (it == null) Toast.makeText(this, R.string.share_only_links, Toast.LENGTH_LONG).show()
-            }
-        } else {
-            intent?.data?.toString()
-        }
+        val intentUrl = linkUrl(intent)
 
         setContent {
             MaterialbookTheme {
@@ -334,6 +331,7 @@ class MainActivity : ComponentActivity() {
                     pipStartedWhilePlaying = pipStartedWhilePlaying,
                     pipHandoffReadTrigger = pipHandoffReadTrigger,
                     pipHandback = pipHandback,
+                    openLinkRequest = openLinkRequest,
                     onPipHandoffRead = ::onPipHandoffRead,
                     onPipPageVisible = { runOnUiThread { handBack("page visible") } },
                     onVideoPlayingChanged = { isPlaying, videoWidth, videoHeight ->
@@ -351,6 +349,26 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             settingsVM.pipPortraitRatio.collect { reapplyPipParams() }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val url = linkUrl(intent) ?: return
+        openLinkRequest = OpenLinkRequest((openLinkRequest?.seq ?: 0) + 1, url)
+    }
+
+    /**
+     * The page an intent asks for: a link shared from another app opens Facebook's share
+     * dialog (shared text without a link can't be shared to Facebook's web share, so the app
+     * just opens); a link or launcher shortcut opens its page if it's a Facebook one.
+     */
+    private fun linkUrl(intent: Intent?): String? = if (intent?.action == Intent.ACTION_SEND) {
+        facebookShareUrl(intent.getStringExtra(Intent.EXTRA_TEXT)).also {
+            if (it == null) Toast.makeText(this, R.string.share_only_links, Toast.LENGTH_LONG).show()
+        }
+    } else {
+        appLinkUrl(intent?.data?.toString())
     }
 
     // Handback signals besides the page's own visibilitychange: the activity
