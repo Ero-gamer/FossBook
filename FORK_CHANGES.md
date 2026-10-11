@@ -435,6 +435,17 @@ leaving the app while a Facebook video or Reel is playing.
 - CI: third-party GitHub Actions are pinned to commit SHAs (the release job holds the
   signing keystore); Dependabot keeps the pins current.
 
+## Custom Tabs and settings backup
+
+- **Open web links in the app** (Settings, off by default): web links from posts and chats
+  open in a Custom Tab, the default browser's tab drawn over Astryxbook, instead of
+  switching to the browser app. The tab uses the browser's own cookies, never this app's
+  Facebook login. Other links (email, phone, other apps) behave as before.
+- **Export and import settings** (Settings): saves every setting to a small JSON file
+  through the system file picker, and restores them from one, on this phone or another.
+  Only known settings with the right type are imported. Developer options and WebView
+  debugging never travel, so a shared settings file can't turn on remote debugging.
+
 ## Keep screen on
 
 New setting (Settings → *Keep screen on*, off by default): *While a video

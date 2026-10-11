@@ -20,4 +20,18 @@
     <string name="external_link_open">פתיחה</string>
     <string name="open_links_title">פתיחת קישורי פייסבוק כאן</string>
     <string name="open_links_summary">בחירה אילו קישורי פייסבוק ייפתחו באפליקציה הזו במקום בדפדפן</string>
+    <string name="open_web_links_in_app_title">פתיחת קישורים לאתרים באפליקציה</string>
+    <string name="open_web_links_in_app_summary">הצגה בכרטיסיית דפדפן מעל האפליקציה במקום מעבר לאפליקציה אחרת. הכרטיסייה לא משתמשת בהתחברות שלך לפייסבוק כאן.</string>
+    <string name="export_settings_title">ייצוא הגדרות</string>
+    <string name="export_settings_summary">שמירת ההגדרות שלך בקובץ</string>
+    <string name="import_settings_title">ייבוא הגדרות</string>
+    <string name="import_settings_summary">שחזור הגדרות מקובץ שיוצא</string>
+    <string name="settings_exported">ההגדרות יוצאו</string>
+    <string name="settings_export_failed">לא ניתן היה לייצא את ההגדרות</string>
+    <string name="settings_import_failed">זה לא קובץ הגדרות של Astryxbook</string>
+    <plurals name="settings_imported">
+        <item quantity="one">יובאה %1$d הגדרה</item>
+        <item quantity="two">יובאו %1$d הגדרות</item>
+        <item quantity="other">יובאו %1$d הגדרות</item>
+    </plurals>
 </resources>

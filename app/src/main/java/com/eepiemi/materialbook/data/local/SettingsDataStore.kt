@@ -41,6 +41,7 @@ class SettingsDataStore(private val context: Context) {
         val TEXT_ZOOM = stringPreferencesKey("text_zoom")
         val DEVELOPER_OPTIONS = booleanPreferencesKey("developer_options")
         val WEBVIEW_DEBUGGING = booleanPreferencesKey("webview_debugging")
+        val OPEN_LINKS_IN_APP = booleanPreferencesKey("open_links_in_app")
 
         // Legacy: set by the old auto-desktop logic when it wrote desktop_layout
         // on the user's behalf. Only read by the migration below.
@@ -192,5 +193,21 @@ class SettingsDataStore(private val context: Context) {
     val webViewDebugging = context.dataStore.data.map { it[WEBVIEW_DEBUGGING] ?: false }
     suspend fun setWebViewDebugging(enabled: Boolean) {
         context.dataStore.edit { it[WEBVIEW_DEBUGGING] = enabled }
+    }
+
+    // Off by default: web links leave the app for the browser, as before.
+    val openLinksInApp = context.dataStore.data.map { it[OPEN_LINKS_IN_APP] ?: false }
+    suspend fun setOpenLinksInApp(enabled: Boolean) {
+        context.dataStore.edit { it[OPEN_LINKS_IN_APP] = enabled }
+    }
+
+    /** All settings as an export file (see SettingsBackup). */
+    suspend fun exportJson(): String = exportSettingsJson(prefs.first())
+
+    /** Applies an export file; returns how many settings it set. Throws on a file that isn't one. */
+    suspend fun importJson(json: String): Int {
+        var applied = 0
+        context.dataStore.edit { applied = importSettingsJson(json, it) }
+        return applied
     }
 }

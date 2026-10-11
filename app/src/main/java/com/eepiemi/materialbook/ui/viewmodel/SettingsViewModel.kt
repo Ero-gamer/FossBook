@@ -1,6 +1,7 @@
 package com.eepiemi.materialbook.ui.viewmodel
 
 import android.app.Application
+import android.net.Uri
 import android.util.Rational
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,6 +21,7 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.IMMERSIVE
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.KEEP_SCREEN_ON
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.MATERIAL_YOU
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.MESSAGES_DESKTOP
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.OPEN_LINKS_IN_APP
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PINCH_TO_ZOOM
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_ENABLED
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_LOCKSCREEN_AUDIO
@@ -34,7 +36,9 @@ import com.eepiemi.materialbook.utils.TextZoom
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.runBlocking
 
 class SettingsViewModel(
@@ -159,6 +163,11 @@ class SettingsViewModel(
     val developerOptions = dataStore.developerOptions.stateIn(
         scope = viewModelScope,
         initialValue = initialPrefs[DEVELOPER_OPTIONS] ?: false,
+        started = SharingStarted.WhileSubscribed()
+    )
+    val openLinksInApp = dataStore.openLinksInApp.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[OPEN_LINKS_IN_APP] ?: false,
         started = SharingStarted.WhileSubscribed()
     )
     // Eagerly: MainActivity applies it with nothing collecting it.
@@ -306,12 +315,53 @@ class SettingsViewModel(
         }
     }
 
+    fun setOpenLinksInApp(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.setOpenLinksInApp(enabled)
+        }
+    }
+
+    /** Writes all settings to [uri] (a file the user picked); [onDone] gets whether it worked. */
+    fun exportSettings(uri: Uri, onDone: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val ok = runCatching {
+                val json = dataStore.exportJson()
+                withContext(Dispatchers.IO) {
+                    getApplication<Application>().contentResolver.openOutputStream(uri, "wt")!!
+                        .use { it.write(json.toByteArray(Charsets.UTF_8)) }
+                }
+            }.isSuccess
+            onDone(ok)
+        }
+    }
+
+    /**
+     * Reads settings from [uri] (a file the user picked); [onDone] gets how many were applied,
+     * or null when the file isn't an Astryxbook settings file.
+     */
+    fun importSettings(uri: Uri, onDone: (Int?) -> Unit) {
+        viewModelScope.launch {
+            val applied = runCatching {
+                val json = withContext(Dispatchers.IO) {
+                    getApplication<Application>().contentResolver.openInputStream(uri)!!
+                        .use { it.readAtMost(MAX_SETTINGS_FILE_BYTES) }
+                        .toString(Charsets.UTF_8)
+                }
+                dataStore.importJson(json)
+            }.getOrNull()
+            onDone(applied)
+        }
+    }
+
     fun parsedPipRational(): Rational = parsedPipRational(pipPortraitRatio.value)
 
     fun pipRationalForVideo(videoWidth: Int, videoHeight: Int): Rational =
         calculatePipRational(videoWidth, videoHeight, parsedPipRational())
 
     companion object {
+        // A settings file is a few hundred bytes; anything bigger isn't one.
+        private const val MAX_SETTINGS_FILE_BYTES = 64 * 1024
+
         private val MIN_PIP_ASPECT_RATIO = 100f / 239f
         private val MAX_PIP_ASPECT_RATIO = 239f / 100f
 
@@ -366,4 +416,17 @@ class SettingsViewModel(
             return Rational(numerator / a, denominator / a)
         }
     }
+}
+
+// The stream's bytes, refusing (rather than reading into memory) one longer than [limit].
+private fun java.io.InputStream.readAtMost(limit: Int): ByteArray {
+    val out = java.io.ByteArrayOutputStream()
+    val buffer = ByteArray(8192)
+    while (true) {
+        val read = read(buffer)
+        if (read < 0) break
+        out.write(buffer, 0, read)
+        require(out.size() <= limit) { "Settings file too large" }
+    }
+    return out.toByteArray()
 }
