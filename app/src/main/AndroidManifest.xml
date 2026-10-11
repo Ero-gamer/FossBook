@@ -55,6 +55,16 @@
                 <data android:host="facebook.com" />
             </intent-filter>
 
+            <!-- Share into the app: a link shared from another app opens Facebook's share
+                 dialog (see facebookShareUrl). -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
         </activity>
 
         <!-- Native audio for a PiP video while the screen is locked. Exported

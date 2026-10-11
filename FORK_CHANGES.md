@@ -365,6 +365,35 @@ leaving the app while a Facebook video or Reel is playing.
   to the foreground at screen-off, so no notification shows during ordinary
   PiP use.
 
+## Sharing, text size, shortcuts and developer options
+
+- **Share into the app:** a link shared from another app (the share sheet's Astryxbook
+  entry) opens Facebook's share dialog for it. Shared text without a link can't be posted
+  through Facebook's web share, so the app just opens and says so.
+- **Share this page:** the share button at the top of Settings sends the page you're on
+  (the Messages layer's while it's open) through the system share sheet, as a
+  `www.facebook.com` link without tracking parameters.
+- **Text size** (Settings, 100% by default): 85% to 150%, for the feed and the Messages
+  layer alike.
+- **Launcher shortcuts:** long-press the app icon for Messages, Notifications and
+  Marketplace. Messages opens where the Messages tab would (the Messages layer when
+  *Messages in desktop mode* is on); this also applies to Messages links from other apps,
+  which used to land on Facebook's "Open Messenger" page.
+- **Tracking parameters:** links leaving the app (to the browser, another app, the share
+  sheet) lose Facebook's trackers (`fbclid`, `__cft__`, `__tn__`, `mibextid`, `rdid` …),
+  campaign tags (`utm_*`) and the usual ad click IDs, and `lm.facebook.com` redirects are
+  unwrapped like `l.facebook.com` ones. Fixed along the way: query values were
+  percent-encoded twice (`%20` became `%2520`), `#fragments` were dropped, and a parameter
+  without `=` left the whole link uncleaned.
+- **WebView debugging is now a developer option** (off by default): tap the version at the
+  bottom of Settings seven times, then turn on *WebView debugging* to use `chrome://inspect`
+  on a release build. Debug builds always allow it. Before, it was always on, so anything
+  with USB debugging access could drive the logged-in page.
+- Both WebViews pin file access off and Safe Browsing on (compose-webview's defaults today)
+  and switch geolocation off.
+- CI: third-party GitHub Actions are pinned to commit SHAs (the release job holds the
+  signing keystore); Dependabot keeps the pins current.
+
 ## Keep screen on
 
 New setting (Settings → *Keep screen on*, off by default): *While a video

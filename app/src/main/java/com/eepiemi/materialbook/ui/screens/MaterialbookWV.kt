@@ -67,7 +67,10 @@ import com.eepiemi.materialbook.utils.fbRedirectSanitizer
 import com.eepiemi.materialbook.utils.hardenWebView
 import com.eepiemi.materialbook.utils.intentFallbackUrl
 import com.eepiemi.materialbook.utils.KeepScreenOn
+import com.eepiemi.materialbook.utils.TextZoom
+import com.eepiemi.materialbook.utils.isMessagesLink
 import com.eepiemi.materialbook.utils.messagesDesktopUrl
+import com.eepiemi.materialbook.utils.shareablePageUrl
 import com.eepiemi.materialbook.utils.rememberAutoDesktop
 import com.eepiemi.materialbook.utils.rememberImeHeight
 import com.eepiemi.materialbook.utils.shouldKeepScreenOn
@@ -753,6 +756,8 @@ internal fun pipHandbackJs(positionMs: Long?, play: Boolean, rearm: Boolean): St
 })();
 """ + PIP_HANDOFF_DISARM_JS + (if (rearm) PIP_HANDOFF_ARM_JS else "")
 
+private const val HOME_URL = "https://facebook.com/"
+
 @Composable
 fun MaterialbookWebView(
     url: String,
@@ -822,8 +827,27 @@ fun MaterialbookWebView(
     LaunchedEffect(navigator) {
         val bundle = state.viewState
         if (bundle == null) {
-            navigator.loadUrl(url)
+            // loadUrl doesn't go through the interceptor: a Messages link the app was opened
+            // with (a launcher shortcut, a link from another app) goes where tapping it in the
+            // page would, the Messages layer or this view's desktop Messages page.
+            when {
+                !isMessagesLink(url) || !url.startsWith("http", ignoreCase = true) -> navigator.loadUrl(url)
+                currentMessagesDesktopSetting && !currentIsEffectiveDesktop -> {
+                    messagesLayerUrl = messagesDesktopUrl(url)
+                    navigator.loadUrl(HOME_URL)
+                }
+                currentIsEffectiveDesktop -> navigator.loadUrl(messagesDesktopUrl(url))
+                else -> navigator.loadUrl(url)
+            }
         }
+    }
+
+    // Text size (Settings): applied when the WebView is created (onCreated) and, when it
+    // changes, on the WebView that's already there.
+    val textZoom by settingsVM.textZoom.collectAsState()
+    val textZoomPercent = TextZoom.percent(textZoom)
+    LaunchedEffect(textZoomPercent) {
+        runCatching { state.nativeWebView }.getOrNull()?.settings?.textZoom = textZoomPercent
     }
 
     // PiP follows the page on screen: the Messages layer's while it's open (it reports its
@@ -1217,6 +1241,20 @@ fun MaterialbookWebView(
                     settings = settingsVM
                 )
                 navigator.reload()
+            },
+            onSharePage = {
+                // The page on screen (the Messages layer's while it's open); the WebView's own
+                // URL follows Facebook's in-page navigation, lastLoadedUrl may not.
+                val pageUrl = runCatching { pipState.nativeWebView.url }.getOrNull()
+                    ?: pipState.lastLoadedUrl
+                if (!pageUrl.isNullOrEmpty()) {
+                    val send = Intent(Intent.ACTION_SEND)
+                        .setType("text/plain")
+                        .putExtra(Intent.EXTRA_TEXT, shareablePageUrl(pageUrl))
+                    runCatching {
+                        context.startActivity(Intent.createChooser(send, resources.getString(R.string.share_page)))
+                    }
+                }
             }
         )
     }
@@ -1313,6 +1351,7 @@ fun MaterialbookWebView(
         captureBackPresses = false,
         onCreated = { webView ->
             hardenWebView(state, webView)
+            state.webSettings.androidWebSettings.textZoom = textZoomPercent
 
             val cookieManager = CookieManager.getInstance()
             cookieManager.setAcceptCookie(true)
@@ -1392,6 +1431,7 @@ fun MaterialbookWebView(
                 onVideoPlayingChanged = onVideoPlayingChanged,
                 onPipPageVisible = onPipPageVisible,
                 trackVideoPlaying = trackVideoPlaying,
+                textZoom = textZoomPercent,
                 onScreenVideoPlayingChanged = { layerVideoPlaying = it },
                 onLeave = { mainUrl ->
                     // Both the interceptor and the in-page watcher can report the same exit.

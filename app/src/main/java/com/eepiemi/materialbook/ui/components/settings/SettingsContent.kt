@@ -1,6 +1,7 @@
 package com.eepiemi.materialbook.ui.components.settings
 
 import android.os.Build
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,10 +20,12 @@ import androidx.compose.material.icons.filled.EmojiPeople
 import androidx.compose.material.icons.filled.Padding
 import androidx.compose.material.icons.filled.Try
 import androidx.compose.material.icons.outlined.AspectRatio
+import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.DesktopWindows
 import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.LightMode
@@ -39,20 +42,26 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.eepiemi.materialbook.BuildConfig
 import com.eepiemi.materialbook.R
 import com.eepiemi.materialbook.ui.viewmodel.SettingsViewModel
 import com.eepiemi.materialbook.utils.KeepScreenOn
+import com.eepiemi.materialbook.utils.TextZoom
 import com.eepiemi.materialbook.utils.effectiveDesktop
 import com.eepiemi.materialbook.utils.rememberAutoDesktop
 
@@ -64,6 +73,7 @@ fun SettingsContent(
     var isOpenDialog by rememberSaveable { mutableStateOf(false) }
     var isPipRatioDialog by rememberSaveable { mutableStateOf(false) }
     var isKeepScreenOnDialog by rememberSaveable { mutableStateOf(false) }
+    var isTextZoomDialog by rememberSaveable { mutableStateOf(false) }
 
     val removeAds = viewModel.removeAds.collectAsState()
     val messagesDesktop = viewModel.messagesDesktop.collectAsState()
@@ -80,6 +90,10 @@ fun SettingsContent(
     val pipPortraitRatio = viewModel.pipPortraitRatio.collectAsState()
     val keepScreenOn = viewModel.keepScreenOn.collectAsState()
     val keepScreenOnLabels = KeepScreenOn.ALL.associateWith { keepScreenOnLabel(it) }
+    val textZoom = viewModel.textZoom.collectAsState()
+    val textZoomLabels = TextZoom.ALL.associateWith { textZoomLabel(it) }
+    val developerOptions = viewModel.developerOptions.collectAsState()
+    val webViewDebugging = viewModel.webViewDebugging.collectAsState()
 
     val isAutoDesktop = rememberAutoDesktop()
 
@@ -161,6 +175,14 @@ fun SettingsContent(
                     onClick = { isKeepScreenOnDialog = true }
                 ),
                 SettingsItem(
+                    icon = Icons.Outlined.FormatSize,
+                    title = stringResource(R.string.text_size_title),
+                    supportingText = textZoomLabels[textZoom.value]
+                        ?: textZoomLabels.getValue(TextZoom.DEFAULT),
+                    isActive = null,
+                    onClick = { isTextZoomDialog = true }
+                ),
+                SettingsItem(
                     icon = Icons.Default.Padding,
                     title = stringResource(R.string.sticky_navbar_title),
                     supportingText = stringResource(R.string.keep_the_navigation_bar_visible_while_scrolling),
@@ -223,6 +245,43 @@ fun SettingsContent(
             )
         }
 
+        // Hidden until the version below is tapped seven times.
+        if (developerOptions.value) {
+            SettingsGroup(
+                items = listOf(
+                    SettingsItem(
+                        icon = Icons.Outlined.BugReport,
+                        title = stringResource(R.string.webview_debugging_title),
+                        supportingText = stringResource(R.string.webview_debugging_summary),
+                        isActive = webViewDebugging.value,
+                        onClick = { viewModel.setWebViewDebugging(!webViewDebugging.value) }
+                    )
+                )
+            )
+        }
+
+        VersionFooter(
+            developerOptions = developerOptions.value,
+            onUnlock = { viewModel.setDeveloperOptions(true) }
+        )
+
+    }
+
+    if (isTextZoomDialog) {
+        ChoiceDialog(
+            title = stringResource(R.string.text_size_title),
+            options = textZoomLabels,
+            current = textZoom.value,
+            onSelect = { zoom ->
+                viewModel.setTextZoom(zoom)
+                @Suppress("AssignedValueIsNeverRead")
+                isTextZoomDialog = false
+            },
+            onDismiss = {
+                @Suppress("AssignedValueIsNeverRead")
+                isTextZoomDialog = false
+            }
+        )
     }
 
     if (isOpenDialog) {
@@ -397,6 +456,38 @@ private fun pipRatioLabel(ratio: String): String = when (ratio) {
     "3:4"  -> stringResource(R.string.pip_ratio_3_4)
     "9:16" -> stringResource(R.string.pip_ratio_9_16)
     else   -> ratio
+}
+
+@Composable
+private fun textZoomLabel(zoom: String): String =
+    if (zoom == TextZoom.DEFAULT) stringResource(R.string.text_size_default, TextZoom.percent(zoom))
+    else stringResource(R.string.text_size_percent, TextZoom.percent(zoom))
+
+private const val DEVELOPER_TAPS = 7
+
+// The app's version; tapping it seven times shows the developer options.
+@Composable
+private fun VersionFooter(developerOptions: Boolean, onUnlock: () -> Unit) {
+    val context = LocalContext.current
+    var taps by remember { mutableIntStateOf(0) }
+    Text(
+        text = stringResource(R.string.app_version, stringResource(R.string.app_name), BuildConfig.VERSION_NAME),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.large)
+            .clickable {
+                if (developerOptions) return@clickable
+                taps++
+                if (taps >= DEVELOPER_TAPS) {
+                    onUnlock()
+                    Toast.makeText(context, R.string.developer_options_enabled, Toast.LENGTH_SHORT).show()
+                }
+            }
+            .padding(vertical = 12.dp)
+    )
 }
 
 @Composable

@@ -80,6 +80,7 @@ fun MessagesLayer(
     onScreenVideoPlayingChanged: (Boolean) -> Unit = {},
     onLeave: (mainUrl: String?) -> Unit = { onClose() },
     onOpenSettings: () -> Unit = {},
+    textZoom: Int = 100,
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -123,6 +124,11 @@ fun MessagesLayer(
         // which navigator.canGoBack doesn't always pick up.
         val canGoBack = runCatching { state.nativeWebView.canGoBack() }.getOrDefault(false)
         if (canGoBack) navigator.navigateBack() else onClose()
+    }
+
+    // Text size (Settings), when it changes while the layer is open.
+    LaunchedEffect(textZoom) {
+        runCatching { state.nativeWebView }.getOrNull()?.settings?.textZoom = textZoom
     }
 
     // Same page scripts as the main view (download hook, theme, ...).
@@ -186,6 +192,7 @@ fun MessagesLayer(
             onDispose = { webView -> webView.destroy() },
             onCreated = { webView ->
                 hardenWebView(state, webView)
+                state.webSettings.androidWebSettings.textZoom = textZoom
                 CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
                 state.webSettings.apply {
                     isJavaScriptEnabled = true
