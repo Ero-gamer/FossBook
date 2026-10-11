@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.eepiemi.materialbook.ui.viewmodel.SettingsViewModel
 import com.eepiemi.materialbook.utils.AppLock
+import com.eepiemi.materialbook.utils.TextZoom
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Before
@@ -95,5 +96,21 @@ class SettingsDefaultsTest {
             "bundledScriptsOnly should default to false",
             viewModel.bundledScriptsOnly.value
         )
+    }
+
+    @Test
+    fun webViewDebuggingIsOffByDefault() {
+        // With it on, anything with USB debugging access can drive the logged-in page.
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val viewModel = SettingsViewModel(app)
+        assertFalse("webViewDebugging should default to false", viewModel.webViewDebugging.value)
+        assertFalse("developerOptions should default to false", viewModel.developerOptions.value)
+    }
+
+    @Test
+    fun textSizeIsTheDefaultZoom() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val viewModel = SettingsViewModel(app)
+        assertEquals(TextZoom.DEFAULT, viewModel.textZoom.value)
     }
 }

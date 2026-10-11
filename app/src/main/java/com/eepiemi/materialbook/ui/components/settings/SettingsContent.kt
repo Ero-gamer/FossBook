@@ -1,6 +1,7 @@
 package com.eepiemi.materialbook.ui.components.settings
 
 import android.os.Build
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,11 +21,13 @@ import androidx.compose.material.icons.filled.EmojiPeople
 import androidx.compose.material.icons.filled.Padding
 import androidx.compose.material.icons.filled.Try
 import androidx.compose.material.icons.outlined.AspectRatio
+import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.DesktopWindows
 import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.LightMode
@@ -44,6 +47,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -52,15 +57,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.eepiemi.materialbook.BuildConfig
 import com.eepiemi.materialbook.R
 import com.eepiemi.materialbook.ui.viewmodel.SettingsViewModel
 import com.eepiemi.materialbook.utils.AppLock
 import com.eepiemi.materialbook.utils.KeepScreenOn
 import com.eepiemi.materialbook.utils.canUseAppLock
+import com.eepiemi.materialbook.utils.TextZoom
 import com.eepiemi.materialbook.utils.effectiveDesktop
 import com.eepiemi.materialbook.utils.rememberAutoDesktop
 
@@ -75,6 +83,7 @@ fun SettingsContent(
     var isLogOutDialog by rememberSaveable { mutableStateOf(false) }
     var isPipRatioDialog by rememberSaveable { mutableStateOf(false) }
     var isKeepScreenOnDialog by rememberSaveable { mutableStateOf(false) }
+    var isTextZoomDialog by rememberSaveable { mutableStateOf(false) }
 
     val removeAds = viewModel.removeAds.collectAsState()
     val messagesDesktop = viewModel.messagesDesktop.collectAsState()
@@ -97,6 +106,10 @@ fun SettingsContent(
     // Checked on each composition: the user may set a screen lock and come back.
     val context = LocalContext.current
     val appLockAvailable = canUseAppLock(context)
+    val textZoom = viewModel.textZoom.collectAsState()
+    val textZoomLabels = TextZoom.ALL.associateWith { textZoomLabel(it) }
+    val developerOptions = viewModel.developerOptions.collectAsState()
+    val webViewDebugging = viewModel.webViewDebugging.collectAsState()
 
     val isAutoDesktop = rememberAutoDesktop()
 
@@ -176,6 +189,14 @@ fun SettingsContent(
                         ?: keepScreenOnLabels.getValue(KeepScreenOn.OFF),
                     isActive = null,
                     onClick = { isKeepScreenOnDialog = true }
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.FormatSize,
+                    title = stringResource(R.string.text_size_title),
+                    supportingText = textZoomLabels[textZoom.value]
+                        ?: textZoomLabels.getValue(TextZoom.DEFAULT),
+                    isActive = null,
+                    onClick = { isTextZoomDialog = true }
                 ),
                 SettingsItem(
                     icon = Icons.Default.Padding,
@@ -269,6 +290,26 @@ fun SettingsContent(
             )
         )
 
+        // Hidden until the version below is tapped seven times.
+        if (developerOptions.value) {
+            SettingsGroup(
+                items = listOf(
+                    SettingsItem(
+                        icon = Icons.Outlined.BugReport,
+                        title = stringResource(R.string.webview_debugging_title),
+                        supportingText = stringResource(R.string.webview_debugging_summary),
+                        isActive = webViewDebugging.value,
+                        onClick = { viewModel.setWebViewDebugging(!webViewDebugging.value) }
+                    )
+                )
+            )
+        }
+
+        VersionFooter(
+            developerOptions = developerOptions.value,
+            onUnlock = { viewModel.setDeveloperOptions(true) }
+        )
+
     }
 
     if (isAppLockDialog) {
@@ -308,6 +349,23 @@ fun SettingsContent(
                     @Suppress("AssignedValueIsNeverRead")
                     isLogOutDialog = false
                 }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
+
+    if (isTextZoomDialog) {
+        ChoiceDialog(
+            title = stringResource(R.string.text_size_title),
+            options = textZoomLabels,
+            current = textZoom.value,
+            onSelect = { zoom ->
+                viewModel.setTextZoom(zoom)
+                @Suppress("AssignedValueIsNeverRead")
+                isTextZoomDialog = false
+            },
+            onDismiss = {
+                @Suppress("AssignedValueIsNeverRead")
+                isTextZoomDialog = false
             }
         )
     }
@@ -493,6 +551,38 @@ private fun appLockLabel(mode: String): String = when (mode) {
     AppLock.AFTER_5_MIN -> stringResource(R.string.app_lock_after_5_min)
     AppLock.AFTER_15_MIN -> stringResource(R.string.app_lock_after_15_min)
     else -> stringResource(R.string.app_lock_off)
+}
+
+@Composable
+private fun textZoomLabel(zoom: String): String =
+    if (zoom == TextZoom.DEFAULT) stringResource(R.string.text_size_default, TextZoom.percent(zoom))
+    else stringResource(R.string.text_size_percent, TextZoom.percent(zoom))
+
+private const val DEVELOPER_TAPS = 7
+
+// The app's version; tapping it seven times shows the developer options.
+@Composable
+private fun VersionFooter(developerOptions: Boolean, onUnlock: () -> Unit) {
+    val context = LocalContext.current
+    var taps by remember { mutableIntStateOf(0) }
+    Text(
+        text = stringResource(R.string.app_version, stringResource(R.string.app_name), BuildConfig.VERSION_NAME),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.large)
+            .clickable {
+                if (developerOptions) return@clickable
+                taps++
+                if (taps >= DEVELOPER_TAPS) {
+                    onUnlock()
+                    Toast.makeText(context, R.string.developer_options_enabled, Toast.LENGTH_SHORT).show()
+                }
+            }
+            .padding(vertical = 12.dp)
+    )
 }
 
 @Composable

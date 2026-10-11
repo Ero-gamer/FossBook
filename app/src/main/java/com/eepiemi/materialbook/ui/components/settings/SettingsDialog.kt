@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -43,6 +44,7 @@ fun SettingsDialog(
     onDismiss: () -> Unit,
     onReload: () -> Unit,
     onLogOut: () -> Unit = {},
+    onSharePage: (() -> Unit)? = null,
 ) {
     val scrollState = rememberScrollState()
 
@@ -66,6 +68,16 @@ fun SettingsDialog(
                         modifier = Modifier.align(Alignment.TopStart).size(22.dp),
                         onClick = { onDismiss() }
                     ) { Icon(Icons.AutoMirrored.Default.ArrowBackIos, "back button") }
+
+                    onSharePage?.let { share ->
+                        IconButton(
+                            modifier = Modifier.align(Alignment.TopEnd).size(22.dp),
+                            onClick = {
+                                onDismiss()
+                                share()
+                            }
+                        ) { Icon(Icons.Default.Share, stringResource(R.string.share_page)) }
+                    }
 
                     Text(
                         stringResource(R.string.materialbook_settings),
