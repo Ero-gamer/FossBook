@@ -118,6 +118,17 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   opened. It now saves a blob only when the page starts a real download (a
   clicked `<a download>` link pointing at it). The app's own media download
   button is unaffected. Covered by `FileDownloadJsTest`.
+- Security fix: any frame in the WebView (an ad or third-party iframe
+  included) could call the download bridge and save any file type, an APK
+  say, to Downloads without the user doing anything. Downloads now go
+  through a message listener (`AstryxDownloads`) that only the main frame of
+  a facebook.com/messenger.com page can reach, and only photos and videos are
+  saved; anything else, or an image that doesn't decode, is refused with
+  "Download failed". On a WebView without message listeners (older than 83)
+  the old `DownloadBridge` interface remains, with the same photo/video
+  limit. The scripts fall back to `DownloadBridge` so older app versions keep
+  working with the scripts on `main`. Covered by `DownloadMimeTypeTest` and
+  `FileDownloadJsTest`.
 - Desktop layout: Back with a Messenger chat window open over the feed closed
   the app, because chat windows aren't marked as dialogs. Back now closes the
   chat window (the right-most visible button of its header, "Close chat" in

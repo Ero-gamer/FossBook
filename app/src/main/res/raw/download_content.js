@@ -131,14 +131,19 @@
     fetch(url)
       .then(response => response.blob())
       .then(blob => {
-        if (window.DownloadBridge && window.DownloadBridge.downloadBase64File) {
+        // AstryxDownloads: the app's Facebook-only message listener;
+        // DownloadBridge: older WebViews and older app versions.
+        const listener = window.AstryxDownloads;
+        const bridge = window.DownloadBridge;
+        if (listener || (bridge && bridge.downloadBase64File)) {
           const reader = new FileReader();
           reader.onloadend = function() {
-            if (reader.result) {
-              window.DownloadBridge.downloadBase64File(
-                reader.result,
-                blob.type || "image/jpeg"
-              );
+            if (!reader.result) return;
+            const mimeType = blob.type || "image/jpeg";
+            if (listener) {
+              listener.postMessage(JSON.stringify({ data: reader.result, mimeType: mimeType }));
+            } else {
+              bridge.downloadBase64File(reader.result, mimeType);
             }
           };
           reader.readAsDataURL(blob);

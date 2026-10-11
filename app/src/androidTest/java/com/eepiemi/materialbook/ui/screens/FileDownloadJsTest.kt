@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit
  * Tests for the "File Download Script" block of scripts.js against a real
  * WebView, same harness approach as PipHandoffJsTest. Only an explicit
  * download (a clicked <a download> pointing at a blob: URL) may reach
- * DownloadBridge; blobs a page merely creates, like the decrypted photos of an
+ * the app (the AstryxDownloads listener, else DownloadBridge); blobs a page merely creates, like the decrypted photos of an
  * encrypted Messenger chat, must not.
  */
 @RunWith(AndroidJUnit4::class)
@@ -183,6 +183,32 @@ class FileDownloadJsTest {
         )
 
         assertEquals(0, h.downloadCountAfterSettling())
+    }
+
+    @Test
+    fun messageListener_isPreferredOverJsInterface() {
+        val h = Harness()
+        h.load()
+
+        // Stands in for the app's AstryxDownloads message listener object.
+        h.eval(
+            """
+            window.__posted = [];
+            window.AstryxDownloads = { postMessage: function(m) { window.__posted.push(JSON.parse(m).mimeType); } };
+            """.trimIndent()
+        )
+        h.eval(makeBlobUrl)
+        h.eval(
+            """
+            var a = document.createElement('a');
+            a.href = window.__url;
+            a.download = 'photo.png';
+            a.click();
+            """.trimIndent()
+        )
+
+        assertEquals(0, h.downloadCountAfterSettling())
+        assertEquals("\"image/png\"", h.eval("window.__posted.join(',')"))
     }
 
     @Test
