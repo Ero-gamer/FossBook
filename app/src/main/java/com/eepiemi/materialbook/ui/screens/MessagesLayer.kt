@@ -25,6 +25,7 @@ import com.eepiemi.materialbook.utils.DESKTOP_USER_AGENT
 import com.eepiemi.materialbook.utils.FullscreenController
 import com.eepiemi.materialbook.utils.MessagesLayerRoute
 import com.eepiemi.materialbook.utils.appWebViewParams
+import com.eepiemi.materialbook.utils.hardenWebView
 import com.eepiemi.materialbook.utils.jsBridge.ClipboardBridge
 import com.eepiemi.materialbook.utils.jsBridge.DownloadBridge
 import com.eepiemi.materialbook.utils.jsBridge.LayerBridge
@@ -184,6 +185,7 @@ fun MessagesLayer(
             // The layer is gone for good once closed: free its WebView (and its page).
             onDispose = { webView -> webView.destroy() },
             onCreated = { webView ->
+                hardenWebView(state, webView)
                 CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
                 state.webSettings.apply {
                     isJavaScriptEnabled = true

@@ -64,6 +64,7 @@ import com.eepiemi.materialbook.utils.jsBridge.ScreenBridge
 import com.eepiemi.materialbook.audio.PipHandback
 import com.eepiemi.materialbook.utils.effectiveDesktop
 import com.eepiemi.materialbook.utils.fbRedirectSanitizer
+import com.eepiemi.materialbook.utils.hardenWebView
 import com.eepiemi.materialbook.utils.intentFallbackUrl
 import com.eepiemi.materialbook.utils.KeepScreenOn
 import com.eepiemi.materialbook.utils.messagesDesktopUrl
@@ -1311,6 +1312,7 @@ fun MaterialbookWebView(
         platformWebViewParams = appWebViewParams(fullscreen),
         captureBackPresses = false,
         onCreated = { webView ->
+            hardenWebView(state, webView)
 
             val cookieManager = CookieManager.getInstance()
             cookieManager.setAcceptCookie(true)
