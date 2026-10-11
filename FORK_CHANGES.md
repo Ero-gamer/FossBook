@@ -141,6 +141,28 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   page externally. The "is this Facebook" check now matches only facebook.com /
   messenger.com hosts and their subdomains (the old pattern also accepted look-alike
   hosts and URLs that merely contained a Facebook address).
+- Security: a link in a post or ad can no longer send you straight into another app.
+  Web, email and phone links open as before; any other kind (another app's deep link,
+  `market:`, `sms:`…) first asks "Open in another app?" and shows the link. `javascript:`,
+  `file:`, `content:` and `data:` links are refused. Links are sent with
+  `CATEGORY_BROWSABLE`, so they only reach apps that accept links from a browser. Covered
+  by `ExternalLinksTest`.
+- Security: a link sent to the app (from another app or an explicit intent) opens only if
+  it's a Facebook page or an fb.watch link, else the app opens at Home. Before, any URL
+  could be loaded in the logged-in WebView, because the start page doesn't pass through
+  the request interceptor. The "is this Facebook" check also no longer accepts a Facebook
+  address in the user-info part (`https://facebook.com:443@other.example/` is
+  other.example). Covered by `AppLinkUrlTest`.
+- A Facebook link tapped in another app while Astryxbook is running now opens in the
+  running app (`singleTask`, `onNewIntent`) instead of starting a second copy with its own
+  WebView, page load and PiP state. Links opened this way go through the same Messages
+  routing as at launch. Covered by `LinkHandlingManifestTest`.
+- Android 12+: Facebook links open in the browser until the app is allowed to open them,
+  since facebook.com can't verify for a third-party app (the useless `autoVerify` is
+  gone). Settings has a new *Open Facebook links here* row that opens the system page
+  where you turn them on.
+- A download that Android refuses to save now says "Failed to save file" instead of
+  showing nothing.
 - Two cold-start crashes ("WebView is not initialized"): the user-agent effect and the PiP
   layer refresh touched the WebView before it existed, which happens when the app starts
   with the screen off. Both now wait for it.
