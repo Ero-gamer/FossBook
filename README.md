@@ -57,6 +57,7 @@ Off by default (opt-in):
 *  Changes the text size, from 85% to 150% (Settings → *Text size*)
 *  Lets you access Messenger (Desktop layout only)
 *  Opens Messages inside the app on the desktop site, in its own layer over the feed, so Back returns you to where you were; it can turn to landscape for more room (Settings → *Messages in desktop mode*); links to a conversation keep it
+*  Makes Messenger voice and video calls from Messages (the camera and microphone are asked for on the first call, for Facebook only)
 *  Supports Picture-in-Picture playback with selectable portrait-window ratios
 *  Keeps a Picture-in-Picture video's audio playing when the screen locks
 *  Keeps the screen on while a video plays, or whenever the app is open (Settings → *Keep screen on*)
