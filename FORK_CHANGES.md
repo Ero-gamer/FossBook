@@ -163,6 +163,12 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   where you turn them on.
 - A download that Android refuses to save now says "Failed to save file" instead of
   showing nothing.
+- Video and reel downloads work again. Facebook plays videos through Media Source
+  Extensions, so the `<video>`'s source is a `blob:` URL the page can't fetch, and the
+  download button failed silently. The button now downloads the player's own MP4
+  (`data-video-url` on the `MVideo` container: one file with video and audio) and saves it
+  as `video/mp4`. When a video has no such file, or fetching it fails, the app says "This
+  video can't be downloaded".
 - Two cold-start crashes ("WebView is not initialized"): the user-agent effect and the PiP
   layer refresh touched the WebView before it existed, which happens when the app starts
   with the screen off. Both now wait for it.
