@@ -57,7 +57,8 @@ import com.eepiemi.materialbook.utils.externalLinkAction
 import com.eepiemi.materialbook.utils.FullscreenController
 import com.eepiemi.materialbook.utils.appOrientation
 import com.eepiemi.materialbook.utils.appWebViewParams
-import com.eepiemi.materialbook.utils.jsBridge.ClipboardBridge
+import com.eepiemi.materialbook.utils.clearWebData
+import com.eepiemi.materialbook.utils.jsBridge.installClipboardBridge
 import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
 import com.eepiemi.materialbook.utils.jsBridge.MaterialbookSettings
 import com.eepiemi.materialbook.utils.jsBridge.ThemeChange
@@ -777,6 +778,7 @@ fun MaterialbookWebView(
     openLinkRequest: OpenLinkRequest? = null,
     onPipHandoffRead: (String?) -> Unit = {},
     onPipPageVisible: () -> Unit = {},
+    isAppLocked: Boolean = false,
     onVideoPlayingChanged: (Boolean, Int, Int) -> Unit = { _, _, _ -> }
 ) {
     val context = LocalContext.current
@@ -1283,6 +1285,12 @@ fun MaterialbookWebView(
                 )
                 navigator.reload()
             },
+            onLogOut = {
+                messagesLayerUrl = null
+                clearWebData(context, runCatching { state.nativeWebView }.getOrNull()) {
+                    navigator.loadUrl(HOME_URL)
+                }
+            },
             onSharePage = {
                 // The page on screen (the Messages layer's while it's open); the WebView's own
                 // URL follows Facebook's in-page navigation, lastLoadedUrl may not.
@@ -1298,6 +1306,19 @@ fun MaterialbookWebView(
                 }
             }
         )
+    }
+
+    // App lock covers the Compose content only: leave what sits above it (a fullscreen
+    // video on the decor view, the Settings dialog's own window) when it locks.
+    LaunchedEffect(isAppLocked) {
+        if (isAppLocked) {
+            fullscreen.hide()
+            if (settingsToggle) {
+                setWindow(settingsVM.immersiveMode.value)
+                viewModel.setThemeColor(originalColor.value)
+                settingsToggle = false
+            }
+        }
     }
 
     LaunchedEffect(settingsToggle) {
@@ -1419,11 +1440,9 @@ fun MaterialbookWebView(
                     ThemeChange { if (!settingsToggle) viewModel.setThemeColor(Color(it)) },
                     "ThemeBridge"
                 )
+                // Download and copy to clipboard: Facebook's own main frame only.
                 installDownloadBridge(this, context)
-                addJavascriptInterface(
-                    ClipboardBridge(context),
-                    "ClipboardBridge"
-                )
+                installClipboardBridge(this, context)
                 addJavascriptInterface(
                     MaterialYouBridge(primaryColor, onPrimaryColor),
                     "MaterialYouBridge"
