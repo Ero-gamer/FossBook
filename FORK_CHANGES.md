@@ -77,6 +77,10 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
 
 ## WebView
 
+- Security: page scripts fetched from GitHub at launch are now checked against the
+  copy bundled in the app (SHA-256). A script that doesn't match is rejected and the
+  bundled one runs, so a bad push to `main` can no longer inject code into every
+  user's logged-in Facebook page. Script updates now arrive with app updates.
 - Settings while watching reels: the Reels viewer has its own top bar instead of
   Facebook's header, where the app's Settings button lives, so Settings couldn't be
   opened from there. `scripts.js` now adds a Settings button at the right end of that

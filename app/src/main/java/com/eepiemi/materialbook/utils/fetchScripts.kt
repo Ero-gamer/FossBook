@@ -9,6 +9,7 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withTimeoutOrNull
+import java.security.MessageDigest
 
 
 const val SCRIPT_SRC = "https://raw.githubusercontent.com/ofirc73/AstryxBook/refs/heads/main/app/src/main/res/raw/"
@@ -25,6 +26,20 @@ const val SCRIPT_SRC = "https://raw.githubusercontent.com/ofirc73/AstryxBook/ref
 // straight back to the bundled resource, same as any other fetch failure
 // already did.
 internal const val FETCH_TIMEOUT_MS = 1000L
+
+// A fetched script runs inside the logged-in Facebook page with every native
+// bridge, so anyone who could push to main would otherwise get code execution
+// in every installed app on its next launch. A fetched script is only used
+// when its SHA-256 matches the copy bundled in the (signed) APK; anything else
+// is rejected in favour of that bundled copy. Line endings are normalised
+// first, so a Windows checkout with CRLF files still matches GitHub's LF copy.
+internal fun scriptSha256(content: String): String =
+    MessageDigest.getInstance("SHA-256")
+        .digest(content.replace("\r\n", "\n").toByteArray(Charsets.UTF_8))
+        .joinToString("") { "%02x".format(it) }
+
+internal fun isTrustedScript(fetched: String, bundled: String): Boolean =
+    scriptSha256(fetched) == scriptSha256(bundled)
 
 data class Script(
     val isEnabled: Boolean,
@@ -49,7 +64,8 @@ suspend fun fetchScripts(
                     }
                 }.getOrNull()
             }
-            fetched ?: fallbackContent(script.resourceId)
+            val bundled = fallbackContent(script.resourceId)
+            if (fetched != null && isTrustedScript(fetched, bundled)) fetched else bundled
         }
     }
     // async preserves list order regardless of completion order, so the

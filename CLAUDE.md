@@ -44,9 +44,10 @@ user-visible change.
   and effects instead of editing focus mode.
 - The page scripts in `res/raw` (except the PiP ones loaded directly in
   `MaterialbookWV.kt`) are fetched at runtime from `main` on GitHub
-  (`SCRIPT_SRC` in `fetchScripts.kt`), falling back to the bundled copy. A
-  push to `main` changes them in every installed app on its next launch, and
-  a local build still runs `main`'s version of a script that exists there.
+  (`SCRIPT_SRC` in `fetchScripts.kt`), but a fetched copy is used only when its
+  SHA-256 (line endings normalised) matches the copy bundled in the APK;
+  otherwise the bundled copy runs. So a push to `main` no longer changes
+  scripts in installed apps: script changes ship with an app release.
 - Messages in desktop mode opens `MessagesLayer` (`ui/screens/MessagesLayer.kt`), a
   second WebView with the desktop user agent over the main one. The main view never
   switches user agent for Messages; Facebook pages opened from a chat stay in the layer
