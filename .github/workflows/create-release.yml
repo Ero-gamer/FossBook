@@ -72,11 +72,13 @@ jobs:
 
   # Computes the single tag used everywhere downstream, regardless of which
   # of the 3 trigger paths fired: compute-version's output (auto-bump path),
-  # else the workflow_dispatch input, else the pushed tag itself. needs:
-  # compute-version works even when that job is skipped (skipped counts as
-  # satisfied for a needs: gate, and its outputs resolve to empty string).
+  # else the workflow_dispatch input, else the pushed tag itself. A job whose
+  # needs: was skipped is skipped too, so the if: lets this run on paths 2
+  # and 3, where compute-version is skipped (its outputs resolve to empty
+  # string); it still stops when compute-version fails.
   resolve-version:
     needs: compute-version
+    if: ${{ !failure() && !cancelled() }}
     runs-on: ubuntu-26.04
     outputs:
       tag: ${{ steps.resolve.outputs.tag }}
