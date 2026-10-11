@@ -151,7 +151,7 @@ fun MessagesLayer(
     }
 
     // PiP for videos in the layer (a shared reel, a video in a chat): the same detector as the
-    // main view reports them through PipBridge, and while the layer is open PiP acts on its
+    // main view reports them (AstryxPage, or PipBridge on old WebViews), and while the layer is open PiP acts on its
     // page. When it closes, its videos are gone: say so, or leaving the app afterwards would
     // still count as "video playing".
     LaunchedEffect(loadingState, pipEnabled) {
