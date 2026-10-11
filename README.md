@@ -59,10 +59,14 @@ Off by default (opt-in):
 *  Supports Picture-in-Picture playback with selectable portrait-window ratios
 *  Keeps a Picture-in-Picture video's audio playing when the screen locks
 *  Keeps the screen on while a video plays, or whenever the app is open (Settings → *Keep screen on*)
+*  Locks the app with your fingerprint, face or screen lock, and hides it in Recents (Settings → *App lock*)
+*  Uses only the page scripts built into the app, without checking GitHub for updates
 
 Always on:
 *  Supports real fullscreen video, including landscape, from Facebook's fullscreen button
    (on phones the app otherwise stays in portrait, apart from Messages, since Facebook's mobile site breaks in landscape)
+*  Runs only page-script updates signed by the maintainer; keeps your Facebook login out of backups; only Facebook's own pages can save files
+*  One-tap *Log out and clear data* in Settings
 *  Supports English, Arabic, Bengali, German, Hebrew (`עברית`), Italian, Spanish, French, Portuguese, and Traditional Chinese
 *  And more!
 

@@ -54,10 +54,10 @@ import com.eepiemi.materialbook.utils.ExternalRequestInterceptor
 import com.eepiemi.materialbook.utils.FullscreenController
 import com.eepiemi.materialbook.utils.appOrientation
 import com.eepiemi.materialbook.utils.appWebViewParams
-import com.eepiemi.materialbook.utils.jsBridge.ClipboardBridge
-import com.eepiemi.materialbook.utils.jsBridge.DownloadBridge
+import com.eepiemi.materialbook.utils.clearWebData
 import com.eepiemi.materialbook.utils.jsBridge.MaterialbookSettings
 import com.eepiemi.materialbook.utils.jsBridge.ThemeChange
+import com.eepiemi.materialbook.utils.jsBridge.installMediaBridge
 import com.eepiemi.materialbook.utils.jsBridge.MaterialYouBridge
 import com.eepiemi.materialbook.utils.jsBridge.PipBridge
 import com.eepiemi.materialbook.utils.jsBridge.ScreenBridge
@@ -65,6 +65,7 @@ import com.eepiemi.materialbook.audio.PipHandback
 import com.eepiemi.materialbook.utils.effectiveDesktop
 import com.eepiemi.materialbook.utils.fbRedirectSanitizer
 import com.eepiemi.materialbook.utils.intentFallbackUrl
+import com.eepiemi.materialbook.utils.isLaunchableExternalUrl
 import com.eepiemi.materialbook.utils.KeepScreenOn
 import com.eepiemi.materialbook.utils.messagesDesktopUrl
 import com.eepiemi.materialbook.utils.rememberAutoDesktop
@@ -764,6 +765,7 @@ fun MaterialbookWebView(
     pipHandback: PipHandback? = null,
     onPipHandoffRead: (String?) -> Unit = {},
     onPipPageVisible: () -> Unit = {},
+    isAppLocked: Boolean = false,
     onVideoPlayingChanged: (Boolean, Int, Int) -> Unit = { _, _, _ -> }
 ) {
     val context = LocalContext.current
@@ -785,7 +787,12 @@ fun MaterialbookWebView(
             externalUrl
         }
         runCatching {
-            context.startActivity(Intent(Intent.ACTION_VIEW, requireNotNull(target).toUri()))
+            // Only links a web page may open (no file:, content:, ...), and only in apps that
+            // accept links from the web (CATEGORY_BROWSABLE).
+            val uri = requireNotNull(target?.takeIf { isLaunchableExternalUrl(it) }).toUri()
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE)
+            )
         }.onFailure {
             Toast.makeText(
                 context,
@@ -1216,8 +1223,27 @@ fun MaterialbookWebView(
                     settings = settingsVM
                 )
                 navigator.reload()
+            },
+            onLogOut = {
+                messagesLayerUrl = null
+                clearWebData(context, runCatching { state.nativeWebView }.getOrNull()) {
+                    navigator.loadUrl("https://facebook.com/")
+                }
             }
         )
+    }
+
+    // App lock covers the Compose content only: leave what sits above it (a fullscreen
+    // video on the decor view, the Settings dialog's own window) when it locks.
+    LaunchedEffect(isAppLocked) {
+        if (isAppLocked) {
+            fullscreen.hide()
+            if (settingsToggle) {
+                setWindow(settingsVM.immersiveMode.value)
+                viewModel.setThemeColor(originalColor.value)
+                settingsToggle = false
+            }
+        }
     }
 
     LaunchedEffect(settingsToggle) {
@@ -1337,14 +1363,8 @@ fun MaterialbookWebView(
                     ThemeChange { if (!settingsToggle) viewModel.setThemeColor(Color(it)) },
                     "ThemeBridge"
                 )
-                addJavascriptInterface(
-                    DownloadBridge(context),
-                    "DownloadBridge"
-                )
-                addJavascriptInterface(
-                    ClipboardBridge(context),
-                    "ClipboardBridge"
-                )
+                // Download and copy to clipboard: Facebook's own main frame only.
+                installMediaBridge(this, context)
                 addJavascriptInterface(
                     MaterialYouBridge(primaryColor, onPrimaryColor),
                     "MaterialYouBridge"

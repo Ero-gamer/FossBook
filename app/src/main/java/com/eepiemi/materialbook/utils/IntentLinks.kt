@@ -27,3 +27,22 @@ private val FACEBOOK_WEB_URL =
  * a subdomain); outbound l./lm.facebook.com redirects and everything else go to the system.
  */
 fun isFacebookWebUrl(url: String): Boolean = FACEBOOK_WEB_URL.containsMatchIn(url)
+
+// Schemes that point at data on this device or run code in the page: handed to ACTION_VIEW
+// they would open (and grant access to) local content instead of a web page or another
+// app's public link. intent: is handled by intentFallbackUrl.
+private val BLOCKED_EXTERNAL_SCHEMES = setOf(
+    "file", "content", "javascript", "data", "blob", "about", "android-app", "intent",
+    "chrome", "chrome-extension", "filesystem", "view-source",
+)
+private val URL_SCHEME = Regex("""^([a-zA-Z][a-zA-Z0-9+.-]*):""")
+
+/**
+ * Whether a link the page navigates to may be handed to another app (the browser, the
+ * dialer, a store or messaging app). The intent also carries CATEGORY_BROWSABLE, so only
+ * apps that accept links from web pages can receive it.
+ */
+fun isLaunchableExternalUrl(url: String): Boolean {
+    val scheme = URL_SCHEME.find(url.trim())?.groupValues?.get(1)?.lowercase() ?: return false
+    return scheme !in BLOCKED_EXTERNAL_SCHEMES
+}

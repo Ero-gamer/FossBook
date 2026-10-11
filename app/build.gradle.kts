@@ -19,6 +19,84 @@ kotlin {
     }
 }
 
+// ---- Script signing ----
+// Page scripts fetched from GitHub at runtime must be signed (see ScriptSignature.kt). The
+// private key stays with the maintainer, outside the repository; only the public key and
+// the signatures are committed.
+//   One-time:  ./gradlew generateScriptSigningKey -PscriptSigningKey=<path outside the repo, e.g. ~/keys/astryxbook-scripts.pk8>
+//   After every change to res/raw/*.js:  ./gradlew signScripts -PscriptSigningKey=<same path>
+// ScriptSignaturesTest fails while a script is unsigned or its signature is stale.
+val SCRIPT_SIGNING_PUBLIC_KEY_FILE = "script-signing-key.pub"
+val SCRIPT_SIGNATURES_DIR = "src/main/script-signatures"
+val SCRIPT_SIGNING_MESSAGE_PREFIX = "astryxbook-script-v1\n" // same as ScriptSignature.kt
+
+tasks.register("generateScriptSigningKey") {
+    group = "script signing"
+    description = "Creates the page-script signing key pair (-PscriptSigningKey=<private key file>)."
+    val privateKeyPath = providers.gradleProperty("scriptSigningKey")
+    val publicKeyFile = layout.projectDirectory.file(SCRIPT_SIGNING_PUBLIC_KEY_FILE).asFile
+    val repoDir = rootProject.layout.projectDirectory.asFile
+    doLast {
+        val privateKeyFile = File(privateKeyPath.orNull ?: error("Pass -PscriptSigningKey=<private key file>"))
+        check(!privateKeyFile.exists()) { "$privateKeyFile already exists; not overwriting it" }
+        check(!privateKeyFile.canonicalPath.startsWith(repoDir.canonicalPath + File.separator)) {
+            "Keep the private key outside the repository (got $privateKeyFile)"
+        }
+        val generator = java.security.KeyPairGenerator.getInstance("EC")
+        generator.initialize(java.security.spec.ECGenParameterSpec("secp256r1"))
+        val pair = generator.generateKeyPair()
+        val encoder = java.util.Base64.getEncoder()
+        privateKeyFile.absoluteFile.parentFile.mkdirs()
+        privateKeyFile.writeText(encoder.encodeToString(pair.private.encoded) + "\n")
+        publicKeyFile.writeText(encoder.encodeToString(pair.public.encoded) + "\n")
+        println("Private key: $privateKeyFile (keep it out of the repository and back it up)")
+        println("Public key:  $publicKeyFile (commit it)")
+    }
+}
+
+tasks.register("signScripts") {
+    group = "script signing"
+    description = "Signs every res/raw/*.js page script (-PscriptSigningKey=<private key file>)."
+    val privateKeyPath = providers.gradleProperty("scriptSigningKey")
+    val rawDir = layout.projectDirectory.dir("src/main/res/raw").asFile
+    val signaturesDir = layout.projectDirectory.dir(SCRIPT_SIGNATURES_DIR).asFile
+    val publicKeyFile = layout.projectDirectory.file(SCRIPT_SIGNING_PUBLIC_KEY_FILE).asFile
+    val messagePrefix = SCRIPT_SIGNING_MESSAGE_PREFIX
+    doLast {
+        val privateKeyFile = File(privateKeyPath.orNull ?: error("Pass -PscriptSigningKey=<private key file>"))
+        val decoder = java.util.Base64.getDecoder()
+        val keyFactory = java.security.KeyFactory.getInstance("EC")
+        val privateKey = keyFactory.generatePrivate(
+            java.security.spec.PKCS8EncodedKeySpec(decoder.decode(privateKeyFile.readText().trim()))
+        )
+        val publicKey = keyFactory.generatePublic(
+            java.security.spec.X509EncodedKeySpec(decoder.decode(publicKeyFile.readText().trim()))
+        )
+        signaturesDir.mkdirs()
+        signaturesDir.listFiles { f -> f.name.endsWith(".sig") }?.forEach { it.delete() }
+        val scripts = rawDir.listFiles { f -> f.name.endsWith(".js") }.orEmpty().sortedBy { it.name }
+        scripts.forEach { script ->
+            val message = (messagePrefix + script.name + "\n" + script.readText().replace("\r\n", "\n"))
+                .toByteArray(Charsets.UTF_8)
+            val signature = java.security.Signature.getInstance("SHA256withECDSA").run {
+                initSign(privateKey)
+                update(message)
+                sign()
+            }
+            // Checked against the committed public key, so a mismatched key pair fails here.
+            val verified = java.security.Signature.getInstance("SHA256withECDSA").run {
+                initVerify(publicKey)
+                update(message)
+                verify(signature)
+            }
+            check(verified) { "The private key doesn't match $publicKeyFile" }
+            File(signaturesDir, script.name + ".sig")
+                .writeText(java.util.Base64.getEncoder().encodeToString(signature) + "\n")
+        }
+        println("Signed ${scripts.size} scripts into $signaturesDir")
+    }
+}
+
 extensions.configure<ApplicationExtension> {
     namespace = "com.eepiemi.materialbook"
     compileSdk = 36
@@ -51,6 +129,13 @@ extensions.configure<ApplicationExtension> {
         }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Public half of the page-script signing key (see "Script signing" below). Without
+        // it the app never fetches scripts and always runs the bundled copies.
+        val scriptSigningPublicKey = providers
+            .fileContents(layout.projectDirectory.file(SCRIPT_SIGNING_PUBLIC_KEY_FILE))
+            .asText.orNull?.trim().orEmpty()
+        buildConfigField("String", "SCRIPT_SIGNING_PUBLIC_KEY", "\"$scriptSigningPublicKey\"")
     }
 
     buildTypes {
@@ -109,6 +194,9 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.webkit)
+    implementation(libs.androidx.biometric)
+    // BiometricPrompt needs a FragmentActivity; pinned so biometric's old fragment 1.2 isn't used.
+    implementation(libs.androidx.fragment.ktx)
     testImplementation(libs.playwright)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

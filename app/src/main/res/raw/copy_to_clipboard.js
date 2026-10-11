@@ -128,14 +128,18 @@
     fetch(url)
       .then(response => response.blob())
       .then(blob => {
-        if (window.ClipboardBridge && window.ClipboardBridge.copyImageToClipboard) {
+        // AstryxMedia (Facebook's main frame only) on current app versions; the
+        // ClipboardBridge interface on older ones and on WebViews before 82.
+        if (window.AstryxMedia || (window.ClipboardBridge && window.ClipboardBridge.copyImageToClipboard)) {
           const reader = new FileReader();
           reader.onloadend = function() {
             if (reader.result) {
-              window.ClipboardBridge.copyImageToClipboard(
-                reader.result,
-                blob.type || "image/jpeg"
-              );
+              const type = blob.type || "image/jpeg";
+              if (window.AstryxMedia) {
+                window.AstryxMedia.postMessage("copy\n" + type + "\n" + reader.result);
+              } else {
+                window.ClipboardBridge.copyImageToClipboard(reader.result, type);
+              }
             }
           };
           reader.readAsDataURL(blob);

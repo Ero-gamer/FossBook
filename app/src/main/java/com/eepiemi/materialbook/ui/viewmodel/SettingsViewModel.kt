@@ -6,6 +6,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.eepiemi.materialbook.data.local.SettingsDataStore
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.AMOLED_BLACK
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.APP_LOCK
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.BUNDLED_SCRIPTS_ONLY
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DESKTOP_LAYOUT
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_COPY_TO_CLIPBOARD
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_DOWNLOAD_CONTENT
@@ -24,6 +26,7 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_LOCKS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_PORTRAIT_RATIO
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REMOVE_ADS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.STICKY_NAVBAR
+import com.eepiemi.materialbook.utils.AppLock
 import com.eepiemi.materialbook.utils.KeepScreenOn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
@@ -139,6 +142,17 @@ class SettingsViewModel(
         initialValue = initialPrefs[KEEP_SCREEN_ON] ?: KeepScreenOn.OFF,
         started = SharingStarted.WhileSubscribed()
     )
+    val bundledScriptsOnly = dataStore.bundledScriptsOnly.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[BUNDLED_SCRIPTS_ONLY] ?: false,
+        started = SharingStarted.WhileSubscribed()
+    )
+    // Eagerly: MainActivity reads it in onStart, with nothing collecting it.
+    val appLock = dataStore.appLock.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[APP_LOCK] ?: AppLock.OFF,
+        started = SharingStarted.Eagerly
+    )
 
     fun setRemoveAds(removeAds: Boolean) {
         viewModelScope.launch {
@@ -251,6 +265,18 @@ class SettingsViewModel(
     fun setKeepScreenOn(mode: String) {
         viewModelScope.launch {
             dataStore.setKeepScreenOn(mode)
+        }
+    }
+
+    fun setBundledScriptsOnly(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.setBundledScriptsOnly(enabled)
+        }
+    }
+
+    fun setAppLock(mode: String) {
+        viewModelScope.launch {
+            dataStore.setAppLock(mode)
         }
     }
 

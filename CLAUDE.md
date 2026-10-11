@@ -47,6 +47,11 @@ user-visible change.
   (`SCRIPT_SRC` in `fetchScripts.kt`), falling back to the bundled copy. A
   push to `main` changes them in every installed app on its next launch, and
   a local build still runs `main`'s version of a script that exists there.
+  Only signed scripts are used (`ScriptSignature.kt`): after changing any `res/raw/*.js`,
+  run `.\gradlew.bat signScripts "-PscriptSigningKey=<private key>"` and commit
+  `app/src/main/script-signatures/` with it (`ScriptSignaturesTest` checks). The private
+  key never goes in the repo. Builds without `app/script-signing-key.pub` use only the
+  bundled scripts.
 - Messages in desktop mode opens `MessagesLayer` (`ui/screens/MessagesLayer.kt`), a
   second WebView with the desktop user agent over the main one. The main view never
   switches user agent for Messages; Facebook pages opened from a chat stay in the layer

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.Message
 import androidx.compose.material.icons.filled.BurstMode
 import androidx.compose.material.icons.filled.Camera
@@ -20,22 +21,26 @@ import androidx.compose.material.icons.filled.Padding
 import androidx.compose.material.icons.filled.Try
 import androidx.compose.material.icons.outlined.AspectRatio
 import androidx.compose.material.icons.outlined.Circle
+import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.DesktopWindows
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PanoramaWideAngle
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
 import androidx.compose.material.icons.outlined.Pinch
 import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,16 +58,21 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.eepiemi.materialbook.R
 import com.eepiemi.materialbook.ui.viewmodel.SettingsViewModel
+import com.eepiemi.materialbook.utils.AppLock
 import com.eepiemi.materialbook.utils.KeepScreenOn
+import com.eepiemi.materialbook.utils.canUseAppLock
 import com.eepiemi.materialbook.utils.effectiveDesktop
 import com.eepiemi.materialbook.utils.rememberAutoDesktop
 
 @Composable
 fun SettingsContent(
     modifier: Modifier,
-    viewModel: SettingsViewModel = viewModel()
+    viewModel: SettingsViewModel = viewModel(),
+    onLogOut: () -> Unit = {},
 ) {
     var isOpenDialog by rememberSaveable { mutableStateOf(false) }
+    var isAppLockDialog by rememberSaveable { mutableStateOf(false) }
+    var isLogOutDialog by rememberSaveable { mutableStateOf(false) }
     var isPipRatioDialog by rememberSaveable { mutableStateOf(false) }
     var isKeepScreenOnDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -80,6 +91,12 @@ fun SettingsContent(
     val pipPortraitRatio = viewModel.pipPortraitRatio.collectAsState()
     val keepScreenOn = viewModel.keepScreenOn.collectAsState()
     val keepScreenOnLabels = KeepScreenOn.ALL.associateWith { keepScreenOnLabel(it) }
+    val appLock = viewModel.appLock.collectAsState()
+    val appLockLabels = AppLock.ALL.associateWith { appLockLabel(it) }
+    val bundledScriptsOnly = viewModel.bundledScriptsOnly.collectAsState()
+    // Checked on each composition: the user may set a screen lock and come back.
+    val context = LocalContext.current
+    val appLockAvailable = canUseAppLock(context)
 
     val isAutoDesktop = rememberAutoDesktop()
 
@@ -223,6 +240,76 @@ fun SettingsContent(
             )
         }
 
+        SettingsGroup(
+            items = listOf(
+                SettingsItem(
+                    icon = Icons.Outlined.Lock,
+                    title = stringResource(R.string.app_lock_title),
+                    supportingText = when {
+                        appLockAvailable -> appLockLabels[appLock.value] ?: appLockLabels.getValue(AppLock.OFF)
+                        else -> stringResource(R.string.app_lock_unavailable)
+                    },
+                    isActive = null,
+                    onClick = { if (appLockAvailable) isAppLockDialog = true }
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.CloudOff,
+                    title = stringResource(R.string.bundled_scripts_only_title),
+                    supportingText = stringResource(R.string.bundled_scripts_only_summary),
+                    isActive = bundledScriptsOnly.value,
+                    onClick = { viewModel.setBundledScriptsOnly(!bundledScriptsOnly.value) }
+                ),
+                SettingsItem(
+                    icon = Icons.AutoMirrored.Outlined.Logout,
+                    title = stringResource(R.string.log_out_title),
+                    supportingText = stringResource(R.string.log_out_summary),
+                    isActive = null,
+                    onClick = { isLogOutDialog = true }
+                )
+            )
+        )
+
+    }
+
+    if (isAppLockDialog) {
+        ChoiceDialog(
+            title = stringResource(R.string.app_lock_title),
+            options = appLockLabels,
+            current = appLock.value,
+            onSelect = { mode ->
+                viewModel.setAppLock(mode)
+                @Suppress("AssignedValueIsNeverRead")
+                isAppLockDialog = false
+            },
+            onDismiss = {
+                @Suppress("AssignedValueIsNeverRead")
+                isAppLockDialog = false
+            }
+        )
+    }
+
+    if (isLogOutDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                @Suppress("AssignedValueIsNeverRead")
+                isLogOutDialog = false
+            },
+            title = { Text(stringResource(R.string.log_out_confirm_title)) },
+            text = { Text(stringResource(R.string.log_out_confirm_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    @Suppress("AssignedValueIsNeverRead")
+                    isLogOutDialog = false
+                    onLogOut()
+                }) { Text(stringResource(R.string.log_out_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    @Suppress("AssignedValueIsNeverRead")
+                    isLogOutDialog = false
+                }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
     }
 
     if (isOpenDialog) {
@@ -397,6 +484,15 @@ private fun pipRatioLabel(ratio: String): String = when (ratio) {
     "3:4"  -> stringResource(R.string.pip_ratio_3_4)
     "9:16" -> stringResource(R.string.pip_ratio_9_16)
     else   -> ratio
+}
+
+@Composable
+private fun appLockLabel(mode: String): String = when (mode) {
+    AppLock.IMMEDIATELY -> stringResource(R.string.app_lock_immediately)
+    AppLock.AFTER_1_MIN -> stringResource(R.string.app_lock_after_1_min)
+    AppLock.AFTER_5_MIN -> stringResource(R.string.app_lock_after_5_min)
+    AppLock.AFTER_15_MIN -> stringResource(R.string.app_lock_after_15_min)
+    else -> stringResource(R.string.app_lock_off)
 }
 
 @Composable

@@ -25,13 +25,12 @@ import com.eepiemi.materialbook.utils.DESKTOP_USER_AGENT
 import com.eepiemi.materialbook.utils.FullscreenController
 import com.eepiemi.materialbook.utils.MessagesLayerRoute
 import com.eepiemi.materialbook.utils.appWebViewParams
-import com.eepiemi.materialbook.utils.jsBridge.ClipboardBridge
-import com.eepiemi.materialbook.utils.jsBridge.DownloadBridge
 import com.eepiemi.materialbook.utils.jsBridge.LayerBridge
 import com.eepiemi.materialbook.utils.jsBridge.MaterialYouBridge
 import com.eepiemi.materialbook.utils.jsBridge.MaterialbookSettings
 import com.eepiemi.materialbook.utils.jsBridge.PipBridge
 import com.eepiemi.materialbook.utils.jsBridge.ScreenBridge
+import com.eepiemi.materialbook.utils.jsBridge.installMediaBridge
 import com.eepiemi.materialbook.utils.messagesLayerExit
 import com.eepiemi.materialbook.utils.messagesLayerRoute
 import com.multiplatform.webview.request.RequestInterceptor
@@ -194,8 +193,7 @@ fun MessagesLayer(
                     }
                 }
                 webView.apply {
-                    addJavascriptInterface(DownloadBridge(context), "DownloadBridge")
-                    addJavascriptInterface(ClipboardBridge(context), "ClipboardBridge")
+                    installMediaBridge(this, context)
                     addJavascriptInterface(MaterialYouBridge(primaryColor, onPrimaryColor), "MaterialYouBridge")
                     addJavascriptInterface(
                         PipBridge(

@@ -6,9 +6,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.eepiemi.materialbook.BuildConfig
 import com.eepiemi.materialbook.R
 import com.eepiemi.materialbook.utils.Script
 import com.eepiemi.materialbook.utils.fetchScripts
+import com.eepiemi.materialbook.utils.parseScriptSigningKey
 import kotlinx.coroutines.launch
 
 
@@ -19,6 +21,8 @@ class MainViewModel(
 
     private val _themeColor = mutableStateOf(Color.Transparent)
     val themeColor: State<Color> = _themeColor
+
+    private val scriptSigningKey = parseScriptSigningKey(BuildConfig.SCRIPT_SIGNING_PUBLIC_KEY)
 
     private val _scripts = mutableStateOf<String?>(null)
     val scripts: State<String?> = _scripts
@@ -70,7 +74,8 @@ class MainViewModel(
                     fallbackContent = { resId ->
                         resources.openRawResource(resId).bufferedReader()
                             .use { it.readText() }
-                    }
+                    },
+                    publicKey = if (settings.bundledScriptsOnly.value) null else scriptSigningKey
                 )
         }
     }

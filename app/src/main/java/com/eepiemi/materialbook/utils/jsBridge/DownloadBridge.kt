@@ -21,6 +21,15 @@ class DownloadBridge(private val context: Context) {
     @Suppress("unused")
     fun downloadBase64File(base64Data: String, mimeType: String) {
         runCatching {
+            // An app package in Downloads is one tap from the installer: never save one.
+            if (isBlockedDownloadType(mimeType)) {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.failed_to_save_file),
+                    Toast.LENGTH_SHORT
+                ).show()
+                return
+            }
             if (!base64Data.contains(",")) {
                 Toast.makeText(
                     context,
@@ -109,3 +118,10 @@ class DownloadBridge(private val context: Context) {
         }
     }
 }
+
+/**
+ * Android app packages. The file's extension comes from its MIME type (MimeTypeMap), and
+ * this is the type that maps to .apk.
+ */
+fun isBlockedDownloadType(mimeType: String): Boolean =
+    mimeType.substringBefore(';').trim().equals("application/vnd.android.package-archive", ignoreCase = true)

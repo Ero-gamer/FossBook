@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Strings for this fork's privacy and security settings (app lock, bundled scripts,
+  log out). Kept out of strings.xml, upstream's translation file, for the same reason as
+  brand_strings.xml: fewer merge conflicts on every upstream sync.
+-->
+<resources>
+    <string name="app_lock_title">App lock</string>
+    <string name="app_lock_off">Off</string>
+    <string name="app_lock_immediately">Lock as soon as I leave</string>
+    <string name="app_lock_after_1_min">Lock after 1 minute away</string>
+    <string name="app_lock_after_5_min">Lock after 5 minutes away</string>
+    <string name="app_lock_after_15_min">Lock after 15 minutes away</string>
+    <string name="app_lock_unavailable">Set a screen lock on this device to use app lock</string>
+    <string name="app_lock_locked">%1$s is locked</string>
+    <string name="app_lock_unlock">Unlock</string>
+    <string name="app_lock_prompt_title">Unlock %1$s</string>
+
+    <string name="bundled_scripts_only_title">Use bundled scripts only</string>
+    <string name="bundled_scripts_only_summary">Don\'t download script updates from GitHub; use the versions built into this app</string>
+
+    <string name="log_out_title">Log out and clear data</string>
+    <string name="log_out_summary">Remove the Facebook login, cookies, cache and site data from this app</string>
+    <string name="log_out_confirm_title">Log out and clear data?</string>
+    <string name="log_out_confirm_text">You\'ll be logged out of Facebook in this app, and its cookies, cache and site data will be deleted. Your settings are kept.</string>
+    <string name="log_out_confirm">Log out</string>
+    <string name="cancel">Cancel</string>
+</resources>

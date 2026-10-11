@@ -5,9 +5,15 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import com.eepiemi.materialbook.R
+import com.eepiemi.materialbook.utils.jsBridge.FACEBOOK_ORIGIN_RULES
+import com.eepiemi.materialbook.utils.jsBridge.MEDIA_BRIDGE_NAME
+import com.eepiemi.materialbook.utils.jsBridge.MediaRequest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.concurrent.CountDownLatch
@@ -23,11 +29,16 @@ import java.util.concurrent.TimeUnit
 @RunWith(AndroidJUnit4::class)
 class FileDownloadJsTest {
 
-    private class Harness {
+    /**
+     * [viaMediaBridge]: the page gets AstryxMedia (a web message listener for Facebook's
+     * origins, as the app installs it) instead of the DownloadBridge JS interface.
+     */
+    private class Harness(private val viaMediaBridge: Boolean = false) {
         lateinit var webView: WebView
             private set
 
         val downloads = mutableListOf<String>()
+        val messages = mutableListOf<String>()
 
         inner class FakeDownloadBridge {
             @JavascriptInterface
@@ -42,14 +53,27 @@ class FileDownloadJsTest {
                 val context = InstrumentationRegistry.getInstrumentation().targetContext
                 webView = WebView(context).apply {
                     settings.javaScriptEnabled = true
-                    addJavascriptInterface(FakeDownloadBridge(), "DownloadBridge")
+                    if (viaMediaBridge) {
+                        WebViewCompat.addWebMessageListener(
+                            this, MEDIA_BRIDGE_NAME, FACEBOOK_ORIGIN_RULES,
+                            WebViewCompat.WebMessageListener { _, message, _, _, _ ->
+                                val data = message.data.orEmpty()
+                                synchronized(downloads) {
+                                    messages.add(data)
+                                    MediaRequest.parse(data)?.let { downloads.add(it.mimeType) }
+                                }
+                            }
+                        )
+                    } else {
+                        addJavascriptInterface(FakeDownloadBridge(), "DownloadBridge")
+                    }
                     webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView, url: String) {
                             latch.countDown()
                         }
                     }
                     loadDataWithBaseURL(
-                        "https://example.com/",
+                        if (viaMediaBridge) "https://www.facebook.com/" else "https://example.com/",
                         "<html><body><p id='text'>hi</p></body></html>",
                         "text/html", "UTF-8", null
                     )
@@ -90,6 +114,27 @@ class FileDownloadJsTest {
 
     private val makeBlobUrl =
         "window.__url = URL.createObjectURL(new Blob(['x'], { type: 'image/png' }));"
+
+    @Test
+    fun downloadLink_postsToMediaBridge_whenTheAppProvidesIt() {
+        assumeTrue(WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER))
+        val h = Harness(viaMediaBridge = true)
+        h.load()
+
+        h.eval(makeBlobUrl)
+        h.eval(
+            """
+            var a = document.createElement('a');
+            a.href = window.__url;
+            a.download = 'photo.png';
+            a.click();
+            """.trimIndent()
+        )
+
+        assertEquals(1, h.downloadCountAfterSettling())
+        assertEquals("image/png", h.downloads.single())
+        assertTrue(h.messages.single().startsWith("download\nimage/png\ndata:image/png;base64,"))
+    }
 
     @Test
     fun creatingBlobUrls_doesNotDownload() {

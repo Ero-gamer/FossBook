@@ -1,6 +1,7 @@
 package com.eepiemi.materialbook.utils
 
 import androidx.annotation.RawRes
+import com.eepiemi.materialbook.BuildConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
@@ -9,6 +10,7 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withTimeoutOrNull
+import java.security.PublicKey
 
 
 const val SCRIPT_SRC = "https://raw.githubusercontent.com/ofirc73/AstryxBook/refs/heads/main/app/src/main/res/raw/"
@@ -32,22 +34,34 @@ data class Script(
     val scriptTitle: String
 )
 
+/**
+ * The enabled [scripts], concatenated in list order. Each one is fetched from [SCRIPT_SRC]
+ * with its signature from [SIGNATURE_SRC] and used only if the signature verifies against
+ * [publicKey] (see ScriptSignature.kt); otherwise, and on any network failure, the bundled
+ * copy is used. A null [publicKey] (no key built in, or "Use bundled scripts only") makes no
+ * network request at all.
+ */
 suspend fun fetchScripts(
     scripts: List<Script>,
     fallbackContent: (Int) -> String,
-    httpClient: HttpClient = HttpClient(OkHttp)
+    httpClient: HttpClient = HttpClient(OkHttp),
+    publicKey: PublicKey? = parseScriptSigningKey(BuildConfig.SCRIPT_SIGNING_PUBLIC_KEY),
 ): String = coroutineScope {
     val deferredContents = scripts.filter { it.isEnabled }.map { script ->
         async {
-            val fetched = withTimeoutOrNull(FETCH_TIMEOUT_MS) {
-                runCatching {
-                    val res = httpClient.get(SCRIPT_SRC + script.scriptTitle)
-                    if (res.status == HttpStatusCode.OK) {
-                        res.body() as String
-                    } else {
-                        throw Exception()
-                    }
-                }.getOrNull()
+            val fetched = publicKey?.let { key ->
+                withTimeoutOrNull(FETCH_TIMEOUT_MS) {
+                    // Its own scope: a failed fetch fails only this script, not the others.
+                    runCatching {
+                        coroutineScope {
+                            val content = async { fetchText(httpClient, SCRIPT_SRC + script.scriptTitle) }
+                            val signature = async { fetchText(httpClient, SIGNATURE_SRC + script.scriptTitle + ".sig") }
+                            normalizeScript(content.await()).takeIf {
+                                isScriptSignatureValid(script.scriptTitle, it, signature.await(), key)
+                            }
+                        }
+                    }.getOrNull()
+                }
             }
             fetched ?: fallbackContent(script.resourceId)
         }
@@ -58,4 +72,10 @@ suspend fun fetchScripts(
     buildString {
         deferredContents.forEach { append(it.await()) }
     }
+}
+
+private suspend fun fetchText(httpClient: HttpClient, url: String): String {
+    val res = httpClient.get(url)
+    if (res.status != HttpStatusCode.OK) throw Exception("HTTP ${res.status.value} for $url")
+    return res.body<ByteArray>().toString(Charsets.UTF_8)
 }

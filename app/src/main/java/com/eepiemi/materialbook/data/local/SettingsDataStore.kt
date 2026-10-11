@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.eepiemi.materialbook.utils.AppLock
 import com.eepiemi.materialbook.utils.KeepScreenOn
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -35,6 +36,8 @@ class SettingsDataStore(private val context: Context) {
         val PIP_PORTRAIT_RATIO = stringPreferencesKey("pip_portrait_ratio")
         val PIP_LOCKSCREEN_AUDIO = booleanPreferencesKey("pip_lockscreen_audio")
         val KEEP_SCREEN_ON = stringPreferencesKey("keep_screen_on")
+        val BUNDLED_SCRIPTS_ONLY = booleanPreferencesKey("bundled_scripts_only")
+        val APP_LOCK = stringPreferencesKey("app_lock")
 
         // Legacy: set by the old auto-desktop logic when it wrote desktop_layout
         // on the user's behalf. Only read by the migration below.
@@ -161,5 +164,18 @@ class SettingsDataStore(private val context: Context) {
     val keepScreenOn = context.dataStore.data.map { it[KEEP_SCREEN_ON] ?: KeepScreenOn.OFF }
     suspend fun setKeepScreenOn(mode: String) {
         context.dataStore.edit { it[KEEP_SCREEN_ON] = mode }
+    }
+
+    // Off by default: the page scripts are fetched from GitHub (signed, see fetchScripts).
+    // On, the app only runs the copies it was built with and makes no request for them.
+    val bundledScriptsOnly = context.dataStore.data.map { it[BUNDLED_SCRIPTS_ONLY] ?: false }
+    suspend fun setBundledScriptsOnly(enabled: Boolean) {
+        context.dataStore.edit { it[BUNDLED_SCRIPTS_ONLY] = enabled }
+    }
+
+    // One of AppLock's values; off by default.
+    val appLock = context.dataStore.data.map { it[APP_LOCK] ?: AppLock.OFF }
+    suspend fun setAppLock(mode: String) {
+        context.dataStore.edit { it[APP_LOCK] = mode }
     }
 }

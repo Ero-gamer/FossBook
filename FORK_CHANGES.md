@@ -374,6 +374,38 @@ layer); *Always* keeps it on whenever the app is on screen. It sets the view's
 `keepScreenOn`, so it never applies in the background and doesn't interfere
 with the window flag fullscreen video already sets.
 
+## Privacy and security
+
+- **Signed page scripts.** The page scripts fetched from GitHub at launch run inside your
+  logged-in Facebook session, so each one now has to carry a signature made with the
+  maintainer's offline key (ECDSA P-256), checked against the public key built into the
+  app. A script that is unsigned, altered, or signed for another script name isn't used;
+  the app runs its bundled copy instead, as it already did when a fetch failed. Builds
+  without a key never fetch scripts. Signatures live in `app/src/main/script-signatures/`
+  and are made with `./gradlew signScripts -PscriptSigningKey=<private key>` after every
+  change to `res/raw/*.js` (`ScriptSignaturesTest` fails until they are).
+- **Use bundled scripts only** (Settings, off by default): never fetch script updates;
+  the app also stops contacting GitHub at launch.
+- **Download and copy to clipboard only for Facebook itself.** The bridges were visible to
+  every frame of every page, so an ad or embedded iframe could save any file to Downloads
+  without a tap. They now take messages only from the main frame of a Facebook or
+  Messenger page (`AstryxMedia`, a web message listener). WebViews older than 82 keep the
+  old interface. Android app packages (`.apk`) are never saved.
+- **Links to other apps.** Only the page itself, not an iframe inside it, can open another
+  app. Links handed to Android carry `CATEGORY_BROWSABLE` (only apps that accept links
+  from the web can receive them), and `file:`, `content:`, `javascript:`, `data:` and
+  similar local schemes are never handed over.
+- **Backups leave out the Facebook login.** Google backup and phone-to-phone transfer no
+  longer include the WebView's data (cookies, site storage); your settings are still
+  backed up. After restoring to a new phone you log in again.
+- **App lock** (Settings, off by default): asks for your fingerprint, face or screen lock
+  when the app opens, and again after it's been out of sight for the time you pick (right
+  away, 1, 5 or 15 minutes). A video in PiP or playing on the lock screen keeps going
+  underneath. While it's on, Recents shows no preview of the page (Android 13+). Needs a
+  screen lock on the device.
+- **Log out and clear data** (Settings): removes the Facebook login, cookies, cache, site
+  storage and copied images from the app, keeping your settings.
+
 ## Known limitations
 
 - On Reels specifically, Facebook's own web player can re-pause a video

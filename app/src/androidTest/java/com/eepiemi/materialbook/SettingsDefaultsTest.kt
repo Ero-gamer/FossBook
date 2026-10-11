@@ -5,6 +5,8 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.eepiemi.materialbook.ui.viewmodel.SettingsViewModel
+import com.eepiemi.materialbook.utils.AppLock
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
@@ -72,6 +74,26 @@ class SettingsDefaultsTest {
         assertFalse(
             "pipLockscreenAudio should default to false",
             viewModel.pipLockscreenAudio.value
+        )
+    }
+
+    @Test
+    fun appLockIsOffByDefault() {
+        // A lock the user didn't ask for (on a device that may have no screen lock) would
+        // lock them out of their feed: opt-in.
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val viewModel = SettingsViewModel(app)
+        assertEquals(AppLock.OFF, viewModel.appLock.value)
+    }
+
+    @Test
+    fun bundledScriptsOnlyIsOffByDefault() {
+        // Signed script updates from GitHub stay on by default (they carry Facebook fixes).
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val viewModel = SettingsViewModel(app)
+        assertFalse(
+            "bundledScriptsOnly should default to false",
+            viewModel.bundledScriptsOnly.value
         )
     }
 }
