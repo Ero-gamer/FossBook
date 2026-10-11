@@ -323,6 +323,16 @@ separate layer was added on top.
   instead of the browser.
 - `MessagesDesktopTest` covers the URL helpers and the layer's routing.
 
+## Messenger calls
+
+- **Voice and video calls** in the Messages layer (Messages in desktop mode): the call
+  opens in the layer, and the first call asks Android for the camera and microphone. Only
+  Facebook's and Messenger's own `https` pages get them, and only those two (other requests,
+  such as protected media IDs or MIDI, are still denied); compose-webview's own handler
+  would have granted them to any page once the app held the permissions, so the app
+  replaces it. The camera and microphone aren't required hardware, so the app still
+  installs on devices without them.
+
 ## Picture-in-Picture
 
 New feature, opt-in (off by default): shrinks into a floating window when

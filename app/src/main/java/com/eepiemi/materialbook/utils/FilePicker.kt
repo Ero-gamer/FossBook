@@ -2,9 +2,12 @@ package com.eepiemi.materialbook.utils
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.view.View
+import android.webkit.PermissionRequest
 import android.webkit.ValueCallback
 import android.webkit.WebView
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -16,6 +19,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import com.multiplatform.webview.web.AccompanistWebChromeClient
 import com.multiplatform.webview.web.PlatformWebViewParams
 
@@ -25,8 +30,39 @@ import com.multiplatform.webview.web.PlatformWebViewParams
 fun appWebViewParams(fullscreen: FullscreenController): PlatformWebViewParams {
     var fileChooserIntent by remember { mutableStateOf<Intent?>(null) }
 
+    // Messenger calls: the camera/microphone request waiting for Android's permission prompt.
+    val context = LocalContext.current
+    var pendingMediaRequest by remember { mutableStateOf<PendingMediaRequest?>(null) }
+    val mediaPermissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+            val pending = pendingMediaRequest ?: return@rememberLauncherForActivityResult
+            pendingMediaRequest = null
+            pending.grantWhatAndroidAllows(context)
+        }
+
     val webViewChromeClient =
-        remember(fullscreen) { AppWebChromeClient(fullscreen) { fileChooserIntent = it } }
+        remember(fullscreen) {
+            AppWebChromeClient(
+                fullscreen,
+                onShowFilePicker = { fileChooserIntent = it },
+                onMediaRequest = { request, resources ->
+                    val pending = PendingMediaRequest(request, resources)
+                    val missing = pending.missingPermissions(context)
+                    if (missing.isEmpty()) {
+                        pending.grantWhatAndroidAllows(context)
+                    } else {
+                        // One prompt at a time: a newer request replaces (and denies) an older one.
+                        pendingMediaRequest?.request?.deny()
+                        pendingMediaRequest = pending
+                        runCatching { mediaPermissionLauncher.launch(missing) }
+                            .onFailure { pendingMediaRequest = null; request.deny() }
+                    }
+                },
+                onMediaRequestCanceled = { request ->
+                    if (pendingMediaRequest?.request == request) pendingMediaRequest = null
+                },
+            )
+        }
 
     val launcher =
         rememberLauncherForActivityResult(
@@ -73,9 +109,29 @@ private fun Intent.getUris(): List<Uri>? {
     return (0 until clipData.itemCount).map { clipData.getItemAt(it).uri }
 }
 
+/** A page's camera/microphone request and the web resources it may get (see webMediaGrant). */
+private class PendingMediaRequest(val request: PermissionRequest, val resources: List<String>) {
+    fun missingPermissions(context: Context): Array<String> =
+        resources.map(::androidPermissionFor).distinct()
+            .filter { ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED }
+            .toTypedArray()
+
+    // Grants each resource whose runtime permission the app holds; denies if none.
+    fun grantWhatAndroidAllows(context: Context) {
+        val allowed = resources.filter {
+            ContextCompat.checkSelfPermission(context, androidPermissionFor(it)) == PackageManager.PERMISSION_GRANTED
+        }
+        runCatching {
+            if (allowed.isEmpty()) request.deny() else request.grant(allowed.toTypedArray())
+        }
+    }
+}
+
 private class AppWebChromeClient(
     private val fullscreen: FullscreenController,
     private val onShowFilePicker: (Intent) -> Unit,
+    private val onMediaRequest: (PermissionRequest, List<String>) -> Unit,
+    private val onMediaRequestCanceled: (PermissionRequest) -> Unit,
 ) : AccompanistWebChromeClient() {
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
 
@@ -88,6 +144,18 @@ private class AppWebChromeClient(
 
     override fun onHideCustomView() {
         fullscreen.hide()
+    }
+
+    // Camera and microphone for Messenger calls: Facebook's own pages only (webMediaGrant),
+    // and only once Android has given the app the matching permission. Everything else is
+    // denied, as before (WebChromeClient's default).
+    override fun onPermissionRequest(request: PermissionRequest) {
+        val resources = webMediaGrant(request.origin.toString(), request.resources)
+        if (resources == null) request.deny() else onMediaRequest(request, resources)
+    }
+
+    override fun onPermissionRequestCanceled(request: PermissionRequest) {
+        onMediaRequestCanceled(request)
     }
 
     override fun onShowFileChooser(
