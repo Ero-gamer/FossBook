@@ -36,7 +36,9 @@ user-visible change.
   trigger counter `> 0`, or it replaces the initial `loadUrl` and the page
   never loads.
 - Native -> JS uses Compose trigger counters/state passed from `MainActivity`
-  into `MaterialbookWebView`; JS -> native uses `PipBridge`.
+  into `MaterialbookWebView`; JS -> native goes through the `AstryxPage` message listener
+  (`PageBridge.kt`, main Facebook frame only), with `PipBridge` etc. as the fallback on
+  WebViews older than 83. New page -> app calls go there, not in a new `addJavascriptInterface`.
 - PiP focus mode (`PIP_FOCUS_MODE_JS` / `PIP_RESTORE_MODE_JS`) was tuned
   through live DevTools sessions and is covered by `PipFocusModeJsTest`. Never
   restyle or resize the video's ancestor elements: Facebook's reels controller
