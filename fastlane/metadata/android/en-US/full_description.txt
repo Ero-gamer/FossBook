@@ -23,13 +23,22 @@ Off by default (opt-in):
         </ul>
     <li>Hides the system bars</li>
     <li>Allows pinch-to-zoom anywhere</li>
+    <li>Changes the text size, from 85% to 150%</li>
+    <li>Opens web links in a browser tab over the app instead of switching apps</li>
     <li>Lets the user access Messenger (Desktop layout only)</li>
     <li>Opens Messages inside the app on the desktop site, in its own layer over the feed</li>
+    <li>Makes Messenger voice and video calls from Messages (camera and microphone are asked for on the first call, for Facebook only)</li>
     <li>Supports Picture-in-Picture for playing Facebook videos and Reels, with a native resume button</li>
     <li>Keeps a Picture-in-Picture video's audio playing when the screen locks, with lock-screen controls</li>
+    <li>Keeps the screen on while a video plays, or whenever the app is open</li>
+    <li>Locks the app with your fingerprint, face or screen lock, and hides it in Recents</li>
 </ul>
 
 Always on:
 <ul>
+    <li>Shares links from other apps to Facebook, and the page you're on to other apps, without tracking parameters</li>
+    <li>Launcher shortcuts for Messages, Notifications and Marketplace</li>
+    <li>Exports your settings to a file and imports them on another phone</li>
     <li>Plays videos in real fullscreen, including landscape</li>
+    <li>One-tap "Log out and clear data"</li>
 </ul>
