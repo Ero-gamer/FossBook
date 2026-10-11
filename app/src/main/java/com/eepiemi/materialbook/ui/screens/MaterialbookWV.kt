@@ -55,7 +55,7 @@ import com.eepiemi.materialbook.utils.FullscreenController
 import com.eepiemi.materialbook.utils.appOrientation
 import com.eepiemi.materialbook.utils.appWebViewParams
 import com.eepiemi.materialbook.utils.jsBridge.ClipboardBridge
-import com.eepiemi.materialbook.utils.jsBridge.DownloadBridge
+import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
 import com.eepiemi.materialbook.utils.jsBridge.MaterialbookSettings
 import com.eepiemi.materialbook.utils.jsBridge.ThemeChange
 import com.eepiemi.materialbook.utils.jsBridge.MaterialYouBridge
@@ -1337,10 +1337,7 @@ fun MaterialbookWebView(
                     ThemeChange { if (!settingsToggle) viewModel.setThemeColor(Color(it)) },
                     "ThemeBridge"
                 )
-                addJavascriptInterface(
-                    DownloadBridge(context),
-                    "DownloadBridge"
-                )
+                installDownloadBridge(this, context)
                 addJavascriptInterface(
                     ClipboardBridge(context),
                     "ClipboardBridge"
