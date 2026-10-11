@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.eepiemi.materialbook.utils.AppLock
 import com.eepiemi.materialbook.utils.KeepScreenOn
 import com.eepiemi.materialbook.utils.TextZoom
 import kotlinx.coroutines.flow.first
@@ -36,6 +37,7 @@ class SettingsDataStore(private val context: Context) {
         val PIP_PORTRAIT_RATIO = stringPreferencesKey("pip_portrait_ratio")
         val PIP_LOCKSCREEN_AUDIO = booleanPreferencesKey("pip_lockscreen_audio")
         val KEEP_SCREEN_ON = stringPreferencesKey("keep_screen_on")
+        val APP_LOCK = stringPreferencesKey("app_lock")
         val TEXT_ZOOM = stringPreferencesKey("text_zoom")
         val DEVELOPER_OPTIONS = booleanPreferencesKey("developer_options")
         val WEBVIEW_DEBUGGING = booleanPreferencesKey("webview_debugging")
@@ -166,6 +168,12 @@ class SettingsDataStore(private val context: Context) {
     val keepScreenOn = context.dataStore.data.map { it[KEEP_SCREEN_ON] ?: KeepScreenOn.OFF }
     suspend fun setKeepScreenOn(mode: String) {
         context.dataStore.edit { it[KEEP_SCREEN_ON] = mode }
+    }
+
+    // One of AppLock's values; off by default.
+    val appLock = context.dataStore.data.map { it[APP_LOCK] ?: AppLock.OFF }
+    suspend fun setAppLock(mode: String) {
+        context.dataStore.edit { it[APP_LOCK] = mode }
     }
 
     // One of TextZoom's values; 100% by default.

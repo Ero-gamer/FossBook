@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.eepiemi.materialbook.data.local.SettingsDataStore
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.AMOLED_BLACK
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.APP_LOCK
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DESKTOP_LAYOUT
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DEVELOPER_OPTIONS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_COPY_TO_CLIPBOARD
@@ -27,6 +28,7 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_LOCKS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_PORTRAIT_RATIO
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REMOVE_ADS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.STICKY_NAVBAR
+import com.eepiemi.materialbook.utils.AppLock
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.TEXT_ZOOM
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.WEBVIEW_DEBUGGING
 import com.eepiemi.materialbook.utils.KeepScreenOn
@@ -146,6 +148,12 @@ class SettingsViewModel(
         scope = viewModelScope,
         initialValue = initialPrefs[KEEP_SCREEN_ON] ?: KeepScreenOn.OFF,
         started = SharingStarted.WhileSubscribed()
+    )
+    // Eagerly: MainActivity reads it in onStart, with nothing collecting it.
+    val appLock = dataStore.appLock.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[APP_LOCK] ?: AppLock.OFF,
+        started = SharingStarted.Eagerly
     )
     val textZoom = dataStore.textZoom.stateIn(
         scope = viewModelScope,
@@ -280,6 +288,12 @@ class SettingsViewModel(
     fun setKeepScreenOn(mode: String) {
         viewModelScope.launch {
             dataStore.setKeepScreenOn(mode)
+        }
+    }
+
+    fun setAppLock(mode: String) {
+        viewModelScope.launch {
+            dataStore.setAppLock(mode)
         }
     }
 

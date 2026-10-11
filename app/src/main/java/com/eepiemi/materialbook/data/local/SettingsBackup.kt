@@ -3,6 +3,7 @@ package com.eepiemi.materialbook.data.local
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.AMOLED_BLACK
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.APP_LOCK
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DESKTOP_LAYOUT
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_COPY_TO_CLIPBOARD
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_DOWNLOAD_CONTENT
@@ -43,8 +44,9 @@ val EXPORTED_BOOLEAN_SETTINGS: List<Preferences.Key<Boolean>> = listOf(
     MESSAGES_DESKTOP, PIP_ENABLED, PIP_LOCKSCREEN_AUDIO, OPEN_LINKS_IN_APP,
 )
 
+// App lock travels too: on a device without a screen lock it simply stays off (canUseAppLock).
 val EXPORTED_STRING_SETTINGS: List<Preferences.Key<String>> = listOf(
-    PIP_PORTRAIT_RATIO, KEEP_SCREEN_ON, TEXT_ZOOM,
+    PIP_PORTRAIT_RATIO, KEEP_SCREEN_ON, TEXT_ZOOM, APP_LOCK,
 )
 
 /** Settings that never travel: see above. */

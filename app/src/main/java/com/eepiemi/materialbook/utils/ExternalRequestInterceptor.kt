@@ -16,7 +16,11 @@ class ExternalRequestInterceptor(
         navigator: WebViewNavigator
     ): WebRequestInterceptResult {
 
-        if (request.isForMainFrame && isMessagesLink(request.url)) {
+        // Frames inside the page (ads, embeds) load as they are but never leave the app or
+        // launch another one: only the page itself can do that (as in the Messages layer).
+        if (!request.isForMainFrame) return WebRequestInterceptResult.Allow
+
+        if (isMessagesLink(request.url)) {
             // Messages/Messenger entry points open in the Messages layer (desktop site in its
             // own WebView) when enabled, so this page stays where it is underneath.
             if (tryOpenMessagesDesktop(request.url)) return WebRequestInterceptResult.Reject
@@ -32,14 +36,12 @@ class ExternalRequestInterceptor(
 
         // Facebook redirects full loads of some pages (profiles) to its app via intent://;
         // open the web fallback here instead, so the page stays in this app.
-        if (request.isForMainFrame) {
-            intentFallbackUrl(request.url)?.takeIf { isFacebookWebUrl(it) }?.let { fallback ->
-                navigator.loadUrl(fallback)
-                return WebRequestInterceptResult.Reject
-            }
+        intentFallbackUrl(request.url)?.takeIf { isFacebookWebUrl(it) }?.let { fallback ->
+            navigator.loadUrl(fallback)
+            return WebRequestInterceptResult.Reject
         }
 
-        return if (isFacebookWebUrl(request.url) && request.isForMainFrame) {
+        return if (isFacebookWebUrl(request.url)) {
             WebRequestInterceptResult.Allow
         } else {
             handleExternalUrl(fbRedirectSanitizer(request.url))

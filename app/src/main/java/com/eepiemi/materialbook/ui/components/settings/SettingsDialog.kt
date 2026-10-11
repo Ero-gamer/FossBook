@@ -43,6 +43,7 @@ import com.eepiemi.materialbook.R
 fun SettingsDialog(
     onDismiss: () -> Unit,
     onReload: () -> Unit,
+    onLogOut: () -> Unit = {},
     onSharePage: (() -> Unit)? = null,
 ) {
     val scrollState = rememberScrollState()
@@ -118,7 +119,11 @@ fun SettingsDialog(
                 modifier = Modifier
                     .padding(paddingValues)
                     .verticalScroll(scrollState)
-                    .padding(16.dp)
+                    .padding(16.dp),
+                onLogOut = {
+                    onDismiss()
+                    onLogOut()
+                }
             )
         }
 

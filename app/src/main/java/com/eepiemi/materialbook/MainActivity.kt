@@ -1,5 +1,7 @@
 package com.eepiemi.materialbook
 
+import android.app.Activity
+import android.app.KeyguardManager
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
@@ -19,17 +21,22 @@ import android.util.Log
 import android.util.Rational
 import android.webkit.WebView
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.biometric.BiometricPrompt
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -40,7 +47,12 @@ import com.eepiemi.materialbook.audio.LockScreenAudioService
 import com.eepiemi.materialbook.audio.PipHandback
 import com.eepiemi.materialbook.audio.isHandoffEligible
 import com.eepiemi.materialbook.audio.parseHandoffRead
+import com.eepiemi.materialbook.ui.screens.AppLockScreen
 import com.eepiemi.materialbook.ui.screens.MaterialbookWebView
+import com.eepiemi.materialbook.utils.AppLock
+import com.eepiemi.materialbook.utils.canUseAppLock
+import com.eepiemi.materialbook.utils.isAppLockEnabled
+import com.eepiemi.materialbook.utils.shouldLockOnReturn
 import com.eepiemi.materialbook.ui.screens.OpenLinkRequest
 import com.eepiemi.materialbook.utils.appLinkUrl
 import com.eepiemi.materialbook.utils.appOrientation
@@ -61,7 +73,8 @@ private const val HANDOFF_READ_TIMEOUT_MS = 300L
 // How recently a video must have been playing to count as "playing when PiP started".
 private const val PIP_RECENTLY_PLAYING_MS = 3000L
 
-class MainActivity : ComponentActivity() {
+// A FragmentActivity (a ComponentActivity) because BiometricPrompt needs one.
+class MainActivity : FragmentActivity() {
 
     // Shared with the composable tree below (passed explicitly rather than
     // relying on Compose's viewModel() default resolution) so onUserLeaveHint
@@ -280,6 +293,82 @@ class MainActivity : ComponentActivity() {
     }
     // ---- end lock-screen audio ----
 
+    // ---- app lock ----
+    // While locked, AppLockScreen covers the page and the system prompt asks for the
+    // fingerprint/face or the screen lock. The page keeps running underneath (PiP and
+    // lock-screen audio are unaffected). Locks on every cold start, and on coming back
+    // after being out of sight for the setting's grace period (see shouldLockOnReturn).
+    private var isAppLocked by mutableStateOf(false)
+    // When the activity was last stopped, on the monotonic clock; null while visible.
+    private var hiddenAt: Long? = null
+    // The prompt (or the screen-lock confirmation, which is an activity of its own) is up:
+    // the stop/start it causes doesn't count as leaving the app.
+    private var isAuthenticating = false
+    private lateinit var biometricPrompt: BiometricPrompt
+
+    // Android 8.x: the system's screen-lock confirmation (BiometricPrompt's own fallback
+    // there is a fingerprint-only dialog).
+    private val confirmDeviceCredential =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            isAuthenticating = false
+            if (result.resultCode == Activity.RESULT_OK) isAppLocked = false
+        }
+
+    private fun createBiometricPrompt() = BiometricPrompt(
+        this,
+        ContextCompat.getMainExecutor(this),
+        object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                isAuthenticating = false
+                isAppLocked = false
+            }
+
+            // Cancelled or failed for good: stay locked; AppLockScreen's button retries.
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                isAuthenticating = false
+            }
+        }
+    )
+
+    private fun lockIfEnabled() {
+        if (isAppLockEnabled(settingsVM.appLock.value) && canUseAppLock(this)) isAppLocked = true
+    }
+
+    private fun authenticate() {
+        if (!isAppLocked || isAuthenticating) return
+        // The screen lock was removed since the app locked: nothing could unlock it.
+        if (!canUseAppLock(this)) {
+            isAppLocked = false
+            return
+        }
+        isAuthenticating = true
+        val title = getString(R.string.app_lock_prompt_title, getString(R.string.app_name))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            biometricPrompt.authenticate(
+                BiometricPrompt.PromptInfo.Builder()
+                    .setTitle(title)
+                    .setAllowedAuthenticators(AppLock.AUTHENTICATORS)
+                    .build()
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            val intent = getSystemService(KeyguardManager::class.java)
+                ?.createConfirmDeviceCredentialIntent(title, null)
+            if (intent == null) {
+                isAuthenticating = false
+                isAppLocked = false
+            } else {
+                confirmDeviceCredential.launch(intent)
+            }
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (!isAuthenticating && !isChangingConfigurations) hiddenAt = SystemClock.elapsedRealtime()
+    }
+    // ---- end app lock ----
+
     override fun onCreate(savedInstanceState: Bundle?) {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         enableEdgeToEdge()
@@ -317,27 +406,36 @@ class MainActivity : ComponentActivity() {
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
 
+        biometricPrompt = createBiometricPrompt()
+        lockIfEnabled()
+
         val intentUrl = linkUrl(intent)
 
         setContent {
             MaterialbookTheme {
-                MaterialbookWebView(
-                    url = intentUrl
-                        ?: "https://facebook.com/",
-                    settingsVM = settingsVM,
-                    pipToggleTrigger = pipToggleTrigger,
-                    pipEnteringTrigger = pipEnteringTrigger,
-                    isInPipMode = isInPipMode,
-                    pipStartedWhilePlaying = pipStartedWhilePlaying,
-                    pipHandoffReadTrigger = pipHandoffReadTrigger,
-                    pipHandback = pipHandback,
-                    openLinkRequest = openLinkRequest,
-                    onPipHandoffRead = ::onPipHandoffRead,
-                    onPipPageVisible = { runOnUiThread { handBack("page visible") } },
-                    onVideoPlayingChanged = { isPlaying, videoWidth, videoHeight ->
-                        updateVideoPlaybackState(isPlaying, videoWidth, videoHeight)
-                    }
-                )
+                // Stacks the lock screen over the page; passes the window's exact size on
+                // to the page, as the window itself did before.
+                Box(Modifier.fillMaxSize(), propagateMinConstraints = true) {
+                    MaterialbookWebView(
+                        url = intentUrl
+                            ?: "https://facebook.com/",
+                        settingsVM = settingsVM,
+                        pipToggleTrigger = pipToggleTrigger,
+                        pipEnteringTrigger = pipEnteringTrigger,
+                        isInPipMode = isInPipMode,
+                        pipStartedWhilePlaying = pipStartedWhilePlaying,
+                        pipHandoffReadTrigger = pipHandoffReadTrigger,
+                        pipHandback = pipHandback,
+                        openLinkRequest = openLinkRequest,
+                        onPipHandoffRead = ::onPipHandoffRead,
+                        onPipPageVisible = { runOnUiThread { handBack("page visible") } },
+                        isAppLocked = isAppLocked,
+                        onVideoPlayingChanged = { isPlaying, videoWidth, videoHeight ->
+                            updateVideoPlaybackState(isPlaying, videoWidth, videoHeight)
+                        }
+                    )
+                    if (isAppLocked) AppLockScreen(onUnlock = ::authenticate)
+                }
             }
         }
 
@@ -348,6 +446,15 @@ class MainActivity : ComponentActivity() {
         }
         lifecycleScope.launch {
             settingsVM.pipPortraitRatio.collect { reapplyPipParams() }
+        }
+        // With app lock on, Recents shows no snapshot of the page (Android 13+; screenshots
+        // still work).
+        lifecycleScope.launch {
+            settingsVM.appLock.collect { mode ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    setRecentsScreenshotEnabled(!isAppLockEnabled(mode))
+                }
+            }
         }
     }
 
@@ -376,11 +483,18 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         handBack("onStart")
+        if (!isAuthenticating &&
+            shouldLockOnReturn(settingsVM.appLock.value, hiddenAt, SystemClock.elapsedRealtime())
+        ) {
+            lockIfEnabled()
+        }
+        hiddenAt = null
     }
 
     override fun onResume() {
         super.onResume()
         handBack("onResume")
+        if (isAppLocked && !isInPictureInPictureMode) authenticate()
     }
 
     override fun onDestroy() {
