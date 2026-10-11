@@ -59,6 +59,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -107,6 +108,7 @@ fun SettingsContent(
 
     // Settings export and import go through the system file picker (no storage permission).
     val toastContext = LocalContext.current
+    val toastResources = LocalResources.current
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
@@ -123,9 +125,9 @@ fun SettingsContent(
         uri ?: return@rememberLauncherForActivityResult
         viewModel.importSettings(uri) { applied ->
             val message = if (applied == null) {
-                toastContext.getString(R.string.settings_import_failed)
+                toastResources.getString(R.string.settings_import_failed)
             } else {
-                toastContext.resources.getQuantityString(R.plurals.settings_imported, applied, applied)
+                toastResources.getQuantityString(R.plurals.settings_imported, applied, applied)
             }
             Toast.makeText(toastContext, message, Toast.LENGTH_LONG).show()
         }
