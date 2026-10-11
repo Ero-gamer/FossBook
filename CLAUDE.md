@@ -42,12 +42,9 @@ user-visible change.
   restyle or resize the video's ancestor elements: Facebook's reels controller
   watches them and pauses the reel. Add new PiP behaviour as separate scripts
   and effects instead of editing focus mode.
-- The page scripts in `res/raw` (except the PiP ones loaded directly in
-  `MaterialbookWV.kt`) are fetched at runtime from `main` on GitHub
-  (`SCRIPT_SRC` in `fetchScripts.kt`), but a fetched copy is used only when its
-  SHA-256 (line endings normalised) matches the copy bundled in the APK;
-  otherwise the bundled copy runs. So a push to `main` no longer changes
-  scripts in installed apps: script changes ship with an app release.
+- The page scripts in `res/raw` always run from the copy bundled in the APK
+  (`bundledScripts.kt`); nothing is fetched at runtime, so script changes ship
+  only with an app release.
 - Messages in desktop mode opens `MessagesLayer` (`ui/screens/MessagesLayer.kt`), a
   second WebView with the desktop user agent over the main one. The main view never
   switches user agent for Messages; Facebook pages opened from a chat stay in the layer

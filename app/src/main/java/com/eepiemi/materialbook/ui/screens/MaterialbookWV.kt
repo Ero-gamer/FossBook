@@ -1122,13 +1122,11 @@ fun MaterialbookWebView(
 
     val pipEnabled by settingsVM.pipEnabled.collectAsState()
 
-    // Loaded directly from the bundled resource, deliberately skipping
-    // fetchScripts' network-fetch-with-GitHub-hotfix path that the rest of
-    // userScripts go through (see MainViewModel.kt's loadScripts for why).
-    // Confirmed via field reports: without this, the very first PiP attempt
-    // right after a fresh install or app-cache clear - forcing every other
-    // script back onto a cold network fetch - would not trigger PiP at all,
-    // since PipBridge never got a chance to report isVideoPlaying in time.
+    // Evaluated on its own rather than as part of userScripts (see
+    // MainViewModel.kt's loadScripts for why). Confirmed via field reports:
+    // when it waited on the other scripts (then fetched over the network), the
+    // very first PiP attempt after a fresh install or app-cache clear did not
+    // trigger PiP at all, since PipBridge never reported isVideoPlaying in time.
     LaunchedEffect(loadingState, pipEnabled) {
         if (loadingState is LoadingState.Finished && pipEnabled) {
             val detectorScript = context.resources.openRawResource(R.raw.pip_video_detector)
@@ -1178,12 +1176,8 @@ fun MaterialbookWebView(
                 navigator.evaluateJavaScript(scripts) {
                     isLoading = false
                     // Correlates against PipBridge/PiP logcat timestamps to confirm
-                    // or rule out a cold-start race: userScripts (including
-                    // pip_video_detector.js, fetched over the network - see
-                    // fetchScripts.kt) may not finish loading/evaluating before the
-                    // user tries PiP, especially right after an app cache clear
-                    // forces every script fetch back onto the network instead of a
-                    // cached response.
+                    // or rule out a cold-start race: userScripts may not finish
+                    // evaluating before the user tries PiP.
                     Log.d("AstryxbookPiP", "userScripts finished evaluating")
                 }
             }

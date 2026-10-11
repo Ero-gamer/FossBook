@@ -77,10 +77,11 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
 
 ## WebView
 
-- Security: page scripts fetched from GitHub at launch are now checked against the
-  copy bundled in the app (SHA-256). A script that doesn't match is rejected and the
-  bundled one runs, so a bad push to `main` can no longer inject code into every
-  user's logged-in Facebook page. Script updates now arrive with app updates.
+- Security: page scripts are no longer downloaded from GitHub at launch; the app
+  always runs the copies bundled with it. Before, anyone able to push to `main`
+  could inject code into every user's logged-in Facebook page on their next
+  launch. Script updates now arrive with app updates, and launch no longer waits
+  on the network for them.
 - Settings while watching reels: the Reels viewer has its own top bar instead of
   Facebook's header, where the app's Settings button lives, so Settings couldn't be
   opened from there. `scripts.js` now adds a Settings button at the right end of that
@@ -172,7 +173,7 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
 
 Added test coverage for the rebrand and default-behavior changes: settings
 defaults, theme colors, app identity/strings, launcher icon, applicationId,
-and the pinned external script source — none of which existed upstream.
+none of which existed upstream.
 
 Also covers the PiP focus-mode/toggle/freeze JS (`PipFocusModeJsTest`, 24
 tests driven against a real `WebView` with synthetic DOM fixtures rather
