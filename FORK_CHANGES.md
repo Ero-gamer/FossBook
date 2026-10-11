@@ -444,6 +444,24 @@ layer); *Always* keeps it on whenever the app is on screen. It sets the view's
 `keepScreenOn`, so it never applies in the background and doesn't interfere
 with the window flag fullscreen video already sets.
 
+## App lock, log out and frame restrictions
+
+- **App lock** (Settings, off by default): asks for your fingerprint, face or screen lock
+  when the app opens, and again after it's been out of sight for the time you pick (right
+  away, 1, 5 or 15 minutes). A video in PiP or playing on the lock screen keeps going
+  underneath; locking leaves fullscreen video and closes Settings, which draw above it.
+  While it's on, Recents shows no preview of the page (Android 13+). Needs a screen lock on
+  the device; it can't be turned on without one.
+- **Log out and clear data** (Settings): removes the Facebook login, cookies, cache, site
+  storage and copied images from the app, keeping your settings.
+- **Copy to clipboard only for Facebook itself**, like downloads: the clipboard bridge
+  takes messages only from the main frame of a Facebook or Messenger page
+  (`AstryxClipboard`, a web message listener), so an ad or embed can't fill the clipboard.
+  WebViews without message listeners keep the old interface.
+- **Iframes can't open other apps.** Only the page itself can send a link out of the app;
+  a navigation inside an ad or embed frame stays in that frame, so it can't open the
+  browser or another app without a tap.
+
 ## Known limitations
 
 - On Reels specifically, Facebook's own web player can re-pause a video

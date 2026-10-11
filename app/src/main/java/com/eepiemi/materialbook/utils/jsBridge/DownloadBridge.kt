@@ -26,8 +26,8 @@ import java.util.concurrent.Executors
 // The page object scripts post downloads to (see scripts.js / download_content.js).
 const val DOWNLOAD_LISTENER_NAME = "AstryxDownloads"
 
-// Only Facebook/Messenger frames get the download object at all.
-private val DOWNLOAD_ORIGINS = setOf(
+// Only Facebook/Messenger frames get the download (and clipboard) object at all.
+internal val FACEBOOK_PAGE_ORIGINS = setOf(
     "https://facebook.com", "https://*.facebook.com",
     "https://messenger.com", "https://*.messenger.com"
 )
@@ -57,7 +57,7 @@ fun installDownloadBridge(webView: WebView, context: Context) {
         webView.addJavascriptInterface(bridge, "DownloadBridge")
         return
     }
-    WebViewCompat.addWebMessageListener(webView, DOWNLOAD_LISTENER_NAME, DOWNLOAD_ORIGINS) { _, message, sourceOrigin, isMainFrame, _ ->
+    WebViewCompat.addWebMessageListener(webView, DOWNLOAD_LISTENER_NAME, FACEBOOK_PAGE_ORIGINS) { _, message, sourceOrigin, isMainFrame, _ ->
         if (!isMainFrame || !isFacebookWebUrl(sourceOrigin.toString())) return@addWebMessageListener
         val payload = message.data?.let { runCatching { JSONObject(it) }.getOrNull() }
             ?: return@addWebMessageListener

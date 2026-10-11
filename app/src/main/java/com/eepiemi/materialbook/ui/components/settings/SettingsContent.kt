@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.Message
 import androidx.compose.material.icons.filled.BurstMode
 import androidx.compose.material.icons.filled.Camera
@@ -31,17 +32,20 @@ import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PanoramaWideAngle
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
 import androidx.compose.material.icons.outlined.Pinch
 import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -64,7 +68,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.eepiemi.materialbook.BuildConfig
 import com.eepiemi.materialbook.R
 import com.eepiemi.materialbook.ui.viewmodel.SettingsViewModel
+import com.eepiemi.materialbook.utils.AppLock
 import com.eepiemi.materialbook.utils.KeepScreenOn
+import com.eepiemi.materialbook.utils.canUseAppLock
 import com.eepiemi.materialbook.utils.TextZoom
 import com.eepiemi.materialbook.utils.effectiveDesktop
 import com.eepiemi.materialbook.utils.rememberAutoDesktop
@@ -72,9 +78,12 @@ import com.eepiemi.materialbook.utils.rememberAutoDesktop
 @Composable
 fun SettingsContent(
     modifier: Modifier,
-    viewModel: SettingsViewModel = viewModel()
+    viewModel: SettingsViewModel = viewModel(),
+    onLogOut: () -> Unit = {},
 ) {
     var isOpenDialog by rememberSaveable { mutableStateOf(false) }
+    var isAppLockDialog by rememberSaveable { mutableStateOf(false) }
+    var isLogOutDialog by rememberSaveable { mutableStateOf(false) }
     var isPipRatioDialog by rememberSaveable { mutableStateOf(false) }
     var isKeepScreenOnDialog by rememberSaveable { mutableStateOf(false) }
     var isTextZoomDialog by rememberSaveable { mutableStateOf(false) }
@@ -94,6 +103,11 @@ fun SettingsContent(
     val pipPortraitRatio = viewModel.pipPortraitRatio.collectAsState()
     val keepScreenOn = viewModel.keepScreenOn.collectAsState()
     val keepScreenOnLabels = KeepScreenOn.ALL.associateWith { keepScreenOnLabel(it) }
+    val appLock = viewModel.appLock.collectAsState()
+    val appLockLabels = AppLock.ALL.associateWith { appLockLabel(it) }
+    // Checked on each composition: the user may set a screen lock and come back.
+    val context = LocalContext.current
+    val appLockAvailable = canUseAppLock(context)
     val textZoom = viewModel.textZoom.collectAsState()
     val textZoomLabels = TextZoom.ALL.associateWith { textZoomLabel(it) }
     val developerOptions = viewModel.developerOptions.collectAsState()
@@ -249,10 +263,31 @@ fun SettingsContent(
             )
         }
 
+        SettingsGroup(
+            items = listOf(
+                SettingsItem(
+                    icon = Icons.Outlined.Lock,
+                    title = stringResource(R.string.app_lock_title),
+                    supportingText = when {
+                        appLockAvailable -> appLockLabels[appLock.value] ?: appLockLabels.getValue(AppLock.OFF)
+                        else -> stringResource(R.string.app_lock_unavailable)
+                    },
+                    isActive = null,
+                    onClick = { if (appLockAvailable) isAppLockDialog = true }
+                ),
+                SettingsItem(
+                    icon = Icons.AutoMirrored.Outlined.Logout,
+                    title = stringResource(R.string.log_out_title),
+                    supportingText = stringResource(R.string.log_out_summary),
+                    isActive = null,
+                    onClick = { isLogOutDialog = true }
+                )
+            )
+        )
+
         // Android 12+ opens Facebook links in the browser until the user allows them for this
         // app (facebook.com can't verify for it); this opens that system page.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val context = LocalContext.current
             SettingsGroup(
                 items = listOf(
                     SettingsItem(
@@ -295,6 +330,47 @@ fun SettingsContent(
             onUnlock = { viewModel.setDeveloperOptions(true) }
         )
 
+    }
+
+    if (isAppLockDialog) {
+        ChoiceDialog(
+            title = stringResource(R.string.app_lock_title),
+            options = appLockLabels,
+            current = appLock.value,
+            onSelect = { mode ->
+                viewModel.setAppLock(mode)
+                @Suppress("AssignedValueIsNeverRead")
+                isAppLockDialog = false
+            },
+            onDismiss = {
+                @Suppress("AssignedValueIsNeverRead")
+                isAppLockDialog = false
+            }
+        )
+    }
+
+    if (isLogOutDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                @Suppress("AssignedValueIsNeverRead")
+                isLogOutDialog = false
+            },
+            title = { Text(stringResource(R.string.log_out_confirm_title)) },
+            text = { Text(stringResource(R.string.log_out_confirm_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    @Suppress("AssignedValueIsNeverRead")
+                    isLogOutDialog = false
+                    onLogOut()
+                }) { Text(stringResource(R.string.log_out_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    @Suppress("AssignedValueIsNeverRead")
+                    isLogOutDialog = false
+                }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
     }
 
     if (isTextZoomDialog) {
@@ -486,6 +562,15 @@ private fun pipRatioLabel(ratio: String): String = when (ratio) {
     "3:4"  -> stringResource(R.string.pip_ratio_3_4)
     "9:16" -> stringResource(R.string.pip_ratio_9_16)
     else   -> ratio
+}
+
+@Composable
+private fun appLockLabel(mode: String): String = when (mode) {
+    AppLock.IMMEDIATELY -> stringResource(R.string.app_lock_immediately)
+    AppLock.AFTER_1_MIN -> stringResource(R.string.app_lock_after_1_min)
+    AppLock.AFTER_5_MIN -> stringResource(R.string.app_lock_after_5_min)
+    AppLock.AFTER_15_MIN -> stringResource(R.string.app_lock_after_15_min)
+    else -> stringResource(R.string.app_lock_off)
 }
 
 @Composable
