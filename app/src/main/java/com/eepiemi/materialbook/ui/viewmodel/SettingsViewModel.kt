@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.eepiemi.materialbook.data.local.SettingsDataStore
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.AMOLED_BLACK
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DESKTOP_LAYOUT
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DEVELOPER_OPTIONS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_COPY_TO_CLIPBOARD
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_DOWNLOAD_CONTENT
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_GROUPS
@@ -24,7 +25,10 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_LOCKS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_PORTRAIT_RATIO
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REMOVE_ADS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.STICKY_NAVBAR
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.TEXT_ZOOM
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.WEBVIEW_DEBUGGING
 import com.eepiemi.materialbook.utils.KeepScreenOn
+import com.eepiemi.materialbook.utils.TextZoom
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
@@ -139,6 +143,22 @@ class SettingsViewModel(
         initialValue = initialPrefs[KEEP_SCREEN_ON] ?: KeepScreenOn.OFF,
         started = SharingStarted.WhileSubscribed()
     )
+    val textZoom = dataStore.textZoom.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[TEXT_ZOOM] ?: TextZoom.DEFAULT,
+        started = SharingStarted.WhileSubscribed()
+    )
+    val developerOptions = dataStore.developerOptions.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[DEVELOPER_OPTIONS] ?: false,
+        started = SharingStarted.WhileSubscribed()
+    )
+    // Eagerly: MainActivity applies it with nothing collecting it.
+    val webViewDebugging = dataStore.webViewDebugging.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[WEBVIEW_DEBUGGING] ?: false,
+        started = SharingStarted.Eagerly
+    )
 
     fun setRemoveAds(removeAds: Boolean) {
         viewModelScope.launch {
@@ -251,6 +271,24 @@ class SettingsViewModel(
     fun setKeepScreenOn(mode: String) {
         viewModelScope.launch {
             dataStore.setKeepScreenOn(mode)
+        }
+    }
+
+    fun setTextZoom(zoom: String) {
+        viewModelScope.launch {
+            dataStore.setTextZoom(zoom)
+        }
+    }
+
+    fun setDeveloperOptions(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.setDeveloperOptions(enabled)
+        }
+    }
+
+    fun setWebViewDebugging(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.setWebViewDebugging(enabled)
         }
     }
 

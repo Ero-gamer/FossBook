@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.eepiemi.materialbook.utils.KeepScreenOn
+import com.eepiemi.materialbook.utils.TextZoom
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -35,6 +36,9 @@ class SettingsDataStore(private val context: Context) {
         val PIP_PORTRAIT_RATIO = stringPreferencesKey("pip_portrait_ratio")
         val PIP_LOCKSCREEN_AUDIO = booleanPreferencesKey("pip_lockscreen_audio")
         val KEEP_SCREEN_ON = stringPreferencesKey("keep_screen_on")
+        val TEXT_ZOOM = stringPreferencesKey("text_zoom")
+        val DEVELOPER_OPTIONS = booleanPreferencesKey("developer_options")
+        val WEBVIEW_DEBUGGING = booleanPreferencesKey("webview_debugging")
 
         // Legacy: set by the old auto-desktop logic when it wrote desktop_layout
         // on the user's behalf. Only read by the migration below.
@@ -161,5 +165,24 @@ class SettingsDataStore(private val context: Context) {
     val keepScreenOn = context.dataStore.data.map { it[KEEP_SCREEN_ON] ?: KeepScreenOn.OFF }
     suspend fun setKeepScreenOn(mode: String) {
         context.dataStore.edit { it[KEEP_SCREEN_ON] = mode }
+    }
+
+    // One of TextZoom's values; 100% by default.
+    val textZoom = context.dataStore.data.map { it[TEXT_ZOOM] ?: TextZoom.DEFAULT }
+    suspend fun setTextZoom(zoom: String) {
+        context.dataStore.edit { it[TEXT_ZOOM] = zoom }
+    }
+
+    // Hidden until the version in Settings is tapped seven times.
+    val developerOptions = context.dataStore.data.map { it[DEVELOPER_OPTIONS] ?: false }
+    suspend fun setDeveloperOptions(enabled: Boolean) {
+        context.dataStore.edit { it[DEVELOPER_OPTIONS] = enabled }
+    }
+
+    // Off by default: with it on, anyone with USB debugging access can inspect and drive the
+    // logged-in page (chrome://inspect). Debug builds always allow it.
+    val webViewDebugging = context.dataStore.data.map { it[WEBVIEW_DEBUGGING] ?: false }
+    suspend fun setWebViewDebugging(enabled: Boolean) {
+        context.dataStore.edit { it[WEBVIEW_DEBUGGING] = enabled }
     }
 }

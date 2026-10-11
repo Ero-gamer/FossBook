@@ -18,6 +18,7 @@ import android.os.SystemClock
 import android.util.Log
 import android.util.Rational
 import android.webkit.WebView
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -41,6 +42,8 @@ import com.eepiemi.materialbook.audio.isHandoffEligible
 import com.eepiemi.materialbook.audio.parseHandoffRead
 import com.eepiemi.materialbook.ui.screens.MaterialbookWebView
 import com.eepiemi.materialbook.utils.appOrientation
+import com.eepiemi.materialbook.utils.facebookShareUrl
+import com.eepiemi.materialbook.utils.publishAppShortcuts
 import com.eepiemi.materialbook.ui.theme.MaterialbookTheme
 import com.eepiemi.materialbook.ui.viewmodel.SettingsViewModel
 import com.google.common.util.concurrent.ListenableFuture
@@ -282,12 +285,19 @@ class MainActivity : ComponentActivity() {
         requestedOrientation =
             appOrientation(resources.configuration.smallestScreenWidthDp, isFullscreen = false)
 
-        // Unconditional on purpose (not gated behind BuildConfig.DEBUG): keeps
-        // chrome://inspect available on release-type builds for field
-        // debugging. Most PiP fixes in this fork were found through live
-        // DevTools sessions against the installed release build. Not
-        // leftover scaffolding; don't remove it in a cleanup.
-        WebView.setWebContentsDebuggingEnabled(true)
+        // chrome://inspect on release builds is a developer setting (Settings: tap the
+        // version seven times, then "WebView debugging"); debug builds always allow it.
+        // Most PiP fixes in this fork were found through live DevTools sessions against
+        // the installed release build, so keep the setting. It's off by default because
+        // with it on, anything with USB debugging access can drive the logged-in page.
+        WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG || settingsVM.webViewDebugging.value)
+        lifecycleScope.launch {
+            settingsVM.webViewDebugging.collect {
+                WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG || it)
+            }
+        }
+
+        publishAppShortcuts(this)
 
         val filter = IntentFilter(ACTION_PIP_TOGGLE)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -302,8 +312,17 @@ class MainActivity : ComponentActivity() {
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
 
+        // A link shared from another app opens Facebook's share dialog; shared text without
+        // a link can't be shared to Facebook's web share, so the app just opens.
+        val intentUrl = if (intent?.action == Intent.ACTION_SEND) {
+            facebookShareUrl(intent.getStringExtra(Intent.EXTRA_TEXT)).also {
+                if (it == null) Toast.makeText(this, R.string.share_only_links, Toast.LENGTH_LONG).show()
+            }
+        } else {
+            intent?.data?.toString()
+        }
+
         setContent {
-            val intentUrl = intent?.data?.toString()
             MaterialbookTheme {
                 MaterialbookWebView(
                     url = intentUrl

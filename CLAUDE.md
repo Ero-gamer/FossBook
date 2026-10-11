@@ -72,8 +72,10 @@ user-visible change.
   fail to parse. Keep new PiP scripts ES5-style; they also run there.
 - All PiP, lock-screen audio and fullscreen logs use the tag `AstryxbookPiP`:
   `adb logcat AstryxbookPiP:D *:S`.
-- `WebView.setWebContentsDebuggingEnabled(true)` is unconditional on purpose.
-  Live debugging on the device: forward `localabstract:webview_devtools_remote_<pid>`
+- WebView debugging is always on in debug builds; on a release build turn it on in
+  Settings (tap the version at the bottom seven times, then *WebView debugging*). Keep the
+  setting: live DevTools sessions against the release build are how most PiP fixes were
+  found. Live debugging on the device: forward `localabstract:webview_devtools_remote_<pid>`
   and use the DevTools protocol (`/json`, `Runtime.evaluate`).
 
 - Facebook's desktop player pauses videos less than 50% inside the viewport (an

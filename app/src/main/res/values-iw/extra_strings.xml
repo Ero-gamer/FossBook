@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- See values/extra_strings.xml. -->
+<resources>
+    <string name="text_size_title">גודל טקסט</string>
+    <string name="text_size_percent">%1$d%%</string>
+    <string name="text_size_default">%1$d%% (ברירת מחדל)</string>
+
+    <string name="share_page">שיתוף הדף</string>
+    <string name="share_only_links">אפשר לשתף לפייסבוק רק קישורים</string>
+
+    <string name="shortcut_messages">הודעות</string>
+    <string name="shortcut_notifications">התראות</string>
+    <string name="shortcut_marketplace">Marketplace</string>
+
+    <string name="app_version">%1$s %2$s</string>
+    <string name="developer_options_enabled">אפשרויות המפתחים מופעלות</string>
+    <string name="webview_debugging_title">ניפוי באגים ב-WebView</string>
+    <string name="webview_debugging_summary">מאפשר למחשב עם ניפוי באגים ב-USB לבדוק ולשלוט בדף (chrome://inspect). כדאי לכבות בסיום.</string>
+</resources>

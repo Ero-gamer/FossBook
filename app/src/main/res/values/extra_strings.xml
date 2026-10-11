@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Strings for this fork's sharing, text size, launcher shortcuts and developer settings.
+  Kept out of strings.xml, upstream's translation file, for the same reason as
+  brand_strings.xml: fewer merge conflicts on every upstream sync.
+-->
+<resources>
+    <string name="text_size_title">Text size</string>
+    <string name="text_size_percent">%1$d%%</string>
+    <string name="text_size_default">%1$d%% (default)</string>
+
+    <string name="share_page">Share this page</string>
+    <string name="share_only_links">Only links can be shared to Facebook</string>
+
+    <string name="shortcut_messages">Messages</string>
+    <string name="shortcut_notifications">Notifications</string>
+    <string name="shortcut_marketplace">Marketplace</string>
+
+    <string name="app_version">%1$s %2$s</string>
+    <string name="developer_options_enabled">Developer options are on</string>
+    <string name="webview_debugging_title">WebView debugging</string>
+    <string name="webview_debugging_summary">Let a computer with USB debugging inspect and control the page (chrome://inspect). Turn it off when you\'re done.</string>
+</resources>
