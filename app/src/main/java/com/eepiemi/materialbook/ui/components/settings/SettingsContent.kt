@@ -1,6 +1,8 @@
 package com.eepiemi.materialbook.ui.components.settings
 
+import android.content.Intent
 import android.os.Build
+import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,7 +25,6 @@ import androidx.compose.material.icons.filled.Try
 import androidx.compose.material.icons.outlined.AspectRatio
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Circle
-import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.DesktopWindows
 import androidx.compose.material.icons.outlined.FileDownload
@@ -32,6 +33,7 @@ import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PanoramaWideAngle
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
@@ -61,6 +63,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.eepiemi.materialbook.BuildConfig
 import com.eepiemi.materialbook.R
@@ -102,7 +105,6 @@ fun SettingsContent(
     val keepScreenOnLabels = KeepScreenOn.ALL.associateWith { keepScreenOnLabel(it) }
     val appLock = viewModel.appLock.collectAsState()
     val appLockLabels = AppLock.ALL.associateWith { appLockLabel(it) }
-    val bundledScriptsOnly = viewModel.bundledScriptsOnly.collectAsState()
     // Checked on each composition: the user may set a screen lock and come back.
     val context = LocalContext.current
     val appLockAvailable = canUseAppLock(context)
@@ -274,13 +276,6 @@ fun SettingsContent(
                     onClick = { if (appLockAvailable) isAppLockDialog = true }
                 ),
                 SettingsItem(
-                    icon = Icons.Outlined.CloudOff,
-                    title = stringResource(R.string.bundled_scripts_only_title),
-                    supportingText = stringResource(R.string.bundled_scripts_only_summary),
-                    isActive = bundledScriptsOnly.value,
-                    onClick = { viewModel.setBundledScriptsOnly(!bundledScriptsOnly.value) }
-                ),
-                SettingsItem(
                     icon = Icons.AutoMirrored.Outlined.Logout,
                     title = stringResource(R.string.log_out_title),
                     supportingText = stringResource(R.string.log_out_summary),
@@ -289,6 +284,31 @@ fun SettingsContent(
                 )
             )
         )
+
+        // Android 12+ opens Facebook links in the browser until the user allows them for this
+        // app (facebook.com can't verify for it); this opens that system page.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            SettingsGroup(
+                items = listOf(
+                    SettingsItem(
+                        icon = Icons.Outlined.Link,
+                        title = stringResource(R.string.open_links_title),
+                        supportingText = stringResource(R.string.open_links_summary),
+                        isActive = null,
+                        onClick = {
+                            runCatching {
+                                context.startActivity(
+                                    Intent(
+                                        Settings.ACTION_APP_OPEN_BY_DEFAULT_SETTINGS,
+                                        "package:${context.packageName}".toUri()
+                                    )
+                                )
+                            }
+                        }
+                    )
+                )
+            )
+        }
 
         // Hidden until the version below is tapped seven times.
         if (developerOptions.value) {

@@ -490,11 +490,11 @@ observer.observe(document.body, { childList: true, subtree: true });
         const reader = new FileReader();
         reader.onloadend = function() {
             if (!reader.result) return;
-            // AstryxMedia (Facebook's main frame only) on current app versions; the
-            // DownloadBridge interface on older ones and on WebViews before 82.
-            if (window.AstryxMedia)
-                window.AstryxMedia.postMessage('download\n' + blob.type + '\n' + reader.result);
-            else
+            // AstryxDownloads: the app's Facebook-only message listener;
+            // DownloadBridge: older WebViews and older app versions.
+            if (window.AstryxDownloads)
+                AstryxDownloads.postMessage(JSON.stringify({ data: reader.result, mimeType: blob.type }));
+            else if (window.DownloadBridge)
                 DownloadBridge.downloadBase64File(reader.result, blob.type);
         };
         reader.readAsDataURL(blob);

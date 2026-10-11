@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-   Backup and device-to-device transfer on Android 12+ (backup_rules.xml covers
-   Android 11 and lower). The WebView's data directory holds the Facebook
-   session (cookies) and web storage, so it is excluded from both: a restored or
-   transferred install logs in again. App settings (DataStore) are kept.
+   Backup and device-transfer rules for Android 12+ (API 31+).
+   Only the settings DataStore is copied. The WebView's profile (app_webview/), which holds
+   the Facebook session cookies, and its caches stay on the device, so a restore or a new
+   phone starts logged out instead of carrying the session over.
+   With an <include>, anything not listed is excluded. See backup_rules.xml for API 30 and lower.
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <exclude domain="root" path="app_webview/" />
+        <include domain="file" path="datastore/" />
     </cloud-backup>
     <device-transfer>
-        <exclude domain="root" path="app_webview/" />
+        <include domain="file" path="datastore/" />
     </device-transfer>
 </data-extraction-rules>

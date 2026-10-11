@@ -10,65 +10,91 @@ import android.provider.MediaStore
 import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.webkit.MimeTypeMap
+import android.webkit.WebView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import com.eepiemi.materialbook.R
+import com.eepiemi.materialbook.utils.isFacebookWebUrl
+import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.util.concurrent.Executors
+
+// The page object scripts post downloads to (see scripts.js / download_content.js).
+const val DOWNLOAD_LISTENER_NAME = "AstryxDownloads"
+
+// Only Facebook/Messenger frames get the download (and clipboard) object at all.
+internal val FACEBOOK_PAGE_ORIGINS = setOf(
+    "https://facebook.com", "https://*.facebook.com",
+    "https://messenger.com", "https://*.messenger.com"
+)
+
+/**
+ * The MIME type to save a download as, or null when it isn't a photo or video. Parameters
+ * (`;codecs=…`) and case are dropped. Anything else (an APK, an HTML page, an unknown type)
+ * is refused, so a page can't drop arbitrary files into Downloads.
+ */
+fun downloadMimeType(mimeType: String): String? {
+    val type = mimeType.substringBefore(';').trim().lowercase()
+    val (major, minor) = type.split('/', limit = 2).takeIf { it.size == 2 } ?: return null
+    if (major != "image" && major != "video") return null
+    if (minor.isEmpty() || !minor.all { it.isLetterOrDigit() || it in ".+-" }) return null
+    return type
+}
+
+/**
+ * Exposes downloads to the page. With WebView's message listener (WebView 83+, nearly every
+ * device) only the main frame of a Facebook/Messenger page can reach it, not iframes or other
+ * origins; on older WebViews it falls back to the `DownloadBridge` JS interface, which is still
+ * limited to photos and videos.
+ */
+fun installDownloadBridge(webView: WebView, context: Context) {
+    val bridge = DownloadBridge(context)
+    if (!WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
+        webView.addJavascriptInterface(bridge, "DownloadBridge")
+        return
+    }
+    WebViewCompat.addWebMessageListener(webView, DOWNLOAD_LISTENER_NAME, FACEBOOK_PAGE_ORIGINS) { _, message, sourceOrigin, isMainFrame, _ ->
+        if (!isMainFrame || !isFacebookWebUrl(sourceOrigin.toString())) return@addWebMessageListener
+        val payload = message.data?.let { runCatching { JSONObject(it) }.getOrNull() }
+            ?: return@addWebMessageListener
+        val data = payload.optString("data")
+        val mimeType = payload.optString("mimeType")
+        // The listener runs on the UI thread; decoding and writing a video doesn't belong there.
+        DownloadBridge.saver.execute { bridge.downloadBase64File(data, mimeType) }
+    }
+}
 
 class DownloadBridge(private val context: Context) {
     @JavascriptInterface
     @Suppress("unused")
     fun downloadBase64File(base64Data: String, mimeType: String) {
         runCatching {
-            // An app package in Downloads is one tap from the installer: never save one.
-            if (isBlockedDownloadType(mimeType)) {
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.failed_to_save_file),
-                    Toast.LENGTH_SHORT
-                ).show()
-                return
-            }
-            if (!base64Data.contains(",")) {
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.download_failed_invalid_data),
-                    Toast.LENGTH_SHORT
-                ).show()
+            val type = downloadMimeType(mimeType)
+            if (type == null || !base64Data.contains(",")) {
+                toast(R.string.download_failed_invalid_data)
                 return
             }
 
             val data = Base64.decode(base64Data.split(",")[1], Base64.DEFAULT)
 
-            // Determine if it's an image or video
-            val isImage = mimeType.startsWith("image/")
-            val isVideo = mimeType.startsWith("video/")
-
-            val (finalData, finalMimeType, extension) = when {
-                isImage -> {
-                    // Convert images to PNG for maximum compatibility
-                    val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
-                    if (bitmap != null) {
-                        val outputStream = ByteArrayOutputStream()
-                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-                        Triple(outputStream.toByteArray(), "image/png", "png")
-                    } else {
-                        // If bitmap decoding fails, use original data
-                        val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "bin"
-                        Triple(data, mimeType, ext)
-                    }
+            val (finalData, finalMimeType, extension) = if (type.startsWith("image/")) {
+                // Convert images to PNG for maximum compatibility; refuse what isn't one.
+                val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
+                if (bitmap == null) {
+                    toast(R.string.download_failed_invalid_data)
+                    return
                 }
-                isVideo -> {
-                    // Keep videos as-is
-                    val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "mp4"
-                    Triple(data, mimeType, ext)
-                }
-                else -> {
-                    // Unknown type, keep as-is
-                    val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "bin"
-                    Triple(data, mimeType, ext)
-                }
+                val outputStream = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                Triple(outputStream.toByteArray(), "image/png", "png")
+            } else {
+                // Keep videos as-is
+                val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(type) ?: "mp4"
+                Triple(data, type, ext)
             }
 
             val fileName = "${System.currentTimeMillis()}.$extension"
@@ -92,36 +118,27 @@ class DownloadBridge(private val context: Context) {
                     contentValues.put(MediaStore.Downloads.IS_PENDING, 0)
                     resolver.update(uri, contentValues, null, null)
 
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.saved_to_downloads),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+                    toast(R.string.saved_to_downloads)
+                } ?: toast(R.string.failed_to_save_file)
             } else {
                 val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 val file = File(downloadsDir, fileName)
 
                 FileOutputStream(file).use { it.write(finalData) }
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.saved_to_downloads),
-                    Toast.LENGTH_SHORT
-                ).show()
+                toast(R.string.saved_to_downloads)
             }
         }.onFailure {
-            Toast.makeText(
-                context,
-                context.getString(R.string.failed_to_save_file),
-                Toast.LENGTH_SHORT
-            ).show()
+            toast(R.string.failed_to_save_file)
         }
     }
-}
 
-/**
- * Android app packages. The file's extension comes from its MIME type (MimeTypeMap), and
- * this is the type that maps to .apk.
- */
-fun isBlockedDownloadType(mimeType: String): Boolean =
-    mimeType.substringBefore(';').trim().equals("application/vnd.android.package-archive", ignoreCase = true)
+    private fun toast(message: Int) {
+        ContextCompat.getMainExecutor(context).execute {
+            Toast.makeText(context, context.getString(message), Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    companion object {
+        internal val saver = Executors.newSingleThreadExecutor()
+    }
+}

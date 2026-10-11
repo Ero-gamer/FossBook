@@ -12,8 +12,6 @@
     <string name="app_lock_unlock">ביטול נעילה</string>
     <string name="app_lock_prompt_title">ביטול הנעילה של %1$s</string>
 
-    <string name="bundled_scripts_only_title">שימוש בסקריפטים המובנים בלבד</string>
-    <string name="bundled_scripts_only_summary">בלי להוריד עדכוני סקריפטים מ-GitHub; שימוש בגרסאות שמובנות באפליקציה</string>
 
     <string name="log_out_title">התנתקות ומחיקת נתונים</string>
     <string name="log_out_summary">מחיקת ההתחברות לפייסבוק, קובצי ה-Cookie, המטמון ונתוני האתר מהאפליקציה</string>

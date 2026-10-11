@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Strings for this fork's privacy and security settings (app lock, bundled scripts,
-  log out). Kept out of strings.xml, upstream's translation file, for the same reason as
+  Strings for this fork's privacy and security settings (app lock, log out). Kept out of strings.xml, upstream's translation file, for the same reason as
   brand_strings.xml: fewer merge conflicts on every upstream sync.
 -->
 <resources>
@@ -16,8 +15,6 @@
     <string name="app_lock_unlock">Unlock</string>
     <string name="app_lock_prompt_title">Unlock %1$s</string>
 
-    <string name="bundled_scripts_only_title">Use bundled scripts only</string>
-    <string name="bundled_scripts_only_summary">Don\'t download script updates from GitHub; use the versions built into this app</string>
 
     <string name="log_out_title">Log out and clear data</string>
     <string name="log_out_summary">Remove the Facebook login, cookies, cache and site data from this app</string>

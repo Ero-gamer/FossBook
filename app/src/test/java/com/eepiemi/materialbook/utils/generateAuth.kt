@@ -1,8 +1,5 @@
 package com.eepiemi.materialbook.utils
 
-// reset after usage!
- const val FACEBOOK_USERNAME = ""
- const val FACEBOOK_PASSWORD = ""
-
-
-
+// A test account for AdblockTest, from the environment so it's never written into the source.
+val FACEBOOK_USERNAME: String = System.getenv("FACEBOOK_USERNAME").orEmpty()
+val FACEBOOK_PASSWORD: String = System.getenv("FACEBOOK_PASSWORD").orEmpty()

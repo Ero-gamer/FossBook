@@ -42,16 +42,9 @@ user-visible change.
   restyle or resize the video's ancestor elements: Facebook's reels controller
   watches them and pauses the reel. Add new PiP behaviour as separate scripts
   and effects instead of editing focus mode.
-- The page scripts in `res/raw` (except the PiP ones loaded directly in
-  `MaterialbookWV.kt`) are fetched at runtime from `main` on GitHub
-  (`SCRIPT_SRC` in `fetchScripts.kt`), falling back to the bundled copy. A
-  push to `main` changes them in every installed app on its next launch, and
-  a local build still runs `main`'s version of a script that exists there.
-  Only signed scripts are used (`ScriptSignature.kt`): after changing any `res/raw/*.js`,
-  run `.\gradlew.bat signScripts "-PscriptSigningKey=<private key>"` and commit
-  `app/src/main/script-signatures/` with it (`ScriptSignaturesTest` checks). The private
-  key never goes in the repo. Builds without `app/script-signing-key.pub` use only the
-  bundled scripts.
+- The page scripts in `res/raw` always run from the copy bundled in the APK
+  (`bundledScripts.kt`); nothing is fetched at runtime, so script changes ship
+  only with an app release.
 - Messages in desktop mode opens `MessagesLayer` (`ui/screens/MessagesLayer.kt`), a
   second WebView with the desktop user agent over the main one. The main view never
   switches user agent for Messages; Facebook pages opened from a chat stay in the layer
@@ -64,6 +57,9 @@ user-visible change.
 - `m.facebook.com` redirects full loads of some pages (profiles) to
   `intent://…;package=com.facebook.katana;S.browser_fallback_url=…`; the interceptors open
   the web fallback (`intentFallbackUrl`). Never launch the app an `intent://` link names.
+- `MainActivity` is `singleTask`: a link sent while the app runs arrives in `onNewIntent`
+  and reaches the WebView as `openLinkRequest`. Start links are checked with `appLinkUrl`
+  (the start page skips the request interceptor); outgoing links with `externalLinkAction`.
 - `state.nativeWebView` throws until the WebView exists (it's created during layout, which
   doesn't happen with the screen off): guard it in effects.
 - Instrumented tests reset the debug app's settings (not its Facebook login).

@@ -45,19 +45,23 @@ import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.rememberSaveableWebViewState
 import com.multiplatform.webview.web.rememberWebViewNavigator
 import com.eepiemi.materialbook.R
+import com.eepiemi.materialbook.ui.components.ExternalLinkDialog
 import com.eepiemi.materialbook.ui.components.NetworkErrorDialog
 import com.eepiemi.materialbook.ui.components.settings.SettingsDialog
 import com.eepiemi.materialbook.ui.viewmodel.MainViewModel
 import com.eepiemi.materialbook.ui.viewmodel.SettingsViewModel
 import com.eepiemi.materialbook.utils.DESKTOP_USER_AGENT
+import com.eepiemi.materialbook.utils.ExternalLinkAction
 import com.eepiemi.materialbook.utils.ExternalRequestInterceptor
+import com.eepiemi.materialbook.utils.externalLinkAction
 import com.eepiemi.materialbook.utils.FullscreenController
 import com.eepiemi.materialbook.utils.appOrientation
 import com.eepiemi.materialbook.utils.appWebViewParams
 import com.eepiemi.materialbook.utils.clearWebData
+import com.eepiemi.materialbook.utils.jsBridge.installClipboardBridge
+import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
 import com.eepiemi.materialbook.utils.jsBridge.MaterialbookSettings
 import com.eepiemi.materialbook.utils.jsBridge.ThemeChange
-import com.eepiemi.materialbook.utils.jsBridge.installMediaBridge
 import com.eepiemi.materialbook.utils.jsBridge.MaterialYouBridge
 import com.eepiemi.materialbook.utils.jsBridge.PipBridge
 import com.eepiemi.materialbook.utils.jsBridge.ScreenBridge
@@ -66,7 +70,6 @@ import com.eepiemi.materialbook.utils.effectiveDesktop
 import com.eepiemi.materialbook.utils.fbRedirectSanitizer
 import com.eepiemi.materialbook.utils.hardenWebView
 import com.eepiemi.materialbook.utils.intentFallbackUrl
-import com.eepiemi.materialbook.utils.isLaunchableExternalUrl
 import com.eepiemi.materialbook.utils.KeepScreenOn
 import com.eepiemi.materialbook.utils.TextZoom
 import com.eepiemi.materialbook.utils.isMessagesLink
@@ -759,6 +762,9 @@ internal fun pipHandbackJs(positionMs: Long?, play: Boolean, rearm: Boolean): St
 
 private const val HOME_URL = "https://facebook.com/"
 
+/** A link the running app was sent (onNewIntent); [seq] tells two taps on the same link apart. */
+data class OpenLinkRequest(val seq: Int, val url: String)
+
 @Composable
 fun MaterialbookWebView(
     url: String,
@@ -769,6 +775,7 @@ fun MaterialbookWebView(
     pipStartedWhilePlaying: Boolean = false,
     pipHandoffReadTrigger: Int = 0,
     pipHandback: PipHandback? = null,
+    openLinkRequest: OpenLinkRequest? = null,
     onPipHandoffRead: (String?) -> Unit = {},
     onPipPageVisible: () -> Unit = {},
     isAppLocked: Boolean = false,
@@ -784,6 +791,23 @@ fun MaterialbookWebView(
     val isAutoDesktop = rememberAutoDesktop()
     val isEffectiveDesktop = effectiveDesktop(isDesktop, isAutoDesktop)
 
+    val showNotSupported = {
+        Toast.makeText(
+            context,
+            resources.getString(R.string.not_supported),
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+    val launchExternalUrl: (String) -> Unit = { target ->
+        // BROWSABLE and no selector: the link only reaches activities that accept links from
+        // a browser, as it would from Chrome.
+        val intent = Intent(Intent.ACTION_VIEW, target.toUri())
+            .addCategory(Intent.CATEGORY_BROWSABLE)
+            .apply { selector = null }
+        runCatching { context.startActivity(intent) }.onFailure { showNotSupported() }
+    }
+    // A link into another app (not web, email or phone) waits here for the user's OK.
+    var pendingExternalLink by remember { mutableStateOf<String?>(null) }
     val openExternalUrl: (String) -> Unit = { externalUrl ->
         // intent:// links are never used to launch the app they name (Facebook uses them to
         // push its own apps); if one carries a web fallback, that page is opened instead.
@@ -792,20 +816,25 @@ fun MaterialbookWebView(
         } else {
             externalUrl
         }
-        runCatching {
-            // Only links a web page may open (no file:, content:, ...), and only in apps that
-            // accept links from the web (CATEGORY_BROWSABLE).
-            val uri = requireNotNull(target?.takeIf { isLaunchableExternalUrl(it) }).toUri()
-            context.startActivity(
-                Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE)
-            )
-        }.onFailure {
-            Toast.makeText(
-                context,
-                resources.getString(R.string.not_supported),
-                Toast.LENGTH_SHORT
-            ).show()
+        if (target == null) {
+            showNotSupported()
+        } else {
+            when (externalLinkAction(target)) {
+                ExternalLinkAction.OPEN -> launchExternalUrl(target)
+                ExternalLinkAction.CONFIRM -> { pendingExternalLink = target }
+                ExternalLinkAction.BLOCK -> showNotSupported()
+            }
         }
+    }
+    pendingExternalLink?.let { link ->
+        ExternalLinkDialog(
+            link = link,
+            onOpen = {
+                pendingExternalLink = null
+                launchExternalUrl(link)
+            },
+            onDismiss = { pendingExternalLink = null }
+        )
     }
 
     // Messages in desktop mode: Messages links open in MessagesLayer, a separate desktop
@@ -831,22 +860,35 @@ fun MaterialbookWebView(
         )
     )
 
-    LaunchedEffect(navigator) {
-        val bundle = state.viewState
-        if (bundle == null) {
-            // loadUrl doesn't go through the interceptor: a Messages link the app was opened
-            // with (a launcher shortcut, a link from another app) goes where tapping it in the
-            // page would, the Messages layer or this view's desktop Messages page.
-            when {
-                !isMessagesLink(url) || !url.startsWith("http", ignoreCase = true) -> navigator.loadUrl(url)
-                currentMessagesDesktopSetting && !currentIsEffectiveDesktop -> {
-                    messagesLayerUrl = messagesDesktopUrl(url)
-                    navigator.loadUrl(HOME_URL)
-                }
-                currentIsEffectiveDesktop -> navigator.loadUrl(messagesDesktopUrl(url))
-                else -> navigator.loadUrl(url)
+    // loadUrl doesn't go through the interceptor: a Messages link the app was opened with (a
+    // launcher shortcut, a link from another app) goes where tapping it in the page would, the
+    // Messages layer or this view's desktop Messages page. A link sent to the running app
+    // ([whileRunning]) closes the Messages layer to show its page, or opens in the layer over
+    // the page that's already here.
+    fun openAppLink(link: String, whileRunning: Boolean) {
+        when {
+            !isMessagesLink(link) || !link.startsWith("http", ignoreCase = true) -> {
+                if (whileRunning) messagesLayerUrl = null
+                navigator.loadUrl(link)
             }
+            currentMessagesDesktopSetting && !currentIsEffectiveDesktop -> {
+                messagesLayerUrl = messagesDesktopUrl(link)
+                if (!whileRunning) navigator.loadUrl(HOME_URL)
+            }
+            currentIsEffectiveDesktop -> navigator.loadUrl(messagesDesktopUrl(link))
+            else -> navigator.loadUrl(link)
         }
+    }
+
+    LaunchedEffect(navigator) {
+        if (state.viewState == null) openAppLink(url, whileRunning = false)
+    }
+
+    // A link tapped elsewhere while the app runs (singleTask) opens in this WebView rather
+    // than a second copy of the app. Guarded on a request so the navigator isn't sent a
+    // load at composition (see CLAUDE.md).
+    LaunchedEffect(openLinkRequest?.seq) {
+        openLinkRequest?.let { openAppLink(it.url, whileRunning = true) }
     }
 
     // Text size (Settings): applied when the WebView is created (onCreated) and, when it
@@ -1154,13 +1196,11 @@ fun MaterialbookWebView(
 
     val pipEnabled by settingsVM.pipEnabled.collectAsState()
 
-    // Loaded directly from the bundled resource, deliberately skipping
-    // fetchScripts' network-fetch-with-GitHub-hotfix path that the rest of
-    // userScripts go through (see MainViewModel.kt's loadScripts for why).
-    // Confirmed via field reports: without this, the very first PiP attempt
-    // right after a fresh install or app-cache clear - forcing every other
-    // script back onto a cold network fetch - would not trigger PiP at all,
-    // since PipBridge never got a chance to report isVideoPlaying in time.
+    // Evaluated on its own rather than as part of userScripts (see
+    // MainViewModel.kt's loadScripts for why). Confirmed via field reports:
+    // when it waited on the other scripts (then fetched over the network), the
+    // very first PiP attempt after a fresh install or app-cache clear did not
+    // trigger PiP at all, since PipBridge never reported isVideoPlaying in time.
     LaunchedEffect(loadingState, pipEnabled) {
         if (loadingState is LoadingState.Finished && pipEnabled) {
             val detectorScript = context.resources.openRawResource(R.raw.pip_video_detector)
@@ -1210,12 +1250,8 @@ fun MaterialbookWebView(
                 navigator.evaluateJavaScript(scripts) {
                     isLoading = false
                     // Correlates against PipBridge/PiP logcat timestamps to confirm
-                    // or rule out a cold-start race: userScripts (including
-                    // pip_video_detector.js, fetched over the network - see
-                    // fetchScripts.kt) may not finish loading/evaluating before the
-                    // user tries PiP, especially right after an app cache clear
-                    // forces every script fetch back onto the network instead of a
-                    // cached response.
+                    // or rule out a cold-start race: userScripts may not finish
+                    // evaluating before the user tries PiP.
                     Log.d("AstryxbookPiP", "userScripts finished evaluating")
                 }
             }
@@ -1405,7 +1441,8 @@ fun MaterialbookWebView(
                     "ThemeBridge"
                 )
                 // Download and copy to clipboard: Facebook's own main frame only.
-                installMediaBridge(this, context)
+                installDownloadBridge(this, context)
+                installClipboardBridge(this, context)
                 addJavascriptInterface(
                     MaterialYouBridge(primaryColor, onPrimaryColor),
                     "MaterialYouBridge"

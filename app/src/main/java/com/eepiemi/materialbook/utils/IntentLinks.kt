@@ -20,29 +20,22 @@ fun intentFallbackUrl(url: String): String? {
 }
 
 private val FACEBOOK_WEB_URL =
-    Regex("""^https?://(?!(?:l|lm)\.)(?:[^/?#:]+\.)?(?:facebook|messenger)\.com(?:[/?#:]|$)""", RegexOption.IGNORE_CASE)
+    Regex("""^https?://(?!(?:l|lm)\.)(?:[^/?#:@\\]+\.)?(?:facebook|messenger)\.com(?::\d+)?(?:[/?#]|$)""", RegexOption.IGNORE_CASE)
 
 /**
  * A Facebook/Messenger page the app shows itself (the host is facebook.com, messenger.com or
  * a subdomain); outbound l./lm.facebook.com redirects and everything else go to the system.
+ * No user info (`https://facebook.com:443@other.example/` is other.example) and only a numeric port.
  */
 fun isFacebookWebUrl(url: String): Boolean = FACEBOOK_WEB_URL.containsMatchIn(url)
 
-// Schemes that point at data on this device or run code in the page: handed to ACTION_VIEW
-// they would open (and grant access to) local content instead of a web page or another
-// app's public link. intent: is handled by intentFallbackUrl.
-private val BLOCKED_EXTERNAL_SCHEMES = setOf(
-    "file", "content", "javascript", "data", "blob", "about", "android-app", "intent",
-    "chrome", "chrome-extension", "filesystem", "view-source",
-)
-private val URL_SCHEME = Regex("""^([a-zA-Z][a-zA-Z0-9+.-]*):""")
+private val FB_WATCH_URL = Regex("""^https://fb\.watch(?:[/?#]|$)""", RegexOption.IGNORE_CASE)
 
 /**
- * Whether a link the page navigates to may be handed to another app (the browser, the
- * dialer, a store or messaging app). The intent also carries CATEGORY_BROWSABLE, so only
- * apps that accept links from web pages can receive it.
+ * The page to open for a link another app (or a launcher shortcut) sent: only Facebook pages
+ * and fb.watch short links, the hosts in the manifest's link filter. The activity is exported,
+ * so an explicit intent could carry any URL, and a URL loaded at start doesn't pass through the
+ * request interceptor; anything else opens the home page instead.
  */
-fun isLaunchableExternalUrl(url: String): Boolean {
-    val scheme = URL_SCHEME.find(url.trim())?.groupValues?.get(1)?.lowercase() ?: return false
-    return scheme !in BLOCKED_EXTERNAL_SCHEMES
-}
+fun appLinkUrl(url: String?): String? =
+    url?.takeIf { it.startsWith("https://", ignoreCase = true) && (isFacebookWebUrl(it) || FB_WATCH_URL.containsMatchIn(it)) }

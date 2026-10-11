@@ -54,6 +54,9 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
 - Raised the minimum supported Android version to 8.0 (API level 26).
 - Removed the obsolete pre-API 26 launcher-icon fallback; supported installs
   now resolve the adaptive icon from the base `mipmap-anydpi` resources.
+- Backups (Google cloud backup, device-to-device transfer and `adb backup`) now
+  carry only the app's settings. The Facebook login (the WebView's cookies) and
+  caches stay on the phone, so a restored or new phone starts logged out.
 
 ## Default behavior changes
 
@@ -77,6 +80,11 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
 
 ## WebView
 
+- Security: page scripts are no longer downloaded from GitHub at launch; the app
+  always runs the copies bundled with it. Before, anyone able to push to `main`
+  could inject code into every user's logged-in Facebook page on their next
+  launch. Script updates now arrive with app updates, and launch no longer waits
+  on the network for them.
 - Settings while watching reels: the Reels viewer has its own top bar instead of
   Facebook's header, where the app's Settings button lives, so Settings couldn't be
   opened from there. `scripts.js` now adds a Settings button at the right end of that
@@ -110,6 +118,17 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   opened. It now saves a blob only when the page starts a real download (a
   clicked `<a download>` link pointing at it). The app's own media download
   button is unaffected. Covered by `FileDownloadJsTest`.
+- Security fix: any frame in the WebView (an ad or third-party iframe
+  included) could call the download bridge and save any file type, an APK
+  say, to Downloads without the user doing anything. Downloads now go
+  through a message listener (`AstryxDownloads`) that only the main frame of
+  a facebook.com/messenger.com page can reach, and only photos and videos are
+  saved; anything else, or an image that doesn't decode, is refused with
+  "Download failed". On a WebView without message listeners (older than 83)
+  the old `DownloadBridge` interface remains, with the same photo/video
+  limit. The scripts fall back to `DownloadBridge` so older app versions keep
+  working with the scripts on `main`. Covered by `DownloadMimeTypeTest` and
+  `FileDownloadJsTest`.
 - Desktop layout: Back with a Messenger chat window open over the feed closed
   the app, because chat windows aren't marked as dialogs. Back now closes the
   chat window (the right-most visible button of its header, "Close chat" in
@@ -122,6 +141,28 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   page externally. The "is this Facebook" check now matches only facebook.com /
   messenger.com hosts and their subdomains (the old pattern also accepted look-alike
   hosts and URLs that merely contained a Facebook address).
+- Security: a link in a post or ad can no longer send you straight into another app.
+  Web, email and phone links open as before; any other kind (another app's deep link,
+  `market:`, `sms:`…) first asks "Open in another app?" and shows the link. `javascript:`,
+  `file:`, `content:` and `data:` links are refused. Links are sent with
+  `CATEGORY_BROWSABLE`, so they only reach apps that accept links from a browser. Covered
+  by `ExternalLinksTest`.
+- Security: a link sent to the app (from another app or an explicit intent) opens only if
+  it's a Facebook page or an fb.watch link, else the app opens at Home. Before, any URL
+  could be loaded in the logged-in WebView, because the start page doesn't pass through
+  the request interceptor. The "is this Facebook" check also no longer accepts a Facebook
+  address in the user-info part (`https://facebook.com:443@other.example/` is
+  other.example). Covered by `AppLinkUrlTest`.
+- A Facebook link tapped in another app while Astryxbook is running now opens in the
+  running app (`singleTask`, `onNewIntent`) instead of starting a second copy with its own
+  WebView, page load and PiP state. Links opened this way go through the same Messages
+  routing as at launch. Covered by `LinkHandlingManifestTest`.
+- Android 12+: Facebook links open in the browser until the app is allowed to open them,
+  since facebook.com can't verify for a third-party app (the useless `autoVerify` is
+  gone). Settings has a new *Open Facebook links here* row that opens the system page
+  where you turn them on.
+- A download that Android refuses to save now says "Failed to save file" instead of
+  showing nothing.
 - Two cold-start crashes ("WebView is not initialized"): the user-agent effect and the PiP
   layer refresh touched the WebView before it existed, which happens when the app starts
   with the screen off. Both now wait for it.
@@ -168,7 +209,7 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
 
 Added test coverage for the rebrand and default-behavior changes: settings
 defaults, theme colors, app identity/strings, launcher icon, applicationId,
-and the pinned external script source — none of which existed upstream.
+none of which existed upstream.
 
 Also covers the PiP focus-mode/toggle/freeze JS (`PipFocusModeJsTest`, 24
 tests driven against a real `WebView` with synthetic DOM fixtures rather
@@ -403,37 +444,23 @@ layer); *Always* keeps it on whenever the app is on screen. It sets the view's
 `keepScreenOn`, so it never applies in the background and doesn't interfere
 with the window flag fullscreen video already sets.
 
-## Privacy and security
+## App lock, log out and frame restrictions
 
-- **Signed page scripts.** The page scripts fetched from GitHub at launch run inside your
-  logged-in Facebook session, so each one now has to carry a signature made with the
-  maintainer's offline key (ECDSA P-256), checked against the public key built into the
-  app. A script that is unsigned, altered, or signed for another script name isn't used;
-  the app runs its bundled copy instead, as it already did when a fetch failed. Builds
-  without a key never fetch scripts. Signatures live in `app/src/main/script-signatures/`
-  and are made with `./gradlew signScripts -PscriptSigningKey=<private key>` after every
-  change to `res/raw/*.js` (`ScriptSignaturesTest` fails until they are).
-- **Use bundled scripts only** (Settings, off by default): never fetch script updates;
-  the app also stops contacting GitHub at launch.
-- **Download and copy to clipboard only for Facebook itself.** The bridges were visible to
-  every frame of every page, so an ad or embedded iframe could save any file to Downloads
-  without a tap. They now take messages only from the main frame of a Facebook or
-  Messenger page (`AstryxMedia`, a web message listener). WebViews older than 82 keep the
-  old interface. Android app packages (`.apk`) are never saved.
-- **Links to other apps.** Only the page itself, not an iframe inside it, can open another
-  app. Links handed to Android carry `CATEGORY_BROWSABLE` (only apps that accept links
-  from the web can receive them), and `file:`, `content:`, `javascript:`, `data:` and
-  similar local schemes are never handed over.
-- **Backups leave out the Facebook login.** Google backup and phone-to-phone transfer no
-  longer include the WebView's data (cookies, site storage); your settings are still
-  backed up. After restoring to a new phone you log in again.
 - **App lock** (Settings, off by default): asks for your fingerprint, face or screen lock
   when the app opens, and again after it's been out of sight for the time you pick (right
   away, 1, 5 or 15 minutes). A video in PiP or playing on the lock screen keeps going
-  underneath. While it's on, Recents shows no preview of the page (Android 13+). Needs a
-  screen lock on the device.
+  underneath; locking leaves fullscreen video and closes Settings, which draw above it.
+  While it's on, Recents shows no preview of the page (Android 13+). Needs a screen lock on
+  the device; it can't be turned on without one.
 - **Log out and clear data** (Settings): removes the Facebook login, cookies, cache, site
   storage and copied images from the app, keeping your settings.
+- **Copy to clipboard only for Facebook itself**, like downloads: the clipboard bridge
+  takes messages only from the main frame of a Facebook or Messenger page
+  (`AstryxClipboard`, a web message listener), so an ad or embed can't fill the clipboard.
+  WebViews without message listeners keep the old interface.
+- **Iframes can't open other apps.** Only the page itself can send a link out of the app;
+  a navigation inside an ad or embed frame stays in that frame, so it can't open the
+  browser or another app without a tap.
 
 ## Known limitations
 

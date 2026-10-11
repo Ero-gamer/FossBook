@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-   Auto Backup on Android 11 and lower (Android 12+ reads data_extraction_rules.xml).
-   Everything is backed up except the WebView's data directory, which holds the
-   Facebook session (cookies) and web storage: a backup or a restore to another
-   phone must never carry a logged-in session. App settings (DataStore) are kept.
+   Auto Backup rules for Android 11 and lower (API 23-30), also used by `adb backup`.
+   Only the settings DataStore is backed up. Everything else in the data dir stays on the
+   device, in particular the WebView's profile (app_webview/), which holds the Facebook
+   session cookies, and its caches. With an <include>, anything not listed is excluded.
+   Android 12+ uses data_extraction_rules.xml instead.
 -->
 <full-backup-content>
-    <exclude domain="root" path="app_webview/" />
+    <include domain="file" path="datastore/" />
 </full-backup-content>

@@ -88,17 +88,6 @@ class SettingsDefaultsTest {
     }
 
     @Test
-    fun bundledScriptsOnlyIsOffByDefault() {
-        // Signed script updates from GitHub stay on by default (they carry Facebook fixes).
-        val app = ApplicationProvider.getApplicationContext<Application>()
-        val viewModel = SettingsViewModel(app)
-        assertFalse(
-            "bundledScriptsOnly should default to false",
-            viewModel.bundledScriptsOnly.value
-        )
-    }
-
-    @Test
     fun webViewDebuggingIsOffByDefault() {
         // With it on, anything with USB debugging access can drive the logged-in page.
         val app = ApplicationProvider.getApplicationContext<Application>()

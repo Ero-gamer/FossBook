@@ -2,15 +2,6 @@ import com.android.build.api.dsl.ApplicationExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
 import org.gradle.testing.jacoco.tasks.JacocoReport
-// Imported: inside the build script, a bare `java.` resolves to the `java` extension, not
-// the package (used by the script-signing tasks).
-import java.security.KeyFactory
-import java.security.KeyPairGenerator
-import java.security.Signature
-import java.security.spec.ECGenParameterSpec
-import java.security.spec.PKCS8EncodedKeySpec
-import java.security.spec.X509EncodedKeySpec
-import java.util.Base64
 
 plugins {
     alias(libs.plugins.android.application)
@@ -25,84 +16,6 @@ configure<JacocoPluginExtension> {
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_11)
-    }
-}
-
-// ---- Script signing ----
-// Page scripts fetched from GitHub at runtime must be signed (see ScriptSignature.kt). The
-// private key stays with the maintainer, outside the repository; only the public key and
-// the signatures are committed.
-//   One-time:  ./gradlew generateScriptSigningKey -PscriptSigningKey=<path outside the repo, e.g. ~/keys/astryxbook-scripts.pk8>
-//   After every change to res/raw/*.js:  ./gradlew signScripts -PscriptSigningKey=<same path>
-// ScriptSignaturesTest fails while a script is unsigned or its signature is stale.
-val SCRIPT_SIGNING_PUBLIC_KEY_FILE = "script-signing-key.pub"
-val SCRIPT_SIGNATURES_DIR = "src/main/script-signatures"
-val SCRIPT_SIGNING_MESSAGE_PREFIX = "astryxbook-script-v1\n" // same as ScriptSignature.kt
-
-tasks.register("generateScriptSigningKey") {
-    group = "script signing"
-    description = "Creates the page-script signing key pair (-PscriptSigningKey=<private key file>)."
-    val privateKeyPath = providers.gradleProperty("scriptSigningKey")
-    val publicKeyFile = layout.projectDirectory.file(SCRIPT_SIGNING_PUBLIC_KEY_FILE).asFile
-    val repoDir = rootProject.layout.projectDirectory.asFile
-    doLast {
-        val privateKeyFile = File(privateKeyPath.orNull ?: error("Pass -PscriptSigningKey=<private key file>"))
-        check(!privateKeyFile.exists()) { "$privateKeyFile already exists; not overwriting it" }
-        check(!privateKeyFile.canonicalPath.startsWith(repoDir.canonicalPath + File.separator)) {
-            "Keep the private key outside the repository (got $privateKeyFile)"
-        }
-        val generator = KeyPairGenerator.getInstance("EC")
-        generator.initialize(ECGenParameterSpec("secp256r1"))
-        val pair = generator.generateKeyPair()
-        val encoder = Base64.getEncoder()
-        privateKeyFile.absoluteFile.parentFile.mkdirs()
-        privateKeyFile.writeText(encoder.encodeToString(pair.private.encoded) + "\n")
-        publicKeyFile.writeText(encoder.encodeToString(pair.public.encoded) + "\n")
-        println("Private key: $privateKeyFile (keep it out of the repository and back it up)")
-        println("Public key:  $publicKeyFile (commit it)")
-    }
-}
-
-tasks.register("signScripts") {
-    group = "script signing"
-    description = "Signs every res/raw/*.js page script (-PscriptSigningKey=<private key file>)."
-    val privateKeyPath = providers.gradleProperty("scriptSigningKey")
-    val rawDir = layout.projectDirectory.dir("src/main/res/raw").asFile
-    val signaturesDir = layout.projectDirectory.dir(SCRIPT_SIGNATURES_DIR).asFile
-    val publicKeyFile = layout.projectDirectory.file(SCRIPT_SIGNING_PUBLIC_KEY_FILE).asFile
-    val messagePrefix = SCRIPT_SIGNING_MESSAGE_PREFIX
-    doLast {
-        val privateKeyFile = File(privateKeyPath.orNull ?: error("Pass -PscriptSigningKey=<private key file>"))
-        val decoder = Base64.getDecoder()
-        val keyFactory = KeyFactory.getInstance("EC")
-        val privateKey = keyFactory.generatePrivate(
-            PKCS8EncodedKeySpec(decoder.decode(privateKeyFile.readText().trim()))
-        )
-        val publicKey = keyFactory.generatePublic(
-            X509EncodedKeySpec(decoder.decode(publicKeyFile.readText().trim()))
-        )
-        signaturesDir.mkdirs()
-        signaturesDir.listFiles { f -> f.name.endsWith(".sig") }?.forEach { it.delete() }
-        val scripts = rawDir.listFiles { f -> f.name.endsWith(".js") }.orEmpty().sortedBy { it.name }
-        scripts.forEach { script ->
-            val message = (messagePrefix + script.name + "\n" + script.readText().replace("\r\n", "\n"))
-                .toByteArray(Charsets.UTF_8)
-            val signature = Signature.getInstance("SHA256withECDSA").run {
-                initSign(privateKey)
-                update(message)
-                sign()
-            }
-            // Checked against the committed public key, so a mismatched key pair fails here.
-            val verified = Signature.getInstance("SHA256withECDSA").run {
-                initVerify(publicKey)
-                update(message)
-                verify(signature)
-            }
-            check(verified) { "The private key doesn't match $publicKeyFile" }
-            File(signaturesDir, script.name + ".sig")
-                .writeText(Base64.getEncoder().encodeToString(signature) + "\n")
-        }
-        println("Signed ${scripts.size} scripts into $signaturesDir")
     }
 }
 
@@ -138,13 +51,6 @@ extensions.configure<ApplicationExtension> {
         }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        // Public half of the page-script signing key (see "Script signing" below). Without
-        // it the app never fetches scripts and always runs the bundled copies.
-        val scriptSigningPublicKey = providers
-            .fileContents(layout.projectDirectory.file(SCRIPT_SIGNING_PUBLIC_KEY_FILE))
-            .asText.orNull?.trim().orEmpty()
-        buildConfigField("String", "SCRIPT_SIGNING_PUBLIC_KEY", "\"$scriptSigningPublicKey\"")
     }
 
     buildTypes {
@@ -188,8 +94,6 @@ dependencies {
     api(libs.compose.webview.multiplatform)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.okhttp)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -209,7 +113,6 @@ dependencies {
     testImplementation(libs.playwright)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
-    testImplementation(libs.ktor.client.mock)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

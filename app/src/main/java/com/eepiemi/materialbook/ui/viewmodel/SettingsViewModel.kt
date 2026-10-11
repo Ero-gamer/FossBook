@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.eepiemi.materialbook.data.local.SettingsDataStore
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.AMOLED_BLACK
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.APP_LOCK
-import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.BUNDLED_SCRIPTS_ONLY
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DESKTOP_LAYOUT
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DEVELOPER_OPTIONS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_COPY_TO_CLIPBOARD
@@ -146,11 +145,6 @@ class SettingsViewModel(
         initialValue = initialPrefs[KEEP_SCREEN_ON] ?: KeepScreenOn.OFF,
         started = SharingStarted.WhileSubscribed()
     )
-    val bundledScriptsOnly = dataStore.bundledScriptsOnly.stateIn(
-        scope = viewModelScope,
-        initialValue = initialPrefs[BUNDLED_SCRIPTS_ONLY] ?: false,
-        started = SharingStarted.WhileSubscribed()
-    )
     // Eagerly: MainActivity reads it in onStart, with nothing collecting it.
     val appLock = dataStore.appLock.stateIn(
         scope = viewModelScope,
@@ -285,12 +279,6 @@ class SettingsViewModel(
     fun setKeepScreenOn(mode: String) {
         viewModelScope.launch {
             dataStore.setKeepScreenOn(mode)
-        }
-    }
-
-    fun setBundledScriptsOnly(enabled: Boolean) {
-        viewModelScope.launch {
-            dataStore.setBundledScriptsOnly(enabled)
         }
     }
 

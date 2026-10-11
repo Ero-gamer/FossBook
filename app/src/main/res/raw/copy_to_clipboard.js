@@ -128,15 +128,15 @@
     fetch(url)
       .then(response => response.blob())
       .then(blob => {
-        // AstryxMedia (Facebook's main frame only) on current app versions; the
-        // ClipboardBridge interface on older ones and on WebViews before 82.
-        if (window.AstryxMedia || (window.ClipboardBridge && window.ClipboardBridge.copyImageToClipboard)) {
+        // AstryxClipboard: the app's Facebook-only message listener;
+        // ClipboardBridge: older WebViews and older app versions.
+        if (window.AstryxClipboard || (window.ClipboardBridge && window.ClipboardBridge.copyImageToClipboard)) {
           const reader = new FileReader();
           reader.onloadend = function() {
             if (reader.result) {
               const type = blob.type || "image/jpeg";
-              if (window.AstryxMedia) {
-                window.AstryxMedia.postMessage("copy\n" + type + "\n" + reader.result);
+              if (window.AstryxClipboard) {
+                window.AstryxClipboard.postMessage(JSON.stringify({ data: reader.result, mimeType: type }));
               } else {
                 window.ClipboardBridge.copyImageToClipboard(reader.result, type);
               }
