@@ -54,6 +54,9 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
 - Raised the minimum supported Android version to 8.0 (API level 26).
 - Removed the obsolete pre-API 26 launcher-icon fallback; supported installs
   now resolve the adaptive icon from the base `mipmap-anydpi` resources.
+- Backups (Google cloud backup, device-to-device transfer and `adb backup`) now
+  carry only the app's settings. The Facebook login (the WebView's cookies) and
+  caches stay on the phone, so a restored or new phone starts logged out.
 
 ## Default behavior changes
 
