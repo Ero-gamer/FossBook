@@ -27,7 +27,7 @@ import com.eepiemi.materialbook.utils.MessagesLayerRoute
 import com.eepiemi.materialbook.utils.appWebViewParams
 import com.eepiemi.materialbook.utils.hardenWebView
 import com.eepiemi.materialbook.utils.jsBridge.ClipboardBridge
-import com.eepiemi.materialbook.utils.jsBridge.DownloadBridge
+import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
 import com.eepiemi.materialbook.utils.jsBridge.LayerBridge
 import com.eepiemi.materialbook.utils.jsBridge.MaterialYouBridge
 import com.eepiemi.materialbook.utils.jsBridge.MaterialbookSettings
@@ -203,7 +203,7 @@ fun MessagesLayer(
                     }
                 }
                 webView.apply {
-                    addJavascriptInterface(DownloadBridge(context), "DownloadBridge")
+                    installDownloadBridge(this, context)
                     addJavascriptInterface(ClipboardBridge(context), "ClipboardBridge")
                     addJavascriptInterface(MaterialYouBridge(primaryColor, onPrimaryColor), "MaterialYouBridge")
                     addJavascriptInterface(

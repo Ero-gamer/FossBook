@@ -489,7 +489,12 @@ observer.observe(document.body, { childList: true, subtree: true });
         if (!blob) return;
         const reader = new FileReader();
         reader.onloadend = function() {
-            if (reader.result)
+            if (!reader.result) return;
+            // AstryxDownloads: the app's Facebook-only message listener;
+            // DownloadBridge: older WebViews and older app versions.
+            if (window.AstryxDownloads)
+                AstryxDownloads.postMessage(JSON.stringify({ data: reader.result, mimeType: blob.type }));
+            else if (window.DownloadBridge)
                 DownloadBridge.downloadBase64File(reader.result, blob.type);
         };
         reader.readAsDataURL(blob);

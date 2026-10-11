@@ -54,6 +54,9 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
 - Raised the minimum supported Android version to 8.0 (API level 26).
 - Removed the obsolete pre-API 26 launcher-icon fallback; supported installs
   now resolve the adaptive icon from the base `mipmap-anydpi` resources.
+- Backups (Google cloud backup, device-to-device transfer and `adb backup`) now
+  carry only the app's settings. The Facebook login (the WebView's cookies) and
+  caches stay on the phone, so a restored or new phone starts logged out.
 
 ## Default behavior changes
 
@@ -77,6 +80,11 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
 
 ## WebView
 
+- Security: page scripts are no longer downloaded from GitHub at launch; the app
+  always runs the copies bundled with it. Before, anyone able to push to `main`
+  could inject code into every user's logged-in Facebook page on their next
+  launch. Script updates now arrive with app updates, and launch no longer waits
+  on the network for them.
 - Settings while watching reels: the Reels viewer has its own top bar instead of
   Facebook's header, where the app's Settings button lives, so Settings couldn't be
   opened from there. `scripts.js` now adds a Settings button at the right end of that
@@ -110,6 +118,17 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   opened. It now saves a blob only when the page starts a real download (a
   clicked `<a download>` link pointing at it). The app's own media download
   button is unaffected. Covered by `FileDownloadJsTest`.
+- Security fix: any frame in the WebView (an ad or third-party iframe
+  included) could call the download bridge and save any file type, an APK
+  say, to Downloads without the user doing anything. Downloads now go
+  through a message listener (`AstryxDownloads`) that only the main frame of
+  a facebook.com/messenger.com page can reach, and only photos and videos are
+  saved; anything else, or an image that doesn't decode, is refused with
+  "Download failed". On a WebView without message listeners (older than 83)
+  the old `DownloadBridge` interface remains, with the same photo/video
+  limit. The scripts fall back to `DownloadBridge` so older app versions keep
+  working with the scripts on `main`. Covered by `DownloadMimeTypeTest` and
+  `FileDownloadJsTest`.
 - Desktop layout: Back with a Messenger chat window open over the feed closed
   the app, because chat windows aren't marked as dialogs. Back now closes the
   chat window (the right-most visible button of its header, "Close chat" in
@@ -168,7 +187,7 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
 
 Added test coverage for the rebrand and default-behavior changes: settings
 defaults, theme colors, app identity/strings, launcher icon, applicationId,
-and the pinned external script source — none of which existed upstream.
+none of which existed upstream.
 
 Also covers the PiP focus-mode/toggle/freeze JS (`PipFocusModeJsTest`, 24
 tests driven against a real `WebView` with synthetic DOM fixtures rather
