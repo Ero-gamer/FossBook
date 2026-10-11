@@ -29,8 +29,9 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   listing icon/banner recolored to match; downloads badge swapped from an
   opaque third-party worker to a themed, GitHub-API-backed shields.io badge.
 - README banner (the store feature graphic) now shows what sets this fork
-  apart: Picture-in-Picture, lock-screen audio and in-app Messages chips (with
-  a small drop shadow), under the original tagline. The README also gained a License section (GPL-3.0, as
+  apart: Picture-in-Picture, lock-screen audio and in-app Messages chips, and a
+  second row for app lock, Messenger calls and share & shortcuts (with a small
+  drop shadow), under the original tagline. The README also gained a License section (GPL-3.0, as
   upstream) with the fork's copyright line.
 - `NOTICE.md` adds GPL-3.0 section 7 terms for this fork's own material: no
   trademark rights to the Astryxbook name and logo, and modified versions must

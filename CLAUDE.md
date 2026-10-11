@@ -92,6 +92,18 @@ user-visible change.
   widths into inline styles. Chromium ends HTML5 fullscreen by itself when
   PiP starts from landscape (see `PIP_HOLD_FULLSCREENCHANGE_JS`).
 
+## Settings, permissions and strings
+
+- Every new settings key must be listed in `data/local/SettingsBackup.kt`, either as exported
+  or in `NOT_EXPORTED` (developer options, device-specific state). `SettingsBackupTest`
+  fails on a key in neither list.
+- Camera and microphone go to web pages only through `webMediaGrant`
+  (`utils/MediaPermissions.kt`, used by `onPermissionRequest` in `FilePicker.kt`): Facebook
+  origins only, after the Android permission. Don't fall back to the library's grant-all.
+- `MainActivity` is a `FragmentActivity` because app lock uses `BiometricPrompt`.
+- New fork strings go in `brand_strings.xml`, `extra_strings.xml` or `privacy_strings.xml`
+  (with the Hebrew copy in `values-iw`), not upstream's `strings.xml`.
+
 ## Facebook behaviour, not ours
 
 Verify against Chrome/Opera on the phone before "fixing" these: Reels can
