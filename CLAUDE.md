@@ -25,8 +25,9 @@ user-visible change.
   to the release job and doesn't gate it.
 - Pushing to `main` runs `create-release.yml` (which calls `ci.yml`); it
   auto-versions from conventional commits (`feat:` = minor bump) and
-  publishes a release. A docs-only push (`*.md`, `LICENSE`, `fastlane/`,
-  `assets/`) skips it via `paths-ignore`.
+  publishes a release. A push touching only docs or repo tooling (`*.md`,
+  `LICENSE`, `fastlane/`, `assets/`, `.github/`, `.gitignore`, `lint.xml`)
+  skips it via `paths-ignore`.
 
 ## WebView and PiP code (`ui/screens/MaterialbookWV.kt`)
 
