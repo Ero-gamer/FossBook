@@ -1121,6 +1121,11 @@ fun MaterialbookWebView(
     }
 
     val themeColor by viewModel.themeColor
+    var settingsToggle by rememberSaveable { mutableStateOf(false) }
+    // The Messages layer's own page colour (its theme-color, e.g. the desktop site's dark mode)
+    // while it's open, so the system bars match the page on screen; the main page's otherwise.
+    var layerThemeColor by remember(messagesLayerUrl) { mutableStateOf<Color?>(null) }
+    val barColor = layerThemeColor?.takeIf { messagesLayerUrl != null && !settingsToggle } ?: themeColor
     // Manual handling to fix visual & padding bug on settings dialog.
     var isImmersiveMode by rememberSaveable { mutableStateOf(settingsVM.immersiveMode.value) }
 
@@ -1133,7 +1138,7 @@ fun MaterialbookWebView(
             windowInsetsController.systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         } else {
-            val isLight = ColorUtils.calculateLuminance(themeColor.toArgb()) > 0.5
+            val isLight = ColorUtils.calculateLuminance(barColor.toArgb()) > 0.5
             windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
             windowInsetsController.isAppearanceLightStatusBars = isLight
             windowInsetsController.isAppearanceLightNavigationBars = isLight
@@ -1141,7 +1146,7 @@ fun MaterialbookWebView(
         isImmersiveMode = immersive
     }
 
-    LaunchedEffect(isImmersiveMode, themeColor.value) {
+    LaunchedEffect(isImmersiveMode, barColor.value) {
         setWindow(isImmersiveMode)
     }
 
@@ -1282,7 +1287,6 @@ fun MaterialbookWebView(
     val colorScheme = MaterialTheme.colorScheme
     val originalColor = remember { mutableStateOf(themeColor) }
 
-    var settingsToggle by rememberSaveable { mutableStateOf(false) }
     if (settingsToggle) {
         setWindow(false)
         SettingsDialog(
@@ -1409,7 +1413,7 @@ fun MaterialbookWebView(
 
     val pageModifier = Modifier
         .fillMaxSize()
-        .background(themeColor)
+        .background(barColor)
         .then(
             if (isImmersiveMode) {
                 Modifier.padding(bottom = imeHeight)
@@ -1491,7 +1495,7 @@ fun MaterialbookWebView(
                 fullscreen = fullscreen,
                 isFullscreen = isFullscreen,
                 modifier = pageModifier,
-                background = themeColor,
+                background = barColor,
                 primaryColor = primaryColor,
                 onPrimaryColor = onPrimaryColor,
                 onClose = { messagesLayerUrl = null },
@@ -1510,6 +1514,7 @@ fun MaterialbookWebView(
                     }
                 },
                 onOpenSettings = { settingsToggle = true },
+                onThemeColor = { layerThemeColor = it },
                 onExternalUrl = { externalUrl -> openExternalUrl(fbRedirectSanitizer(externalUrl)) }
             )
         }
