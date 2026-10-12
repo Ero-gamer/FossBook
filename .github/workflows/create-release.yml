@@ -15,9 +15,11 @@ name: Create Release
 #  3. workflow_dispatch — manual override with an explicit tag.
 #
 # A main push that only touches docs (Markdown, the fastlane store listing,
-# README images) doesn't release. GitHub checks paths against the whole
-# push, so a push mixing docs and code still releases, and the docs commits
-# count toward the next release's version bump. Path filters don't apply to
+# README images) or repo tooling that doesn't change the APK (.github:
+# workflows, issue templates, dependabot; .gitignore; lint.xml) doesn't
+# release. GitHub checks paths against the whole push, so a push mixing
+# those with code still releases, and the skipped commits count toward the
+# next release's version bump. Path filters don't apply to
 # tag pushes, so path 2 is unaffected.
 #
 # Use Ubuntu 26.04 across release jobs for current GitHub-hosted tooling.
@@ -31,6 +33,9 @@ on:
       - 'LICENSE'
       - 'fastlane/**'
       - 'assets/**'
+      - '.github/**'
+      - '**/.gitignore'
+      - 'lint.xml'
     tags:
       - 'v*.*.*'
   workflow_dispatch:
