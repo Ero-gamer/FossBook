@@ -2,8 +2,8 @@ name: Coverage
 
 # Combined unit + instrumented coverage report, from the instrumented-test-coverage
 # artifact ci.yml's instrumented-tests job uploads earlier in the same run. Called by
-# ci.yml on its own runs (PRs, manual runs), and by create-release.yml next to its
-# release job, so publishing a release doesn't wait for the report.
+# create-release.yml next to its release job, so publishing a release doesn't wait
+# for the report. PR and manual CI runs build the report inside instrumented-tests.
 
 on:
   workflow_call:

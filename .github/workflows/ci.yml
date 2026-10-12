@@ -24,7 +24,7 @@ on:
         required: false
         default: ''
       coverage:
-        description: 'Generate the coverage report as part of this workflow. create-release.yml passes false and runs coverage.yml next to its release job instead, so publishing does not wait for it.'
+        description: 'Generate the coverage report in the instrumented-tests job. create-release.yml passes false and runs coverage.yml next to its release job instead, so publishing does not wait for it.'
         type: boolean
         required: false
         default: true
@@ -185,9 +185,21 @@ jobs:
           path: app/build/outputs/code_coverage/debugAndroidTest/connected/**/*.ec
           if-no-files-found: warn
 
-  coverage-report:
-    needs: [build, instrumented-tests]
-    # inputs.coverage is empty on PR and manual runs; GitHub's loose == would
-    # treat that like false, so compare it as text.
-    if: format('{0}', inputs.coverage) != 'false'
-    uses: ./.github/workflows/coverage.yml
+      # Combined coverage report, built from this job's own .ec. It's steps, not
+      # a job, because release runs (coverage: false) make it in coverage.yml
+      # next to their release job, and a skipped job would still show in their
+      # graph. continue-on-error: the report never gates a PR.
+      # inputs.coverage is empty on PR and manual runs; GitHub's loose == would
+      # treat that like false, so compare it as text.
+      - name: Generate Coverage Report
+        if: format('{0}', inputs.coverage) != 'false'
+        continue-on-error: true
+        run: ./gradlew jacocoTestReport --stacktrace
+
+      - name: Upload Coverage Report
+        if: format('{0}', inputs.coverage) != 'false'
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-report
+          path: app/build/reports/jacoco/jacocoTestReport/html
