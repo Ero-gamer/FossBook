@@ -496,6 +496,11 @@ with the window flag fullscreen video already sets.
   Settings, change the bar colour, keep the screen on by faking a playing video, or reshape
   the PiP window. WebViews without message listeners keep the old interfaces. The Material
   You colours stay a plain interface: they're read-only and only give out the theme colour.
+- **Readable status bar in Settings and over Messages**: the Settings screen now gets dark
+  status and navigation bar icons on its light background (it's its own window, so it never
+  picked up the app's setting), and with Messages in desktop mode open, the system bars take
+  the Messages page's colour (dark when Facebook's desktop dark mode is on) instead of staying
+  the main page's white.
 - **No third-party cookies**: embeds from other sites (ads, link previews) can't set or read
   their cookies inside the app, so they can't track you across pages. Facebook and
   Messenger themselves are unaffected.

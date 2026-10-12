@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.view.WindowInsetsControllerCompat
 import com.eepiemi.materialbook.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,8 +54,18 @@ fun SettingsDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
         onDismissRequest = onDismiss,
     ) {
-        val dialogWindowProvider = LocalView.current.parent as? DialogWindowProvider
+        val view = LocalView.current
+        val dialogWindowProvider = view.parent as? DialogWindowProvider
         dialogWindowProvider?.window?.setDimAmount(0f)
+        // The dialog is its own window, and the status and navigation bar icons follow the
+        // window on top: without this they stay white on a light Settings background.
+        val lightBars = MaterialTheme.colorScheme.background.luminance() > 0.5f
+        dialogWindowProvider?.window?.let { window ->
+            WindowInsetsControllerCompat(window, view).apply {
+                isAppearanceLightStatusBars = lightBars
+                isAppearanceLightNavigationBars = lightBars
+            }
+        }
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),

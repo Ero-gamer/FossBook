@@ -35,6 +35,7 @@ import com.eepiemi.materialbook.utils.jsBridge.MaterialYouBridge
 import com.eepiemi.materialbook.utils.jsBridge.MaterialbookSettings
 import com.eepiemi.materialbook.utils.jsBridge.PipBridge
 import com.eepiemi.materialbook.utils.jsBridge.ScreenBridge
+import com.eepiemi.materialbook.utils.jsBridge.ThemeChange
 import com.eepiemi.materialbook.utils.messagesLayerExit
 import com.eepiemi.materialbook.utils.messagesLayerRoute
 import com.multiplatform.webview.request.RequestInterceptor
@@ -82,6 +83,7 @@ fun MessagesLayer(
     onScreenVideoPlayingChanged: (Boolean) -> Unit = {},
     onLeave: (mainUrl: String?) -> Unit = { onClose() },
     onOpenSettings: () -> Unit = {},
+    onThemeColor: (Color) -> Unit = {},
     textZoom: Int = 100,
 ) {
     val context = LocalContext.current
@@ -89,6 +91,7 @@ fun MessagesLayer(
     val currentOnExternalUrl by rememberUpdatedState(onExternalUrl)
     val currentOnLeave by rememberUpdatedState(onLeave)
     val currentOnOpenSettings by rememberUpdatedState(onOpenSettings)
+    val currentOnThemeColor by rememberUpdatedState(onThemeColor)
 
     // The user agent is applied by the library when it creates the WebView, before the
     // first load (setting it is idempotent, so doing it on every composition is fine).
@@ -213,6 +216,8 @@ fun MessagesLayer(
                         PageBridges(
                             // The gear scripts.js adds to the desktop header opens the app's Settings.
                             settings = MaterialbookSettings { currentOnOpenSettings() },
+                            // The page's theme-color (scripts.js), for the system bars over the layer.
+                            theme = ThemeChange { currentOnThemeColor(Color(it)) },
                             pip = PipBridge(
                                 { playing, width, height -> currentOnVideoPlayingChanged(playing, width, height) },
                                 onPipPageVisible
