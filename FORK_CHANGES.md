@@ -207,7 +207,8 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   a release; its commits roll into the next code release's version bump.
 - Manual releases (running *Create Release* by hand with a tag, or pushing a
   `v*.*.*` tag) work again: every job was skipped because the version step
-  only runs on a push to `main`.
+  only runs on a push to `main`, and a skipped job skips everything
+  downstream of it.
 - APK's actual `versionName`/`versionCode` now baked in from the resolved
   release tag at build time — previously hardcoded to a permanent `1.0.0`
   regardless of the real release version.
