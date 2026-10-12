@@ -1,5 +1,6 @@
 package com.eepiemi.materialbook.ui.components.settings
 
+import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -57,6 +58,9 @@ fun SettingsDialog(
         val view = LocalView.current
         val dialogWindowProvider = view.parent as? DialogWindowProvider
         dialogWindowProvider?.window?.setDimAmount(0f)
+        // A zero dim still counts as dimming, and Android drops light status bar icons under a
+        // dimming window: clear the flag too.
+        dialogWindowProvider?.window?.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
         // The dialog is its own window, and the status and navigation bar icons follow the
         // window on top: without this they stay white on a light Settings background.
         val lightBars = MaterialTheme.colorScheme.background.luminance() > 0.5f
