@@ -72,10 +72,10 @@ jobs:
 
   # Computes the single tag used everywhere downstream, regardless of which
   # of the 3 trigger paths fired: compute-version's output (auto-bump path),
-  # else the workflow_dispatch input, else the pushed tag itself. A job whose
-  # needs: was skipped is skipped too, so the if: lets this run on paths 2
-  # and 3, where compute-version is skipped (its outputs resolve to empty
-  # string); it still stops when compute-version fails.
+  # else the workflow_dispatch input, else the pushed tag itself. On paths 2
+  # and 3 compute-version is skipped (its outputs resolve to empty string).
+  # A skipped job skips every job downstream of it, not just the next one,
+  # unless that job has its own if:, so each job below states what it needs.
   resolve-version:
     needs: compute-version
     if: ${{ !failure() && !cancelled() }}
@@ -93,6 +93,7 @@ jobs:
 
   ci:
     needs: resolve-version
+    if: ${{ !cancelled() && needs.resolve-version.result == 'success' }}
     uses: ./.github/workflows/ci.yml
     with:
       version_name: ${{ needs.resolve-version.outputs.version }}
@@ -102,10 +103,12 @@ jobs:
   # so publishing doesn't wait for it; it gates nothing.
   coverage:
     needs: ci
+    if: ${{ !cancelled() && needs.ci.result == 'success' }}
     uses: ./.github/workflows/coverage.yml
 
   release:
     needs: [ci, resolve-version]
+    if: ${{ !cancelled() && needs.ci.result == 'success' && needs.resolve-version.result == 'success' }}
     runs-on: ubuntu-26.04
     permissions:
       contents: write
