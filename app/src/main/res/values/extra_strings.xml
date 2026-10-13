@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Strings for this fork's sharing, text size, launcher shortcuts, link handling and developer settings.
+  Strings for this fork's sharing, text size, text wrap, launcher shortcuts, link handling and developer settings.
   Kept out of strings.xml, upstream's translation file, for the same reason as
   brand_strings.xml: fewer merge conflicts on every upstream sync.
 -->
@@ -64,4 +64,8 @@
     <string name="share_via">Share via…</string>
     <string name="download_open">Open</string>
     <string name="download_already_saved">Already in Downloads</string>
+
+    <!-- Text wrap on zoom (shown under Pinch to zoom) -->
+    <string name="text_wrap_on_zoom_title">Wrap text when zoomed</string>
+    <string name="text_wrap_on_zoom_summary">Fits the text you zoom in on to the screen, so you don\'t scroll sideways</string>
 </resources>

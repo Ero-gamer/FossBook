@@ -53,7 +53,7 @@ Off by default (opt-in):
     *  Groups
     *  People you may know
 *  Hides the system bars (immersive mode)
-*  Allows pinch-to-zoom anywhere
+*  Allows pinch-to-zoom anywhere, and can wrap text to the screen when zoomed in, like Opera (Settings → *Wrap text when zoomed*)
 *  Changes the text size, from 85% to 150% (Settings → *Text size*)
 *  Opens web links in a browser tab over the app instead of switching apps (Settings → *Open web links in the app*)
 *  Lets you access Messenger (Desktop layout only)

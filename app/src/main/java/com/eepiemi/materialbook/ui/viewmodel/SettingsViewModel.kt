@@ -28,6 +28,7 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_LOCKS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_PORTRAIT_RATIO
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REMOVE_ADS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.STICKY_NAVBAR
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.TEXT_WRAP_ON_ZOOM
 import com.eepiemi.materialbook.utils.AppLock
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.TEXT_ZOOM
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.WEBVIEW_DEBUGGING
@@ -87,6 +88,11 @@ class SettingsViewModel(
     val pinchToZoom = dataStore.pinchToZoom.stateIn(
         scope = viewModelScope,
         initialValue = initialPrefs[PINCH_TO_ZOOM] ?: false,
+        started = SharingStarted.WhileSubscribed()
+    )
+    val textWrapOnZoom = dataStore.textWrapOnZoom.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[TEXT_WRAP_ON_ZOOM] ?: false,
         started = SharingStarted.WhileSubscribed()
     )
     val materialYou = dataStore.materialYou.stateIn(
@@ -216,6 +222,12 @@ class SettingsViewModel(
     fun setPinchToZoom(pinchToZoom: Boolean) {
         viewModelScope.launch {
             dataStore.setPinchToZoom(pinchToZoom)
+        }
+    }
+
+    fun setTextWrapOnZoom(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.setTextWrapOnZoom(enabled)
         }
     }
 

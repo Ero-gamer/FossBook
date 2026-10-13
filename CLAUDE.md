@@ -92,6 +92,15 @@ user-visible change.
   `currentSrc` is `blob:`. The mobile site's player (`data-mcomponent="MVideo"`) carries
   the whole MP4 in `data-video-url`; downloads (`download_content.js`) and the lock-screen
   audio hand-off (`PIP_HANDOFF_ARM_JS`) use that.
+- *Wrap text when zoomed* (`text_wrap.js`, main view only, with pinch to zoom on) narrows text
+  blocks to the visual viewport after a pinch settles. m.facebook.com is laid out on the
+  server: text is `white-space: pre` with the line breaks in the text, and every box has a
+  fixed inline `height` (overlays use negative margins as tall as what they cover, so
+  `height: auto` breaks them). The script joins the server's breaks (canvas-measured),
+  switches to `pre-wrap` and adds each block's growth to the fixed heights around it, up to
+  the first content-sized box. A test WebView can't pinch, so `TextWrapJsTest` fakes
+  `visualViewport`; on the emulator, CDP `Input.synthesizePinchGesture` on the WebView target
+  does a real pinch (its x/y must be inside the visual viewport, in CSS px).
 - "Keep screen on" uses the host view's `keepScreenOn`, not the window flag the fullscreen
   host adds and clears.
 - Facebook's video viewer re-lays out only on a real fullscreen transition

@@ -110,4 +110,11 @@ class SettingsDefaultsTest {
         val viewModel = SettingsViewModel(app)
         assertFalse("openLinksInApp should default to false", viewModel.openLinksInApp.value)
     }
+
+    @Test
+    fun textWrapOnZoomIsOffByDefault() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val viewModel = SettingsViewModel(app)
+        assertFalse("textWrapOnZoom should default to false", viewModel.textWrapOnZoom.value)
+    }
 }

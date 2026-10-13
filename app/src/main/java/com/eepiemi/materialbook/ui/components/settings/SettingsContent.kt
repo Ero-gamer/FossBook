@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.Message
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.automirrored.outlined.WrapText
 import androidx.compose.material.icons.filled.BurstMode
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Diversity1
@@ -107,6 +108,7 @@ fun SettingsContent(
     val immersiveMode = viewModel.immersiveMode.collectAsState()
     val stickyNavbar = viewModel.stickyNavbar.collectAsState()
     val pinchToZoom = viewModel.pinchToZoom.collectAsState()
+    val textWrapOnZoom = viewModel.textWrapOnZoom.collectAsState()
     val materialYou = viewModel.materialYou.collectAsState()
     val amoledBlack = viewModel.amoledBlack.collectAsState()
     val pipEnabled = viewModel.pipEnabled.collectAsState()
@@ -134,8 +136,8 @@ fun SettingsContent(
     // the rest apply at once.
     val pageSettings = listOf(
         messagesDesktop, removeAds, enableDownloadContent, enableCopyToClipboard, desktopLayout,
-        stickyNavbar, pinchToZoom, materialYou, amoledBlack, hideSuggested, hideReels,
-        hideStories, hidePeopleYouMayKnow, hideGroups
+        stickyNavbar, pinchToZoom, textWrapOnZoom, materialYou, amoledBlack, hideSuggested,
+        hideReels, hideStories, hidePeopleYouMayKnow, hideGroups
     ).map { it.value }
     val initialPageSettings = remember { pageSettings }
     val pageSettingsChanged = pageSettings != initialPageSettings
@@ -263,6 +265,15 @@ fun SettingsContent(
                     isActive = pinchToZoom.value,
                     onClick = { viewModel.setPinchToZoom(!pinchToZoom.value) }
                 ),
+            ) + listOfNotNull(
+                // Only shown while pinch to zoom is on: it acts on the zoom.
+                SettingsItem(
+                    icon = Icons.AutoMirrored.Outlined.WrapText,
+                    title = stringResource(R.string.text_wrap_on_zoom_title),
+                    supportingText = stringResource(R.string.text_wrap_on_zoom_summary),
+                    isActive = textWrapOnZoom.value,
+                    onClick = { viewModel.setTextWrapOnZoom(!textWrapOnZoom.value) }
+                ).takeIf { pinchToZoom.value }
             )
         )
 
