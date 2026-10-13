@@ -76,6 +76,8 @@
     <string name="facebook_notifications_summary">כשהאפליקציה סגורה, בודקת כל 15 דקות אם יש התראות, הודעות ובקשות חברות חדשות, דרך החיבור שלך לפייסבוק באפליקציה</string>
     <string name="facebook_notifications_denied">ההתראות של Astryxbook כבויות בהגדרות של Android</string>
     <string name="facebook_notifications_channel">התראות מפייסבוק</string>
+    <string name="facebook_notification_text_title">הצגת תוכן ההתראות</string>
+    <string name="facebook_notification_text_summary">מוסיף את הטקסט של התראות פייסבוק חדשות (לא של צ\'אטים). מוסתר במסך הנעילה</string>
     <plurals name="facebook_new_notifications">
         <item quantity="one">התראה חדשה אחת בפייסבוק</item>
         <item quantity="two">%1$s התראות חדשות בפייסבוק</item>

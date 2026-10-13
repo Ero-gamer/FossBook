@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.Message
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.automirrored.outlined.Subject
 import androidx.compose.material.icons.automirrored.outlined.WrapText
 import androidx.compose.material.icons.filled.BurstMode
 import androidx.compose.material.icons.filled.Camera
@@ -140,6 +141,7 @@ fun SettingsContent(
     val clearCacheOnLeave = viewModel.clearCacheOnLeave.collectAsState()
     val startOnFeeds = viewModel.startOnFeeds.collectAsState()
     val facebookNotifications = viewModel.facebookNotifications.collectAsState()
+    val facebookNotificationText = viewModel.facebookNotificationText.collectAsState()
     // Facebook notifications needs Android's notification permission (API 33+): asked when the
     // setting is turned on, which only sticks if it's granted.
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -400,7 +402,7 @@ fun SettingsContent(
 
         SettingsHeading(stringResource(R.string.settings_section_notifications))
         SettingsGroup(
-            items = listOf(
+            items = listOfNotNull(
                 SettingsItem(
                     icon = Icons.Outlined.Notifications,
                     title = stringResource(R.string.facebook_notifications_title),
@@ -414,7 +416,15 @@ fun SettingsContent(
                         if (needsPermission) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
                         else viewModel.setFacebookNotifications(!facebookNotifications.value)
                     }
-                )
+                ),
+                // Only while Facebook notifications is on, like the PiP options under PiP.
+                if (facebookNotifications.value) SettingsItem(
+                    icon = Icons.AutoMirrored.Outlined.Subject,
+                    title = stringResource(R.string.facebook_notification_text_title),
+                    supportingText = stringResource(R.string.facebook_notification_text_summary),
+                    isActive = facebookNotificationText.value,
+                    onClick = { viewModel.setFacebookNotificationText(!facebookNotificationText.value) }
+                ) else null
             )
         )
 

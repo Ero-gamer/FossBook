@@ -96,6 +96,23 @@ class FacebookCountsNotificationTest {
     }
 
     @Test
+    fun notificationTexts_showWhenExpanded_butNotOnTheLockScreen() {
+        val texts = listOf("Dana commented on your post", "Noa reacted to your photo")
+        FacebookCountsWorker.applyCounts(context, counts(notifications = 2), notify = true, notificationTexts = texts)
+        assertEquals(2, number(FacebookCounter.NOTIFICATIONS, 2))
+        val notification = shown(FacebookCounter.NOTIFICATIONS)!!
+        assertEquals(texts, notification.extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES)?.map { it.toString() })
+        assertEquals(Notification.VISIBILITY_PRIVATE, notification.visibility)
+        // The lock screen's version: the count, no text.
+        assertNull(notification.publicVersion?.extras?.getCharSequenceArray(Notification.EXTRA_TEXT_LINES))
+        assertNull(notification.publicVersion?.extras?.getCharSequence(Notification.EXTRA_TEXT))
+        // Messages and friend requests never carry them.
+        FacebookCountsWorker.applyCounts(context, counts(notifications = 2, messages = 1), notify = true, notificationTexts = texts)
+        assertEquals(1, number(FacebookCounter.MESSAGES, 1))
+        assertNull(shown(FacebookCounter.MESSAGES)?.extras?.getCharSequenceArray(Notification.EXTRA_TEXT_LINES))
+    }
+
+    @Test
     fun aNotificationTap_opensItsTab() {
         FacebookCountsWorker.applyCounts(context, counts(notifications = 2), notify = true)
         assertEquals(2, number(FacebookCounter.NOTIFICATIONS, 2))

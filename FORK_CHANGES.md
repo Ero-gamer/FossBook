@@ -216,6 +216,10 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
 - `./gradlew test`, `:app:lintDebug`, and `connectedAndroidTest` now gate
   every build — previously nothing ran tests or static Android checks before
   signing/releasing.
+- The instrumented-tests job also launches the minified release build on its emulator
+  (`.github/scripts/release-smoke-test.sh`) and fails if it crashes or isn't running 20 s later:
+  the tests run unminified builds, so v1.25.1 and v1.25.2 shipped a crash at launch that only R8
+  caused.
 - Android lint runs as its own CI job and uploads HTML, XML, and text reports
   as a workflow artifact, including on failure. Dependency-update notices are
   advisory because the current pinned libraries target `compileSdk 36`; the
@@ -483,7 +487,9 @@ leaving the app while a Facebook video or Reel is playing.
   zoom and corrects the viewport size Facebook reports to its server (its `vpd` cookie); a
   change of zoom sets that cookie and reloads the page. Pages in PiP keep Facebook's own
   viewport, so PiP is unchanged, and *Wrap text when zoomed* counts pinch zoom from the page
-  zoom. Zooming out uses WebView's wide viewport. The Messages layer keeps the text zoom.
+  zoom. Zooming out uses WebView's wide viewport. The Messages layer keeps the text zoom:
+  the desktop site lays itself out in the browser and keeps it across loads (checked: 130%
+  makes its text 1.3 times as big after a reload).
   Covered by `PageZoomJsTest` and `TextZoomTest`.
 - **Launcher shortcuts:** long-press the app icon for Messages, Notifications and
   Marketplace. Messages opens where the Messages tab would (the Messages layer when

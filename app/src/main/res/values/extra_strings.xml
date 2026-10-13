@@ -79,6 +79,8 @@
     <string name="facebook_notifications_summary">While the app is closed, checks every 15 minutes for new notifications, messages and friend requests, using your Facebook login in the app</string>
     <string name="facebook_notifications_denied">Notifications are off for Astryxbook in Android\'s settings</string>
     <string name="facebook_notifications_channel">Facebook notifications</string>
+    <string name="facebook_notification_text_title">Show what they say</string>
+    <string name="facebook_notification_text_summary">Adds the text of new Facebook notifications (not of chats). Hidden on the lock screen</string>
     <plurals name="facebook_new_notifications">
         <item quantity="one">%1$s new notification on Facebook</item>
         <item quantity="other">%1$s new notifications on Facebook</item>

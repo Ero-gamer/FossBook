@@ -112,11 +112,12 @@ jobs:
       # Compile the app and test APKs before the emulator starts: the emulator
       # renders in software (swiftshader) and competing with it for the CPUs
       # made compiling take most of this job. connectedAndroidTest below then
-      # finds them up to date and only installs and runs the tests.
+      # finds them up to date and only installs and runs the tests. The minified
+      # release APK is built here too, for the launch check after the tests.
       - name: Build App and Test APKs
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug assembleDebugAndroidTest --stacktrace
+          ./gradlew assembleDebug assembleDebugAndroidTest assembleRelease --stacktrace
 
       # GitHub-hosted Ubuntu runners support nested virtualization but need
       # KVM permissions opened up explicitly for the emulator to use it.
@@ -176,7 +177,12 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           disable-animations: true
-          script: ./gradlew connectedAndroidTest --stacktrace
+          # Then the release build, which is minified (R8) while the tests aren't: launched
+          # once, so something R8 strips fails here instead of crashing a published release.
+          # In the same emulator session (each line runs in turn; a failing one fails the step).
+          script: |
+            ./gradlew connectedAndroidTest --stacktrace
+            bash .github/scripts/release-smoke-test.sh
 
       - name: Upload Instrumented Test Coverage Data
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

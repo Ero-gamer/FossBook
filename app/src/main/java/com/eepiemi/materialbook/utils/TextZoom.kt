@@ -6,7 +6,8 @@ import kotlin.math.roundToInt
 /**
  * Values of the "Text size" setting (shown as "Page zoom"): the main view's page zoom in percent
  * (page_zoom.js; m.facebook.com cancels WebSettings.textZoom), stored as strings like the app's
- * other choice settings. The Messages layer still uses it as its text zoom.
+ * other choice settings. The Messages layer uses it as its text zoom, which the desktop site
+ * keeps (only the mobile site cancels it).
  */
 object TextZoom {
     const val DEFAULT = "100"

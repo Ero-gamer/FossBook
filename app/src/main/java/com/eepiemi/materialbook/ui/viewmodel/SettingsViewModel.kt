@@ -16,6 +16,7 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DEVELOPER
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_COPY_TO_CLIPBOARD
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_DOWNLOAD_CONTENT
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.FACEBOOK_NOTIFICATIONS
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.FACEBOOK_NOTIFICATION_TEXT
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_GROUPS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_PEOPLE_YOU_MAY_KNOW
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_REELS
@@ -185,6 +186,11 @@ class SettingsViewModel(
     val facebookNotifications = dataStore.facebookNotifications.stateIn(
         scope = viewModelScope,
         initialValue = initialPrefs[FACEBOOK_NOTIFICATIONS] ?: false,
+        started = SharingStarted.WhileSubscribed()
+    )
+    val facebookNotificationText = dataStore.facebookNotificationText.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[FACEBOOK_NOTIFICATION_TEXT] ?: false,
         started = SharingStarted.WhileSubscribed()
     )
     // Read once, for the page the app starts on.
@@ -368,6 +374,12 @@ class SettingsViewModel(
     fun setBlockScreenshots(enabled: Boolean) {
         viewModelScope.launch {
             dataStore.setBlockScreenshots(enabled)
+        }
+    }
+
+    fun setFacebookNotificationText(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.setFacebookNotificationText(enabled)
         }
     }
 
