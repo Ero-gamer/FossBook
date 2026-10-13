@@ -80,8 +80,8 @@
         "Sponset", "Patrocinado", "Sponsorizat", "Sponzorované",
         "Sponsoroitu", "Sponsrat", "Được tài trợ", "Χορηγούμενη",
         "Спонсорирано", "Спонзорирано", "Ивээн тэтгэсэн", "Реклама",
-        "Спонзорисано", "במימון", "سپانسرڈ", "دارای پشتیبانی مالی",
-        "ስፖንሰር የተደረገ", "प्रायोजित", "ተደረገ", "प", "স্পনসর্ড",
+        "Спонзорисано", "במימון", "ממומן", "سپانسرڈ", "دارای پشتیبانی مالی",
+        "ስፖንሰር የተደረገ", "प्रायोजित", "স্পনসর্ড",
         "ਪ੍ਰਯੋਜਿਤ", "પ્રાયોજિત", "ପ୍ରାୟୋଜିତ", "செய்யப்பட்ட செய்யப்பட்ட",
         "చేయబడినది చేయబడినది", "ಪ್ರಾಯೋಜಿಸಲಾಗಿದೆ", "ചെയ്‌തത് ചെയ്‌തത്",
         "ලද ලද ලද", "สนับสนุน สนับสนุน รับ สนับสนุน สนับสนุน",
@@ -90,14 +90,16 @@
         "Anzeige","Peye","Oglas"
     ];
 
+    // Whole labels only: no letter, combining mark or digit right before or after. (\b
+    // knows only ASCII letters, so labels in other scripts - במימון, Реклама, 広告 - never
+    // matched.) Built once: this runs on every span of every reel the page adds.
+    const sponsoredPatterns = sponsoredTexts.map(word => new RegExp(
+        `(?:^|[^\\p{L}\\p{M}\\p{N}])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{M}\\p{N}])`,
+        'iu'
+    ));
+
     function containsSponsoredText(text) {
-        const lowerText = text.toLowerCase();
-        return sponsoredTexts.some(word => {
-            const lowerWord = word.toLowerCase();
-            // Use word boundary regex to match whole words only
-            const wordBoundaryRegex = new RegExp(`\\b${lowerWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-            return wordBoundaryRegex.test(lowerText);
-        });
+        return sponsoredPatterns.some(pattern => pattern.test(text));
     }
 
 

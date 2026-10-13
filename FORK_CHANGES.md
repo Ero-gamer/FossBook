@@ -177,6 +177,19 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   scrolling to the top first. The check expected one dialog element on the
   feed at rest, which Facebook's desktop feed no longer has. Back now scrolls
   a scrolled feed to the top, and leaves the app from the top, as on mobile.
+- The WebView's renderer process dying no longer closes the app. Android kills it to
+  reclaim memory (mostly while the app is in the background, with a video in PiP or on the
+  lock screen), and WebView's default then takes the app down with it. The app now replaces
+  the WebView and reopens the page that was showing (Home if that isn't a Facebook page, or
+  if the renderer was lost again within a minute); a fullscreen video leaves fullscreen. The
+  Messages layer reopens at its page the same way. Logged as `Astryxbook`. Covered by
+  `RendererRecoveryTest`.
+- Remove ads hides sponsored reels in every language Facebook labels them in. The label check
+  matched whole words with `\b`, which in JavaScript knows only ASCII letters, so the Hebrew,
+  Russian, Japanese, Hindi and other non-Latin labels on the list never matched. Labels now
+  count when no letter, mark or digit touches them; the Hebrew `ממומן` was added, and two
+  fragments that would now match ordinary words (Amharic `ተደረገ`, Hindi `प`) were dropped
+  (their full labels stay). Covered by `ReelAdsJsTest`.
 
 ## CI/CD
 

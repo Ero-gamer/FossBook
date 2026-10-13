@@ -65,6 +65,11 @@ user-visible change.
   (the start page skips the request interceptor); outgoing links with `externalLinkAction`.
 - `state.nativeWebView` throws until the WebView exists (it's created during layout, which
   doesn't happen with the screen off): guard it in effects.
+- A lost renderer process (`RendererGoneClient`, `utils/RendererRecovery.kt`) replaces the
+  WebView: the main view re-keys its `WebView` and reloads through the navigator, the Messages
+  layer is re-keyed at its page. Per-WebView setup belongs in `onCreated` (it runs again for
+  the replacement), not in effects that hold on to the first WebView. To try it on a debug
+  build, send `Page.crash` over DevTools.
 - Instrumented tests reset the debug app's settings (not its Facebook login).
 - On Android 12+ PiP auto-enters and `onUserLeaveHint` is NOT called (verified on API 34
   and 36), so anything that must run on every PiP entry goes on
