@@ -11,6 +11,7 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DESKTOP_L
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_COPY_TO_CLIPBOARD
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_DOWNLOAD_CONTENT
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.FACEBOOK_NOTIFICATIONS
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.FACEBOOK_NOTIFICATION_TEXT
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_GROUPS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_PEOPLE_YOU_MAY_KNOW
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_REELS
@@ -49,7 +50,7 @@ val EXPORTED_BOOLEAN_SETTINGS: List<Preferences.Key<Boolean>> = listOf(
     HIDE_SUGGESTED, HIDE_REELS, HIDE_STORIES, HIDE_PEOPLE_YOU_MAY_KNOW, HIDE_GROUPS,
     MESSAGES_DESKTOP, PIP_ENABLED, PIP_LOCKSCREEN_AUDIO, OPEN_LINKS_IN_APP, TEXT_WRAP_ON_ZOOM,
     START_ON_FEEDS, APP_LOCK_ON_SCREEN_OFF, BLOCK_SCREENSHOTS, CLEAR_CACHE_ON_LEAVE,
-    FACEBOOK_NOTIFICATIONS,
+    FACEBOOK_NOTIFICATIONS, FACEBOOK_NOTIFICATION_TEXT,
 )
 
 // App lock travels too: on a device without a screen lock it simply stays off (canUseAppLock).

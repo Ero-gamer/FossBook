@@ -26,7 +26,9 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.eepiemi.materialbook.MainActivity
 import com.eepiemi.materialbook.R
+import com.eepiemi.materialbook.data.local.SettingsDataStore
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
@@ -59,12 +61,21 @@ class FacebookCountsWorker(context: Context, params: WorkerParameters) : Corouti
             return Result.success()
         }
         val recordOnly = inputData.getBoolean(KEY_RECORD_ONLY, false)
-        applyCounts(applicationContext, counts, notify = !recordOnly && !AppVisibility.onScreen)
+        // "Show what they say": the newest notifications' text, from the page already fetched.
+        val texts = if (SettingsDataStore(applicationContext).facebookNotificationText.first()) {
+            val unread = counts[FacebookCounter.NOTIFICATIONS]?.count ?: 0
+            FacebookCounts.parseNotificationTexts(html, minOf(unread, MAX_TEXT_LINES))
+        } else {
+            emptyList()
+        }
+        applyCounts(applicationContext, counts, notify = !recordOnly && !AppVisibility.onScreen, texts)
         return Result.success()
     }
 
     companion object {
         private const val KEY_RECORD_ONLY = "record_only"
+        // Lines an expanded notification shows (Android's inbox style shows up to about five).
+        private const val MAX_TEXT_LINES = 5
 
         /**
          * The app left the screen on a page without Facebook's tab bar (Feeds, a profile): fetch
@@ -156,8 +167,16 @@ class FacebookCountsWorker(context: Context, params: WorkerParameters) : Corouti
             }
         }.onFailure { Log.w(TAG, "Facebook counts: fetch failed", it) }.getOrNull()
 
-        /** Records [counts] and, with [notify], posts, updates or clears the notifications. */
-        internal fun applyCounts(context: Context, counts: Map<FacebookCounter, UnreadCount>, notify: Boolean) {
+        /**
+         * Records [counts] and, with [notify], posts, updates or clears the notifications;
+         * [notificationTexts] (newest first) go into the one for Facebook's notifications.
+         */
+        internal fun applyCounts(
+            context: Context,
+            counts: Map<FacebookCounter, UnreadCount>,
+            notify: Boolean,
+            notificationTexts: List<String> = emptyList(),
+        ) {
             val prefs = store(context)
             counts.forEach { (counter, now) ->
                 val before = prefs.getString(counter.name, null)?.let { stored ->
@@ -165,8 +184,8 @@ class FacebookCountsWorker(context: Context, params: WorkerParameters) : Corouti
                 }
                 if (notify) {
                     when (val action = FacebookCounts.action(before, now)) {
-                        is CountAction.Notify -> post(context, counter, action.unread, alert = true)
-                        is CountAction.Update -> post(context, counter, action.unread, alert = false)
+                        is CountAction.Notify -> post(context, counter, action.unread, alert = true, linesFor(counter, notificationTexts))
+                        is CountAction.Update -> post(context, counter, action.unread, alert = false, linesFor(counter, notificationTexts))
                         CountAction.Clear -> NotificationManagerCompat.from(context).cancel(counter.notificationId)
                         CountAction.Nothing -> Unit
                     }
@@ -176,7 +195,16 @@ class FacebookCountsWorker(context: Context, params: WorkerParameters) : Corouti
             Log.d(TAG, "Facebook counts: ${counts.entries.joinToString { "${it.key.tab}=${it.value.label}" }}, notify=$notify")
         }
 
-        private fun post(context: Context, counter: FacebookCounter, unread: UnreadCount, alert: Boolean) {
+        private fun linesFor(counter: FacebookCounter, notificationTexts: List<String>) =
+            if (counter == FacebookCounter.NOTIFICATIONS) notificationTexts else emptyList()
+
+        private fun post(
+            context: Context,
+            counter: FacebookCounter,
+            unread: UnreadCount,
+            alert: Boolean,
+            lines: List<String> = emptyList(),
+        ) {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED
             ) return
@@ -195,7 +223,7 @@ class FacebookCountsWorker(context: Context, params: WorkerParameters) : Corouti
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
             val text = context.resources.getQuantityString(textFor(counter), unread.count, unread.label)
-            val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            fun builder() = NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(text)
                 .setContentIntent(open)
@@ -206,7 +234,17 @@ class FacebookCountsWorker(context: Context, params: WorkerParameters) : Corouti
                     else NotificationCompat.CATEGORY_SOCIAL
                 )
                 .setNumber(unread.count)
-                .build()
+            val notification = if (lines.isEmpty()) {
+                builder().build()
+            } else {
+                // What the notifications say is private: the lock screen shows the count only.
+                builder()
+                    .setContentText(lines.first())
+                    .setStyle(NotificationCompat.InboxStyle().also { style -> lines.forEach { style.addLine(it) } })
+                    .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                    .setPublicVersion(builder().build())
+                    .build()
+            }
             runCatching { manager.notify(counter.notificationId, notification) }
                 .onFailure { Log.w(TAG, "Facebook counts: notify failed", it) }
         }
