@@ -483,7 +483,9 @@ leaving the app while a Facebook video or Reel is playing.
   zoom and corrects the viewport size Facebook reports to its server (its `vpd` cookie); a
   change of zoom sets that cookie and reloads the page. Pages in PiP keep Facebook's own
   viewport, so PiP is unchanged, and *Wrap text when zoomed* counts pinch zoom from the page
-  zoom. Zooming out uses WebView's wide viewport. The Messages layer keeps the text zoom.
+  zoom. Zooming out uses WebView's wide viewport. The Messages layer keeps the text zoom:
+  the desktop site lays itself out in the browser and keeps it across loads (checked: 130%
+  makes its text 1.3 times as big after a reload).
   Covered by `PageZoomJsTest` and `TextZoomTest`.
 - **Launcher shortcuts:** long-press the app icon for Messages, Notifications and
   Marketplace. Messages opens where the Messages tab would (the Messages layer when
