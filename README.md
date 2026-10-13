@@ -63,6 +63,7 @@ Off by default (opt-in):
 *  Keeps a Picture-in-Picture video's audio playing when the screen locks
 *  Keeps the screen on while a video plays, or whenever the app is open (Settings → *Keep screen on*)
 *  Locks the app with your fingerprint, face or screen lock, and hides it in Recents (Settings → *App lock*)
+*  Notifies you of new Facebook notifications, unread chats and friend requests while the app is closed, checking every 15 minutes (Settings → *Facebook notifications*)
 
 Always on:
 *  Shares links from other apps to Facebook, and the page you're on to other apps (the share button in Settings), without tracking parameters

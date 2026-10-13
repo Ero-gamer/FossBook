@@ -57,6 +57,8 @@ import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.rememberSaveableWebViewState
 import com.multiplatform.webview.web.rememberWebViewNavigator
 import com.eepiemi.materialbook.R
+import com.eepiemi.materialbook.notifications.FacebookCounts
+import com.eepiemi.materialbook.notifications.FacebookCountsWorker
 import com.eepiemi.materialbook.ui.components.ExternalLinkDialog
 import com.eepiemi.materialbook.ui.components.MessengerLinkDialog
 import com.eepiemi.materialbook.ui.components.NetworkErrorDialog
@@ -1373,12 +1375,30 @@ fun MaterialbookWebView(
     // the app the user just switched to.
     val clearCacheOnLeave by settingsVM.clearCacheOnLeave.collectAsState()
     val currentClearCacheOnLeave by rememberUpdatedState(clearCacheOnLeave)
+    // "Facebook notifications" (Settings): the counts the user leaves the app with are the ones
+    // background checks compare against, read from the page's tab bar (no network), or fetched
+    // once if the page has none (Feeds, a profile).
+    val facebookNotifications by settingsVM.facebookNotifications.collectAsState()
+    val currentFacebookNotifications by rememberUpdatedState(facebookNotifications)
     val lifecycle = (activity as? LifecycleOwner)?.lifecycle
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP && currentClearCacheOnLeave) {
-                runCatching { state.nativeWebView }.getOrNull()?.clearCache(true)
+            if (event != Lifecycle.Event.ON_STOP) return@LifecycleEventObserver
+            val webView = runCatching { state.nativeWebView }.getOrNull()
+            if (currentFacebookNotifications) {
+                if (webView != null && state.loadingState is LoadingState.Finished) {
+                    webView.evaluateJavascript(FacebookCounts.TAB_LABELS_JS) { result ->
+                        val labels = runCatching {
+                            val array = org.json.JSONArray(result)
+                            List(array.length()) { array.getString(it) }
+                        }.getOrNull()
+                        FacebookCountsWorker.onAppHidden(context, labels)
+                    }
+                } else {
+                    FacebookCountsWorker.onAppHidden(context, null)
+                }
             }
+            if (currentClearCacheOnLeave) webView?.clearCache(true)
         }
         lifecycle?.addObserver(observer)
         onDispose { lifecycle?.removeObserver(observer) }

@@ -1,6 +1,8 @@
 package com.eepiemi.materialbook.ui.components.settings
 
 import android.content.Intent
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
@@ -40,6 +42,7 @@ import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PanoramaWideAngle
@@ -75,6 +78,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.eepiemi.materialbook.BuildConfig
@@ -135,6 +139,13 @@ fun SettingsContent(
     val blockScreenshots = viewModel.blockScreenshots.collectAsState()
     val clearCacheOnLeave = viewModel.clearCacheOnLeave.collectAsState()
     val startOnFeeds = viewModel.startOnFeeds.collectAsState()
+    val facebookNotifications = viewModel.facebookNotifications.collectAsState()
+    // Facebook notifications needs Android's notification permission (API 33+): asked when the
+    // setting is turned on, which only sticks if it's granted.
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) viewModel.setFacebookNotifications(true)
+        else Toast.makeText(context, R.string.facebook_notifications_denied, Toast.LENGTH_LONG).show()
+    }
     val hideSuggested = viewModel.hideSuggested.collectAsState()
     val hideReels = viewModel.hideReels.collectAsState()
     val hideStories = viewModel.hideStories.collectAsState()
@@ -385,6 +396,26 @@ fun SettingsContent(
                     )
                 )
             }
+        )
+
+        SettingsHeading(stringResource(R.string.settings_section_notifications))
+        SettingsGroup(
+            items = listOf(
+                SettingsItem(
+                    icon = Icons.Outlined.Notifications,
+                    title = stringResource(R.string.facebook_notifications_title),
+                    supportingText = stringResource(R.string.facebook_notifications_summary),
+                    isActive = facebookNotifications.value,
+                    onClick = {
+                        val needsPermission = !facebookNotifications.value &&
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+                            PackageManager.PERMISSION_GRANTED
+                        if (needsPermission) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        else viewModel.setFacebookNotifications(!facebookNotifications.value)
+                    }
+                )
+            )
         )
 
         SettingsHeading(stringResource(R.string.settings_section_privacy))

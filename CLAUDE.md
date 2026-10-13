@@ -113,6 +113,12 @@ user-visible change.
   `__astryxPageZoomScale()`, not 1. Zooming out needs `useWideViewPort`.
 - m.facebook.com has no URL for Feeds (`?sk=h_chr` redirects to Home). *Start on Feeds* opens the
   menu at `/bookmarks/#astryx-feeds` and `open_feeds.js` presses its Feeds entry, found by its icon.
+- *Facebook notifications* (`notifications/FacebookCountsWorker.kt`, WorkManager, 15 min) fetches
+  `m.facebook.com/notifications/` with the WebView's cookies and reads the tab bar's English
+  `aria-label`s ("notifications, 3 new, 4 of 5"). Without WebView's navigation headers
+  (`Sec-Fetch-*` etc.) Facebook answers 400. A periodic job can't be forced early (WorkManager
+  delays it); turning the setting off and on runs it at once. Logs `Facebook counts:` under
+  `Astryxbook`.
 - "Keep screen on" uses the host view's `keepScreenOn`, not the window flag the fullscreen
   host adds and clears.
 - Facebook's video viewer re-lays out only on a real fullscreen transition

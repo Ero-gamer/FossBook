@@ -617,6 +617,24 @@ From a hands-on pass through the app in light and dark mode on an emulator.
   If the entry doesn't show up, Home opens; logged out, the login page shows. Covered by
   `StartPageTest` and `OpenFeedsJsTest`.
 
+## Facebook notifications
+
+- **Facebook notifications** (Settings → Notifications, off by default): while the app is
+  closed, every 15 minutes (Android's shortest period for background work, and only with a
+  network), the app checks for new Facebook notifications, unread chats and friend requests and
+  posts an Android notification with the count ("3 new notifications on Facebook"). A tap opens
+  that tab in the app. Turning it on asks for Android's notification permission (Android 13+).
+- The check fetches `m.facebook.com/notifications/` with the app's own Facebook login (the
+  WebView's cookies, user agent and navigation headers; cookies Facebook sets go back to the
+  WebView) and reads the unread counts from the tab bar in the HTML. Facebook labels those tabs
+  in English in every language ("notifications, 3 new, 4 of 5"), so the count works whatever
+  Facebook's language; the notifications' own text isn't read. About 120 KB per check.
+- New unread means more than when the user last saw the app: the counts on the page's tab bar
+  are recorded when the app leaves the screen (fetched once if that page has no tab bar, as on
+  Feeds). Fewer unread updates a notification quietly; none removes it; opening the app removes
+  them all. Nothing is notified while the app is on screen. Covered by `FacebookCountsTest` and
+  `FacebookCountsNotificationTest`.
+
 ## Known limitations
 
 - On Reels specifically, Facebook's own web player can re-pause a video

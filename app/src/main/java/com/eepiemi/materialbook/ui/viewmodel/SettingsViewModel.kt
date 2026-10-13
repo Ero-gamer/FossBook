@@ -15,6 +15,7 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DESKTOP_L
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DEVELOPER_OPTIONS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_COPY_TO_CLIPBOARD
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_DOWNLOAD_CONTENT
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.FACEBOOK_NOTIFICATIONS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_GROUPS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_PEOPLE_YOU_MAY_KNOW
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.HIDE_REELS
@@ -179,6 +180,11 @@ class SettingsViewModel(
     val clearCacheOnLeave = dataStore.clearCacheOnLeave.stateIn(
         scope = viewModelScope,
         initialValue = initialPrefs[CLEAR_CACHE_ON_LEAVE] ?: false,
+        started = SharingStarted.WhileSubscribed()
+    )
+    val facebookNotifications = dataStore.facebookNotifications.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[FACEBOOK_NOTIFICATIONS] ?: false,
         started = SharingStarted.WhileSubscribed()
     )
     // Read once, for the page the app starts on.
@@ -362,6 +368,12 @@ class SettingsViewModel(
     fun setBlockScreenshots(enabled: Boolean) {
         viewModelScope.launch {
             dataStore.setBlockScreenshots(enabled)
+        }
+    }
+
+    fun setFacebookNotifications(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.setFacebookNotifications(enabled)
         }
     }
 

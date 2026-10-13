@@ -72,4 +72,23 @@
     <!-- Start page (Feed section) -->
     <string name="start_on_feeds_title">Start on Feeds</string>
     <string name="start_on_feeds_summary">Open the app on Facebook\'s Feeds, the newest posts first, instead of Home</string>
+
+    <!-- Facebook notifications (Notifications section) -->
+    <string name="settings_section_notifications">Notifications</string>
+    <string name="facebook_notifications_title">Facebook notifications</string>
+    <string name="facebook_notifications_summary">While the app is closed, checks every 15 minutes for new notifications, messages and friend requests, using your Facebook login in the app</string>
+    <string name="facebook_notifications_denied">Notifications are off for Astryxbook in Android\'s settings</string>
+    <string name="facebook_notifications_channel">Facebook notifications</string>
+    <plurals name="facebook_new_notifications">
+        <item quantity="one">%1$s new notification on Facebook</item>
+        <item quantity="other">%1$s new notifications on Facebook</item>
+    </plurals>
+    <plurals name="facebook_new_messages">
+        <item quantity="one">%1$s unread chat</item>
+        <item quantity="other">%1$s unread chats</item>
+    </plurals>
+    <plurals name="facebook_new_friend_requests">
+        <item quantity="one">%1$s new friend request</item>
+        <item quantity="other">%1$s new friend requests</item>
+    </plurals>
 </resources>
