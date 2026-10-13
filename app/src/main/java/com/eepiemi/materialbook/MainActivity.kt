@@ -420,7 +420,8 @@ class MainActivity : FragmentActivity() {
         biometricPrompt = createBiometricPrompt()
         lockIfEnabled()
 
-        val intentUrl = linkUrl(intent)
+        // Read once: the page the app starts on (a link it was opened with, or Home/Feeds).
+        val startUrl = startPageUrl(linkUrl(intent), settingsVM.startOnFeeds.value)
 
         setContent {
             val materialYou by settingsVM.materialYou.collectAsState()
@@ -429,7 +430,7 @@ class MainActivity : FragmentActivity() {
                 // to the page, as the window itself did before.
                 Box(Modifier.fillMaxSize(), propagateMinConstraints = true) {
                     MaterialbookWebView(
-                        url = startPageUrl(intentUrl, settingsVM.startOnFeeds.value),
+                        url = startUrl,
                         settingsVM = settingsVM,
                         pipToggleTrigger = pipToggleTrigger,
                         pipEnteringTrigger = pipEnteringTrigger,
