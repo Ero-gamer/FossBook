@@ -92,6 +92,11 @@ user-visible change.
   `currentSrc` is `blob:`. The mobile site's player (`data-mcomponent="MVideo"`) carries
   the whole MP4 in `data-video-url`; downloads (`download_content.js`) and the lock-screen
   audio hand-off (`PIP_HANDOFF_ARM_JS`) use that.
+- *Wrap text when zoomed* (`text_wrap.js`, main view only, with pinch to zoom on) narrows text
+  blocks to the visual viewport after a pinch settles. A test WebView can't pinch, so
+  `TextWrapJsTest` fakes `visualViewport`; real zoom and the pan after it can be checked with
+  Playwright's Chromium and CDP `Emulation.setPageScaleFactor` (synthetic pinch gestures do
+  nothing headless).
 - "Keep screen on" uses the host view's `keepScreenOn`, not the window flag the fullscreen
   host adds and clears.
 - Facebook's video viewer re-lays out only on a real fullscreen transition

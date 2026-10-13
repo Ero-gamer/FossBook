@@ -61,4 +61,8 @@
     <string name="share_via">שיתוף באמצעות…</string>
     <string name="download_open">פתיחה</string>
     <string name="download_already_saved">כבר נמצא בהורדות</string>
+
+    <!-- Text wrap on zoom (shown under Pinch to zoom) -->
+    <string name="text_wrap_on_zoom_title">גלישת טקסט בהגדלה</string>
+    <string name="text_wrap_on_zoom_summary">מתאים את הטקסט שמגדילים לרוחב המסך, בלי לגלול הצידה</string>
 </resources>

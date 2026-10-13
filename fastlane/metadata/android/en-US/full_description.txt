@@ -22,7 +22,7 @@ Off by default (opt-in):
             <li>Groups</li>
         </ul>
     <li>Hides the system bars</li>
-    <li>Allows pinch-to-zoom anywhere</li>
+    <li>Allows pinch-to-zoom anywhere, and can wrap text to the screen when zoomed in</li>
     <li>Changes the text size, from 85% to 150%</li>
     <li>Opens web links in a browser tab over the app instead of switching apps</li>
     <li>Lets the user access Messenger (Desktop layout only)</li>

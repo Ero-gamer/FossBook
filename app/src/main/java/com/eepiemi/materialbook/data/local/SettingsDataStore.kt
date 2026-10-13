@@ -42,6 +42,7 @@ class SettingsDataStore(private val context: Context) {
         val DEVELOPER_OPTIONS = booleanPreferencesKey("developer_options")
         val WEBVIEW_DEBUGGING = booleanPreferencesKey("webview_debugging")
         val OPEN_LINKS_IN_APP = booleanPreferencesKey("open_links_in_app")
+        val TEXT_WRAP_ON_ZOOM = booleanPreferencesKey("text_wrap_on_zoom")
 
         // Legacy: set by the old auto-desktop logic when it wrote desktop_layout
         // on the user's behalf. Only read by the migration below.
@@ -101,6 +102,12 @@ class SettingsDataStore(private val context: Context) {
     val pinchToZoom = context.dataStore.data.map { it[PINCH_TO_ZOOM] ?: false }
     suspend fun setPinchToZoom(pinchToZoom: Boolean) {
         context.dataStore.edit { it[PINCH_TO_ZOOM] = pinchToZoom }
+    }
+
+    // Off by default; only takes effect while pinch to zoom is on (text_wrap.js).
+    val textWrapOnZoom = context.dataStore.data.map { it[TEXT_WRAP_ON_ZOOM] ?: false }
+    suspend fun setTextWrapOnZoom(enabled: Boolean) {
+        context.dataStore.edit { it[TEXT_WRAP_ON_ZOOM] = enabled }
     }
 
     val materialYou = context.dataStore.data.map { it[MATERIAL_YOU] ?: false }

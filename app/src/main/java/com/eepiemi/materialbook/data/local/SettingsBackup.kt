@@ -23,6 +23,7 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_LOCKS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_PORTRAIT_RATIO
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REMOVE_ADS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.STICKY_NAVBAR
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.TEXT_WRAP_ON_ZOOM
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.TEXT_ZOOM
 import org.json.JSONObject
 
@@ -41,7 +42,7 @@ val EXPORTED_BOOLEAN_SETTINGS: List<Preferences.Key<Boolean>> = listOf(
     REMOVE_ADS, ENABLE_DOWNLOAD_CONTENT, ENABLE_COPY_TO_CLIPBOARD, DESKTOP_LAYOUT,
     IMMERSIVE_MODE, STICKY_NAVBAR, PINCH_TO_ZOOM, MATERIAL_YOU, AMOLED_BLACK,
     HIDE_SUGGESTED, HIDE_REELS, HIDE_STORIES, HIDE_PEOPLE_YOU_MAY_KNOW, HIDE_GROUPS,
-    MESSAGES_DESKTOP, PIP_ENABLED, PIP_LOCKSCREEN_AUDIO, OPEN_LINKS_IN_APP,
+    MESSAGES_DESKTOP, PIP_ENABLED, PIP_LOCKSCREEN_AUDIO, OPEN_LINKS_IN_APP, TEXT_WRAP_ON_ZOOM,
 )
 
 // App lock travels too: on a device without a screen lock it simply stays off (canUseAppLock).
