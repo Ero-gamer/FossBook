@@ -467,11 +467,19 @@ leaving the app while a Facebook video or Reel is playing.
 - **Wrap text when zoomed** (opt-in, off by default; shown under *Pinch to zoom* while that
   is on), like Opera's *Text wrap*: after a pinch-in settles, the post and comment text
   near the screen is narrowed to the visible width so its lines wrap on screen, and the
-  view is panned so the text under the middle of the screen starts at the edge (the right
-  edge for right-to-left text). Panning while zoomed wraps text as it comes into view
-  without moving the view; zooming back out restores the page. Elements that hold a video
-  are never restyled (Facebook's reels controller pauses the reel), and the text under the
-  middle of the screen is kept in place while blocks above it grow taller.
+  view is panned so the text filling most of the screen starts at its edge (the right edge
+  for right-to-left text). Text that starts further in, like a post's header or a comment
+  next to its avatar, is narrowed further so it also ends at the screen edge. Panning
+  while zoomed wraps text as it comes into view without moving the view, and so does text
+  Facebook adds while zoomed (more comments, *See more*, which keeps reading where it
+  left off); zooming back out restores the page. Elements that hold a video are never
+  restyled (Facebook's reels controller pauses the reel), and the text under the middle of
+  the screen is kept in place while blocks above it grow taller.
+- Facebook's mobile site lays text out on its server: line breaks are already in the text
+  (`white-space: pre`) and every box around it has a fixed height. Wrapped text gets
+  `pre-wrap`, the server's line breaks become spaces again (the author's own breaks stay),
+  and the boxes around it grow by as much as the text did. Hebrew text in an English page
+  moves to the right side of its box, where the view lines up with it.
 - Android's WebView has no built-in equivalent (the old narrow-columns layout stopped
   working in Android 4.4), so this is a page script, `text_wrap.js`. Main view only, not
   the Messages layer.
