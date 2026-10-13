@@ -4,6 +4,9 @@ import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.AMOLED_BLACK
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.APP_LOCK
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.APP_LOCK_ON_SCREEN_OFF
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.BLOCK_SCREENSHOTS
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.CLEAR_CACHE_ON_LEAVE
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DESKTOP_LAYOUT
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_COPY_TO_CLIPBOARD
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_DOWNLOAD_CONTENT
@@ -22,6 +25,7 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_ENABL
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_LOCKSCREEN_AUDIO
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_PORTRAIT_RATIO
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REMOVE_ADS
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.START_ON_FEEDS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.STICKY_NAVBAR
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.TEXT_WRAP_ON_ZOOM
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.TEXT_ZOOM
@@ -43,6 +47,7 @@ val EXPORTED_BOOLEAN_SETTINGS: List<Preferences.Key<Boolean>> = listOf(
     IMMERSIVE_MODE, STICKY_NAVBAR, PINCH_TO_ZOOM, MATERIAL_YOU, AMOLED_BLACK,
     HIDE_SUGGESTED, HIDE_REELS, HIDE_STORIES, HIDE_PEOPLE_YOU_MAY_KNOW, HIDE_GROUPS,
     MESSAGES_DESKTOP, PIP_ENABLED, PIP_LOCKSCREEN_AUDIO, OPEN_LINKS_IN_APP, TEXT_WRAP_ON_ZOOM,
+    START_ON_FEEDS, APP_LOCK_ON_SCREEN_OFF, BLOCK_SCREENSHOTS, CLEAR_CACHE_ON_LEAVE,
 )
 
 // App lock travels too: on a device without a screen lock it simply stays off (canUseAppLock).

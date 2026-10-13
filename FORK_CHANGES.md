@@ -549,6 +549,15 @@ with the window flag fullscreen video already sets.
 - **Iframes can't open other apps.** Only the page itself can send a link out of the app;
   a navigation inside an ad or embed frame stays in that frame, so it can't open the
   browser or another app without a tap.
+- **Lock when the screen turns off** (Settings, under App lock, off by default): turning the
+  screen off locks the app at once, whatever the grace period you picked. The grace period is
+  for a quick trip to another app (picking a file, sharing), not a phone put away.
+- **Block screenshots** (Settings, off by default): screenshots, screen recording, casting and
+  the Recents preview show the app as black (`FLAG_SECURE`), on every Android version. Settings
+  picks it up the next time it opens.
+- **Clear cache when leaving** (Settings, off by default): the WebView's HTTP cache (the photos,
+  videos and pages Facebook sent) is emptied each time the app goes out of sight. The login,
+  site data and copied images stay. Pages load slower and use more data afterwards.
 
 ## UX pass (October 2026)
 
@@ -584,6 +593,13 @@ From a hands-on pass through the app in light and dark mode on an emulator.
 - "Share via…" in Facebook's share sheet hands the post's link to the Android share sheet.
 - Downloads are named `Facebook_<date>_<time>`, saving the same file again points at the
   first copy, and a snackbar offers Open.
+
+## Start on Feeds
+
+- **Start on Feeds** (Settings → Feed, off by default): the app opens on Facebook's Feeds page
+  (`/?filter=all&sk=h_chr`, the newest posts from friends, groups and Pages first) instead of
+  Home. A link the app was opened with still opens its own page, and Facebook's Home button
+  still goes to Home. Covered by `StartPageTest`.
 
 ## Known limitations
 

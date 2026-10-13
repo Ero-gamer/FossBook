@@ -43,6 +43,10 @@ class SettingsDataStore(private val context: Context) {
         val WEBVIEW_DEBUGGING = booleanPreferencesKey("webview_debugging")
         val OPEN_LINKS_IN_APP = booleanPreferencesKey("open_links_in_app")
         val TEXT_WRAP_ON_ZOOM = booleanPreferencesKey("text_wrap_on_zoom")
+        val START_ON_FEEDS = booleanPreferencesKey("start_on_feeds")
+        val APP_LOCK_ON_SCREEN_OFF = booleanPreferencesKey("app_lock_on_screen_off")
+        val BLOCK_SCREENSHOTS = booleanPreferencesKey("block_screenshots")
+        val CLEAR_CACHE_ON_LEAVE = booleanPreferencesKey("clear_cache_on_leave")
 
         // Legacy: set by the old auto-desktop logic when it wrote desktop_layout
         // on the user's behalf. Only read by the migration below.
@@ -181,6 +185,31 @@ class SettingsDataStore(private val context: Context) {
     val appLock = context.dataStore.data.map { it[APP_LOCK] ?: AppLock.OFF }
     suspend fun setAppLock(mode: String) {
         context.dataStore.edit { it[APP_LOCK] = mode }
+    }
+
+    // Off by default: with app lock on, turning the screen off locks the app at once instead
+    // of after the lock's grace period.
+    val appLockOnScreenOff = context.dataStore.data.map { it[APP_LOCK_ON_SCREEN_OFF] ?: false }
+    suspend fun setAppLockOnScreenOff(enabled: Boolean) {
+        context.dataStore.edit { it[APP_LOCK_ON_SCREEN_OFF] = enabled }
+    }
+
+    // Off by default: screenshots, screen recording and casting show the app as black.
+    val blockScreenshots = context.dataStore.data.map { it[BLOCK_SCREENSHOTS] ?: false }
+    suspend fun setBlockScreenshots(enabled: Boolean) {
+        context.dataStore.edit { it[BLOCK_SCREENSHOTS] = enabled }
+    }
+
+    // Off by default: the WebView's HTTP cache is emptied each time the app goes out of sight.
+    val clearCacheOnLeave = context.dataStore.data.map { it[CLEAR_CACHE_ON_LEAVE] ?: false }
+    suspend fun setClearCacheOnLeave(enabled: Boolean) {
+        context.dataStore.edit { it[CLEAR_CACHE_ON_LEAVE] = enabled }
+    }
+
+    // Off by default: the app opens on Facebook's Home feed, as Facebook orders it.
+    val startOnFeeds = context.dataStore.data.map { it[START_ON_FEEDS] ?: false }
+    suspend fun setStartOnFeeds(enabled: Boolean) {
+        context.dataStore.edit { it[START_ON_FEEDS] = enabled }
     }
 
     // One of TextZoom's values; 100% by default.

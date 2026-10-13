@@ -15,6 +15,14 @@
     <string name="app_lock_prompt_title">Unlock %1$s</string>
 
 
+    <string name="app_lock_on_screen_off_title">Lock when the screen turns off</string>
+    <string name="app_lock_on_screen_off_summary">Turning the screen off locks the app right away, whatever the time above</string>
+    <string name="block_screenshots_title">Block screenshots</string>
+    <string name="block_screenshots_summary">Screenshots, screen recording, casting and the Recents preview show the app as black</string>
+    <string name="clear_cache_on_leave_title">Clear cache when leaving</string>
+    <string name="clear_cache_on_leave_summary">Delete the photos, videos and pages the app has cached each time you leave it. You stay logged in; pages load slower and use more data</string>
+
+
     <string name="log_out_title">Log out and clear data</string>
     <string name="log_out_summary">Remove the Facebook login, cookies, cache and site data from this app</string>
     <string name="log_out_confirm_title">Log out and clear data?</string>

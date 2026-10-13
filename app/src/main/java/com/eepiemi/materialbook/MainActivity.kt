@@ -19,6 +19,7 @@ import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.util.Rational
+import android.view.WindowManager
 import android.webkit.WebView
 import android.widget.Toast
 import androidx.activity.compose.setContent
@@ -53,6 +54,8 @@ import com.eepiemi.materialbook.ui.screens.MaterialbookWebView
 import com.eepiemi.materialbook.utils.AppLock
 import com.eepiemi.materialbook.utils.canUseAppLock
 import com.eepiemi.materialbook.utils.isAppLockEnabled
+import com.eepiemi.materialbook.utils.locksOnScreenOff
+import com.eepiemi.materialbook.utils.startPageUrl
 import com.eepiemi.materialbook.utils.shouldLockOnReturn
 import com.eepiemi.materialbook.ui.screens.OpenLinkRequest
 import com.eepiemi.materialbook.utils.appLinkUrl
@@ -172,6 +175,11 @@ class MainActivity : FragmentActivity() {
     private val screenOffReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action != Intent.ACTION_SCREEN_OFF) return
+            // App lock: "Lock when the screen turns off" locks on the next start, whatever the
+            // grace period (see onStart).
+            if (locksOnScreenOff(settingsVM.appLock.value, settingsVM.appLockOnScreenOff.value)) {
+                lockOnNextStart = true
+            }
             // Observed order on the device spike (SM-A566B, Android 16): the
             // page gets visibilitychange -> hidden first, Facebook pauses the
             // video 25-60ms later, then SCREEN_OFF arrives ~0.5s after that,
@@ -302,6 +310,8 @@ class MainActivity : FragmentActivity() {
     private var isAppLocked by mutableStateOf(false)
     // When the activity was last stopped, on the monotonic clock; null while visible.
     private var hiddenAt: Long? = null
+    // The screen turned off with "Lock when the screen turns off" on (screenOffReceiver).
+    private var lockOnNextStart = false
     // The prompt (or the screen-lock confirmation, which is an activity of its own) is up:
     // the stop/start it causes doesn't count as leaving the app.
     private var isAuthenticating = false
@@ -419,8 +429,7 @@ class MainActivity : FragmentActivity() {
                 // to the page, as the window itself did before.
                 Box(Modifier.fillMaxSize(), propagateMinConstraints = true) {
                     MaterialbookWebView(
-                        url = intentUrl
-                            ?: "https://facebook.com/",
+                        url = startPageUrl(intentUrl, settingsVM.startOnFeeds.value),
                         settingsVM = settingsVM,
                         pipToggleTrigger = pipToggleTrigger,
                         pipEnteringTrigger = pipEnteringTrigger,
@@ -449,8 +458,19 @@ class MainActivity : FragmentActivity() {
         lifecycleScope.launch {
             settingsVM.pipPortraitRatio.collect { reapplyPipParams() }
         }
+        // "Block screenshots" (Settings): screenshots, screen recording, casting and the
+        // Recents preview show the app as black. Dialogs (Settings) inherit it when they open.
+        lifecycleScope.launch {
+            settingsVM.blockScreenshots.collect { block ->
+                if (block) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                }
+            }
+        }
         // With app lock on, Recents shows no snapshot of the page (Android 13+; screenshots
-        // still work).
+        // still work unless they're blocked too).
         lifecycleScope.launch {
             settingsVM.appLock.collect { mode ->
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -485,12 +505,13 @@ class MainActivity : FragmentActivity() {
     override fun onStart() {
         super.onStart()
         handBack("onStart")
-        if (!isAuthenticating &&
-            shouldLockOnReturn(settingsVM.appLock.value, hiddenAt, SystemClock.elapsedRealtime())
+        if (!isAuthenticating && (lockOnNextStart ||
+                shouldLockOnReturn(settingsVM.appLock.value, hiddenAt, SystemClock.elapsedRealtime()))
         ) {
             lockIfEnabled()
         }
         hiddenAt = null
+        lockOnNextStart = false
     }
 
     override fun onResume() {

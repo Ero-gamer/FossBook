@@ -29,8 +29,10 @@ import androidx.compose.material.icons.filled.Try
 import androidx.compose.material.icons.outlined.AspectRatio
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Circle
+import androidx.compose.material.icons.outlined.CleaningServices
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.DesktopWindows
+import androidx.compose.material.icons.outlined.DynamicFeed
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FormatSize
@@ -43,6 +45,8 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PanoramaWideAngle
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
 import androidx.compose.material.icons.outlined.Pinch
+import androidx.compose.material.icons.outlined.ScreenLockPortrait
+import androidx.compose.material.icons.outlined.Screenshot
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material3.AlertDialog
@@ -79,6 +83,7 @@ import com.eepiemi.materialbook.ui.viewmodel.SettingsViewModel
 import com.eepiemi.materialbook.utils.AppLock
 import com.eepiemi.materialbook.utils.KeepScreenOn
 import com.eepiemi.materialbook.utils.canUseAppLock
+import com.eepiemi.materialbook.utils.isAppLockEnabled
 import com.eepiemi.materialbook.utils.TextZoom
 import com.eepiemi.materialbook.utils.effectiveDesktop
 import com.eepiemi.materialbook.utils.rememberAutoDesktop
@@ -126,6 +131,10 @@ fun SettingsContent(
     val developerOptions = viewModel.developerOptions.collectAsState()
     val webViewDebugging = viewModel.webViewDebugging.collectAsState()
     val openLinksInApp = viewModel.openLinksInApp.collectAsState()
+    val appLockOnScreenOff = viewModel.appLockOnScreenOff.collectAsState()
+    val blockScreenshots = viewModel.blockScreenshots.collectAsState()
+    val clearCacheOnLeave = viewModel.clearCacheOnLeave.collectAsState()
+    val startOnFeeds = viewModel.startOnFeeds.collectAsState()
     val hideSuggested = viewModel.hideSuggested.collectAsState()
     val hideReels = viewModel.hideReels.collectAsState()
     val hideStories = viewModel.hideStories.collectAsState()
@@ -185,6 +194,13 @@ fun SettingsContent(
                     supportingText = stringResource(R.string.hide_sponsored_ads_from_your_feed),
                     isActive = removeAds.value,
                     onClick = { viewModel.setRemoveAds(!removeAds.value) },
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.DynamicFeed,
+                    title = stringResource(R.string.start_on_feeds_title),
+                    supportingText = stringResource(R.string.start_on_feeds_summary),
+                    isActive = startOnFeeds.value,
+                    onClick = { viewModel.setStartOnFeeds(!startOnFeeds.value) },
                 ),
                 SettingsItem(
                     icon = Icons.Outlined.GridView,
@@ -373,7 +389,7 @@ fun SettingsContent(
 
         SettingsHeading(stringResource(R.string.settings_section_privacy))
         SettingsGroup(
-            items = listOf(
+            items = listOfNotNull(
                 SettingsItem(
                     icon = Icons.Outlined.Lock,
                     title = stringResource(R.string.app_lock_title),
@@ -389,6 +405,28 @@ fun SettingsContent(
                             runCatching { context.startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS)) }
                         }
                     }
+                ),
+                // Only shown while the lock is on: it changes when the lock locks.
+                SettingsItem(
+                    icon = Icons.Outlined.ScreenLockPortrait,
+                    title = stringResource(R.string.app_lock_on_screen_off_title),
+                    supportingText = stringResource(R.string.app_lock_on_screen_off_summary),
+                    isActive = appLockOnScreenOff.value,
+                    onClick = { viewModel.setAppLockOnScreenOff(!appLockOnScreenOff.value) }
+                ).takeIf { appLockAvailable && isAppLockEnabled(appLock.value) },
+                SettingsItem(
+                    icon = Icons.Outlined.Screenshot,
+                    title = stringResource(R.string.block_screenshots_title),
+                    supportingText = stringResource(R.string.block_screenshots_summary),
+                    isActive = blockScreenshots.value,
+                    onClick = { viewModel.setBlockScreenshots(!blockScreenshots.value) }
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.CleaningServices,
+                    title = stringResource(R.string.clear_cache_on_leave_title),
+                    supportingText = stringResource(R.string.clear_cache_on_leave_summary),
+                    isActive = clearCacheOnLeave.value,
+                    onClick = { viewModel.setClearCacheOnLeave(!clearCacheOnLeave.value) }
                 ),
                 SettingsItem(
                     icon = Icons.AutoMirrored.Outlined.Logout,

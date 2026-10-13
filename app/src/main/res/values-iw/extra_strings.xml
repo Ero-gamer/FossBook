@@ -65,4 +65,8 @@
     <!-- Text wrap on zoom (shown under Pinch to zoom) -->
     <string name="text_wrap_on_zoom_title">גלישת טקסט בהגדלה</string>
     <string name="text_wrap_on_zoom_summary">מתאים את הטקסט שמגדילים לרוחב המסך, בלי לגלול הצידה</string>
+
+    <!-- Start page (Feed section) -->
+    <string name="start_on_feeds_title">פתיחה בפידים</string>
+    <string name="start_on_feeds_summary">פתיחת האפליקציה ב\"פידים\" של פייסבוק, הפוסטים החדשים ראשונים, במקום בדף הבית</string>
 </resources>

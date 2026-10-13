@@ -48,3 +48,11 @@ fun canUseAppLock(context: Context): Boolean =
     } else {
         context.getSystemService(KeyguardManager::class.java)?.isDeviceSecure == true
     }
+
+/**
+ * Whether the screen turning off locks the app at once, whatever the grace period: the lock
+ * is on along with "Lock when the screen turns off". The grace period is for a quick trip to
+ * another app (a file picker, sharing); a phone put away isn't one.
+ */
+fun locksOnScreenOff(mode: String, lockOnScreenOff: Boolean): Boolean =
+    lockOnScreenOff && isAppLockEnabled(mode)

@@ -12,6 +12,14 @@
     <string name="app_lock_prompt_title">ביטול הנעילה של %1$s</string>
 
 
+    <string name="app_lock_on_screen_off_title">נעילה כשהמסך נכבה</string>
+    <string name="app_lock_on_screen_off_summary">כיבוי המסך נועל את האפליקציה מיד, בלי קשר לזמן שנבחר למעלה</string>
+    <string name="block_screenshots_title">חסימת צילומי מסך</string>
+    <string name="block_screenshots_summary">צילומי מסך, הקלטת מסך, העברה למסך אחר והתצוגה המקדימה באפליקציות האחרונות מציגים את האפליקציה בשחור</string>
+    <string name="clear_cache_on_leave_title">ניקוי המטמון ביציאה</string>
+    <string name="clear_cache_on_leave_summary">מחיקת התמונות, הסרטונים והדפים שנשמרו במטמון בכל יציאה מהאפליקציה. ההתחברות נשמרת; הדפים נטענים לאט יותר וצורכים יותר נתונים</string>
+
+
     <string name="log_out_title">התנתקות ומחיקת נתונים</string>
     <string name="log_out_summary">מחיקת ההתחברות לפייסבוק, קובצי ה-Cookie, המטמון ונתוני האתר מהאפליקציה</string>
     <string name="log_out_confirm_title">להתנתק ולמחוק את הנתונים?</string>

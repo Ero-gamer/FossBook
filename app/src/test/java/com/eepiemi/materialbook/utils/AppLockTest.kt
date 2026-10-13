@@ -49,4 +49,13 @@ class AppLockTest {
     fun unknownStoredValue_neverLocks() {
         assertFalse(shouldLockOnReturn("bogus", hiddenAtMillis = 0, nowMillis = 10_000_000))
     }
+
+    @Test
+    fun screenOff_locksOnlyWithTheLockAndTheOptionOn() {
+        assertTrue(locksOnScreenOff(AppLock.AFTER_15_MIN, lockOnScreenOff = true))
+        assertTrue(locksOnScreenOff(AppLock.IMMEDIATELY, lockOnScreenOff = true))
+        assertFalse(locksOnScreenOff(AppLock.AFTER_15_MIN, lockOnScreenOff = false))
+        assertFalse(locksOnScreenOff(AppLock.OFF, lockOnScreenOff = true))
+        assertFalse(locksOnScreenOff("bogus", lockOnScreenOff = true))
+    }
 }
