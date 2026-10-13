@@ -193,6 +193,12 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   count when no letter, mark or digit touches them; the Hebrew `ממומן` was added, and two
   fragments that would now match ordinary words (Amharic `ተደረገ`, Hindi `प`) were dropped
   (their full labels stay). Covered by `ReelAdsJsTest`.
+- A reel counts as an ad only when one of its spans is the label, not when a span mentions it:
+  Facebook's reel ad label is a span of its own (`<span class="f19">Ad</span>` at the bottom left,
+  next to a megaphone icon), "Ad" in English even with Facebook in Hebrew, checked on a phone.
+  Before, a normal reel whose caption used a label word ("Ad", `במימון` "funded by") was hidden
+  too. Icon glyphs, direction marks and separators around the label are ignored. Covered by
+  `ReelAdsJsTest`.
 - Right-to-left languages (Hebrew, Arabic…): the Settings gears sit where they belong in
   Facebook's mirrored bars. On the feed the gear covered the Facebook logo (it's now beside
   Search and Menu on the left), on Reels it covered Back (now at the bar's left end), and on

@@ -92,16 +92,19 @@
         "Anzeige","Peye","Oglas"
     ];
 
-    // Whole labels only: no letter, combining mark or digit right before or after. (\b
-    // knows only ASCII letters, so labels in other scripts - במימון, Реклама, 広告 - never
-    // matched.) Built once: this runs on every span of every reel the page adds.
-    const sponsoredPatterns = sponsoredTexts.map(word => new RegExp(
-        `(?:^|[^\\p{L}\\p{M}\\p{N}])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{M}\\p{N}])`,
-        'iu'
-    ));
+    // A reel's ad label is a span of its own holding just the label: on m.facebook.com it's
+    // <span class="f19">Ad</span> at the reel's bottom left, next to a megaphone icon (a separate
+    // element), with Facebook in English or Hebrew alike. So a span counts only when its whole
+    // text is a label, once icon glyphs, direction marks, spaces and separators are left out.
+    // A caption that uses one of the words (a reel "Ad" in a sentence, "במימון" for "funded by")
+    // no longer hides a normal reel. Built once: this runs on every span of every reel the page adds.
+    const sponsoredLabels = new Set(sponsoredTexts.map(label => label.toLowerCase()));
+    const IGNORED = /[\uE000-\uF8FF\u{F0000}-\u{FFFFD}\p{Cf}]/gu;
+    const EDGES = /^[\s·•|:-]+|[\s·•|:-]+$/gu;
 
     function containsSponsoredText(text) {
-        return sponsoredPatterns.some(pattern => pattern.test(text));
+        const label = text.replace(IGNORED, '').replace(EDGES, '').replace(/\s+/g, ' ');
+        return label.length > 0 && label.length <= 60 && sponsoredLabels.has(label.toLowerCase());
     }
 
 
