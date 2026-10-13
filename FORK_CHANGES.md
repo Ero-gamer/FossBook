@@ -216,6 +216,10 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
 - `./gradlew test`, `:app:lintDebug`, and `connectedAndroidTest` now gate
   every build — previously nothing ran tests or static Android checks before
   signing/releasing.
+- The instrumented-tests job also launches the minified release build on its emulator
+  (`.github/scripts/release-smoke-test.sh`) and fails if it crashes or isn't running 20 s later:
+  the tests run unminified builds, so v1.25.1 and v1.25.2 shipped a crash at launch that only R8
+  caused.
 - Android lint runs as its own CI job and uploads HTML, XML, and text reports
   as a workflow artifact, including on failure. Dependency-update notices are
   advisory because the current pinned libraries target `compileSdk 36`; the
