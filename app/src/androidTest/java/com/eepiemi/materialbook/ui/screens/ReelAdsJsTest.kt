@@ -104,6 +104,32 @@ class ReelAdsJsTest {
     }
 
     @Test
+    fun facebooksReelAdLabel_asOnThePhone_hidesTheReel() {
+        // Sponsored reels on m.facebook.com (Facebook in English and in Hebrew): the label is a span
+        // of its own at the bottom left, next to a megaphone icon that's a separate element.
+        val h = Harness()
+        h.load(
+            "<div class='vertically-snappable' id='ad' style='height:400px'><span>Some Brand</span>" +
+                "<div class='native-text rslh' dir='auto'><span class='f19'>Ad</span></div></div>"
+        )
+
+        assertEquals("true", h.hidden("ad"))
+    }
+
+    @Test
+    fun aCaptionUsingALabelWord_isNotAnAd() {
+        // Only a span that is the label counts, not one that mentions it.
+        val h = Harness()
+        h.load(
+            reel("en", "My friend", "Check out this Ad we made for school") +
+                reel("he", "חברה", "הסרט הופק במימון קרן הקולנוע") +
+                reel("he2", "חברה", "זה לא תוכן ממומן, פשוט אהבתי")
+        )
+
+        assertEquals("false,false,false", h.hidden("en", "he", "he2"))
+    }
+
+    @Test
     fun reelAddedLater_isCheckedToo() {
         val h = Harness()
         h.load("<div id='feed'>${reel("first", "A friend's reel")}</div>")
