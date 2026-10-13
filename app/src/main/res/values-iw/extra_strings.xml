@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- See values/extra_strings.xml. -->
 <resources>
-    <string name="text_size_title">גודל טקסט</string>
+    <string name="text_size_title">הגדלת הדף</string>
     <string name="text_size_percent">%1$d%%</string>
     <string name="text_size_default">%1$d%% (ברירת מחדל)</string>
 
@@ -44,7 +44,7 @@
     <string name="reload_to_apply">טעינה מחדש להחלה</string>
     <string name="hide_from_feed_title">הסתרה מהפיד</string>
     <string name="amoled_black_summary">רקע שחור מלא במצב הכהה של פייסבוק (תפריט פייסבוק › מצב כהה)</string>
-    <string name="text_size_layout_note">מעל 115%, חלקים מהעיצוב של פייסבוק עלולים לחפוף.</string>
+    <string name="text_size_layout_note">מגדיל או מקטין את הדפים של פייסבוק: טקסט, תמונות וכפתורים יחד, כך ששום דבר לא חופף.</string>
     <string name="app_lock_open_security_settings">כדי להשתמש בנעילת אפליקציה, צריך להגדיר נעילת מסך במכשיר. אפשר להקיש כדי לפתוח את הגדרות האבטחה.</string>
     <string name="open_links_hint_text">במסך הבא, צריך להקיש על ״הוספת קישור״ ולבחור את כל הקישורים של פייסבוק.</string>
     <string name="open_links_hint_continue">המשך</string>

@@ -183,7 +183,8 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   the WebView and reopens the page that was showing (Home if that isn't a Facebook page, or
   if the renderer was lost again within a minute); a fullscreen video leaves fullscreen. The
   Messages layer reopens at its page the same way. Logged as `Astryxbook`. Covered by
-  `RendererRecoveryTest`.
+  `RendererRecoveryTest`. A WebView that takes over while in PiP is zoomed back out when PiP
+  ends: its page was laid out at the PiP window's size and could stay zoomed in about 3x.
 - Remove ads hides sponsored reels in every language Facebook labels them in. The label check
   matched whole words with `\b`, which in JavaScript knows only ASCII letters, so the Hebrew,
   Russian, Japanese, Hindi and other non-Latin labels on the list never matched. Labels now
@@ -454,8 +455,17 @@ leaving the app while a Facebook video or Reel is playing.
 - **Share this page:** the share button at the top of Settings sends the page you're on
   (the Messages layer's while it's open) through the system share sheet, as a
   `www.facebook.com` link without tracking parameters.
-- **Text size** (Settings, 100% by default): 85% to 150%, for the feed and the Messages
-  layer alike.
+- **Page zoom** (Settings, was *Text size*; 100% by default): 85% to 150%. The main view
+  zooms whole pages (`page_zoom.js`, a document-start script): text, pictures and buttons
+  together, laid out by Facebook to fit the screen, so nothing overlaps. Text size alone never
+  lasted: m.facebook.com cancels WebView's text zoom on every load (it divides its font sizes
+  by it, because its server-side layout uses fixed boxes), so the setting only showed until the
+  next page. The script gives Facebook's viewport `<meta>`s the window's width divided by the
+  zoom and corrects the viewport size Facebook reports to its server (its `vpd` cookie); a
+  change of zoom sets that cookie and reloads the page. Pages in PiP keep Facebook's own
+  viewport, so PiP is unchanged, and *Wrap text when zoomed* counts pinch zoom from the page
+  zoom. Zooming out uses WebView's wide viewport. The Messages layer keeps the text zoom.
+  Covered by `PageZoomJsTest` and `TextZoomTest`.
 - **Launcher shortcuts:** long-press the app icon for Messages, Notifications and
   Marketplace. Messages opens where the Messages tab would (the Messages layer when
   *Messages in desktop mode* is on); this also applies to Messages links from other apps,
@@ -584,7 +594,7 @@ From a hands-on pass through the app in light and dark mode on an emulator.
 - Settings: sections with headings (Feed, Appearance, Video, Messages and links, Privacy and
   security, Backup); Log out in red; "Reload to apply" (was "Apply Immediately?") shows only
   after a change that needs the page reloaded; Customize feed has a "Hide from your feed"
-  title; Text size warns that Facebook's layout can overlap above 115%; App lock without a
+  title; Page zoom explains that the whole page grows together; App lock without a
   screen lock opens the security settings; "Open Facebook links here" explains what to pick
   first; the header buttons are 48dp and sharing the page keeps Settings open.
 - Facebook's Messages tab, with Messages in desktop mode off, offers desktop mode instead of
@@ -596,10 +606,16 @@ From a hands-on pass through the app in light and dark mode on an emulator.
 
 ## Start on Feeds
 
-- **Start on Feeds** (Settings → Feed, off by default): the app opens on Facebook's Feeds page
-  (`/?filter=all&sk=h_chr`, the newest posts from friends, groups and Pages first) instead of
-  Home. A link the app was opened with still opens its own page, and Facebook's Home button
-  still goes to Home. Covered by `StartPageTest`.
+- **Start on Feeds** (Settings → Feed, off by default): the app opens on Facebook's Feeds (the
+  newest posts from friends, groups and Pages first) instead of Home. A link the app was opened
+  with still opens its own page, and Facebook's Home button still goes to Home. Back on Feeds
+  works as on the feed: it scrolls to the top, then leaves the app.
+- m.facebook.com has no web address for Feeds: its menu entry shows Feeds in place, and every
+  Feeds-looking address (`?sk=h_chr`, which the first version used) redirects to Home. So the
+  app opens the menu (`/bookmarks/#astryx-feeds`) and `open_feeds.js`, a document-start script,
+  presses its Feeds entry (found by its icon, the same in every language) with the menu hidden.
+  If the entry doesn't show up, Home opens; logged out, the login page shows. Covered by
+  `StartPageTest` and `OpenFeedsJsTest`.
 
 ## Known limitations
 

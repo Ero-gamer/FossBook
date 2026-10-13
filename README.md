@@ -54,7 +54,7 @@ Off by default (opt-in):
     *  People you may know
 *  Hides the system bars (immersive mode)
 *  Allows pinch-to-zoom anywhere, and can wrap text to the screen when zoomed in, like Opera (Settings → *Wrap text when zoomed*)
-*  Changes the text size, from 85% to 150% (Settings → *Text size*)
+*  Zooms whole pages, text and pictures together, from 85% to 150% (Settings → *Page zoom*)
 *  Opens web links in a browser tab over the app instead of switching apps (Settings → *Open web links in the app*)
 *  Lets you access Messenger (Desktop layout only)
 *  Opens Messages inside the app on the desktop site, in its own layer over the feed, so Back returns you to where you were; it can turn to landscape for more room (Settings → *Messages in desktop mode*); links to a conversation keep it

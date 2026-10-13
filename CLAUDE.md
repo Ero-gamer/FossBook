@@ -106,6 +106,13 @@ user-visible change.
   the first content-sized box. A test WebView can't pinch, so `TextWrapJsTest` fakes
   `visualViewport`; on the emulator, CDP `Input.synthesizePinchGesture` on the WebView target
   does a real pinch (its x/y must be inside the visual viewport, in CSS px).
+- m.facebook.com cancels WebView's `textZoom` on every load (it divides its font-size variables
+  by it). *Page zoom* (`page_zoom.js`, document-start, main view) zooms whole pages instead: it
+  rewrites the viewport `<meta>`s and Facebook's `vpd` cookie (the viewport its server lays pages
+  out for). Page scripts that read `visualViewport.scale` must count from
+  `__astryxPageZoomScale()`, not 1. Zooming out needs `useWideViewPort`.
+- m.facebook.com has no URL for Feeds (`?sk=h_chr` redirects to Home). *Start on Feeds* opens the
+  menu at `/bookmarks/#astryx-feeds` and `open_feeds.js` presses its Feeds entry, found by its icon.
 - "Keep screen on" uses the host view's `keepScreenOn`, not the window flag the fullscreen
   host adds and clears.
 - Facebook's video viewer re-lays out only on a real fullscreen transition

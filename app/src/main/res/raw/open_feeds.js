@@ -19,7 +19,8 @@
 
   var FEEDS_ICON = 'FTDJiLwLrcM';
   var FEEDS_LABEL = 'Feeds';
-  var GIVE_UP_MS = 8000;
+  var GIVE_UP_AFTER_LOAD_MS = 6000;
+  var GIVE_UP_MS = 20000;
   var RETRY_CLICK_MS = 700;
 
   var hide = document.createElement('style');
@@ -40,7 +41,11 @@
     return document.querySelector('[role="button"][aria-label="' + FEEDS_LABEL + '"]');
   }
 
+  // A slow connection can take longer than the whole budget to load the menu, so the entry
+  // gets a few seconds after the page has loaded, within an overall limit.
   var started = Date.now();
+  var loadedAt = document.readyState === 'complete' ? started : 0;
+  window.addEventListener('load', function () { loadedAt = Date.now(); });
   var lastClick = 0;
   var timer = setInterval(function () {
     var path = window.location.pathname;
@@ -57,7 +62,8 @@
       reveal();
       return;
     }
-    if (Date.now() - started > GIVE_UP_MS) {
+    var now = Date.now();
+    if ((loadedAt && now - loadedAt > GIVE_UP_AFTER_LOAD_MS) || now - started > GIVE_UP_MS) {
       clearInterval(timer);
       reveal();
       window.location.replace('https://m.facebook.com/');

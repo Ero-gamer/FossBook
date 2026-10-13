@@ -101,6 +101,7 @@ import com.eepiemi.materialbook.utils.shareablePageUrl
 import com.eepiemi.materialbook.utils.rememberAutoDesktop
 import com.eepiemi.materialbook.utils.rememberImeHeight
 import com.eepiemi.materialbook.utils.shouldKeepScreenOn
+import androidx.webkit.ScriptHandler
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import kotlinx.coroutines.delay
@@ -538,6 +539,19 @@ internal fun installPipVisibilityScript(webView: android.webkit.WebView) {
 }
 
 private val OPEN_FEEDS_ORIGINS = setOf("https://facebook.com", "https://*.facebook.com")
+
+// Installs page_zoom.js (page zoom, see the script) for [percent]; its handler removes it when
+// the setting changes. Null at 100% and without DOCUMENT_START_SCRIPT (Chrome 87+).
+internal fun installPageZoomScript(webView: android.webkit.WebView, percent: Int): ScriptHandler? {
+    if (percent == 100 || !WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) return null
+    val script = webView.resources.openRawResource(R.raw.page_zoom)
+        .bufferedReader().use { it.readText() }
+    return runCatching {
+        WebViewCompat.addDocumentStartJavaScript(
+            webView, "window.__astryxPageZoom = ${percent / 100.0};\n$script", OPEN_FEEDS_ORIGINS
+        )
+    }.onFailure { Log.w("Astryxbook", "page_zoom.js not installed", it) }.getOrNull()
+}
 
 // Installs open_feeds.js ("Start on Feeds", see the script) as a document-start script, so the
 // menu it starts from is hidden from the first frame. Returns false without DOCUMENT_START_SCRIPT
@@ -978,12 +992,36 @@ fun MaterialbookWebView(
         openLinkRequest?.let { openAppLink(it.url, whileRunning = true) }
     }
 
-    // Text size (Settings): applied when the WebView is created (onCreated) and, when it
-    // changes, on the WebView that's already there.
+    // Page zoom (Settings, stored as "Text size"): page_zoom.js at document start, installed when
+    // the WebView is created (onCreated). m.facebook.com cancels WebView's own textZoom, which is
+    // left for WebViews without document-start scripts. A change re-installs the script on the
+    // WebView that's there and reloads the page, with Facebook's viewport cookie set ahead so
+    // the server lays that page out for the new width too.
     val textZoom by settingsVM.textZoom.collectAsState()
     val textZoomPercent = TextZoom.percent(textZoom)
+    var pageZoomScript by remember { mutableStateOf<ScriptHandler?>(null) }
+    var pageZoomPercent by remember { mutableIntStateOf(textZoomPercent) }
+    var pageZoomByScript by remember { mutableStateOf(true) }
     LaunchedEffect(textZoomPercent) {
-        runCatching { state.nativeWebView }.getOrNull()?.settings?.textZoom = textZoomPercent
+        if (textZoomPercent == pageZoomPercent) return@LaunchedEffect
+        pageZoomPercent = textZoomPercent
+        val webView = runCatching { state.nativeWebView }.getOrNull() ?: return@LaunchedEffect
+        if (!pageZoomByScript) {
+            webView.settings.textZoom = textZoomPercent
+            return@LaunchedEffect
+        }
+        pageZoomScript?.remove()
+        pageZoomScript = installPageZoomScript(webView, textZoomPercent)
+        webView.settings.useWideViewPort = textZoomPercent < 100
+        if (webView.width > 0 && webView.height > 0) {
+            CookieManager.getInstance().setCookie(
+                "https://m.facebook.com",
+                TextZoom.viewportCookie(
+                    webView.width, webView.height, resources.displayMetrics.density, textZoomPercent
+                )
+            )
+        }
+        if (state.loadingState is LoadingState.Finished) navigator.reload()
     }
 
     // PiP follows the page on screen: the Messages layer's while it's open (it reports its
@@ -1589,7 +1627,13 @@ fun MaterialbookWebView(
             onDispose = { webView -> if (deadWebViews.remove(webView)) webView.destroy() },
             onCreated = { webView ->
                 hardenWebView(state, webView)
-                state.webSettings.androidWebSettings.textZoom = textZoomPercent
+                pageZoomPercent = textZoomPercent
+                pageZoomByScript = WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)
+                pageZoomScript = installPageZoomScript(webView, textZoomPercent)
+                state.webSettings.androidWebSettings.textZoom = if (pageZoomByScript) 100 else textZoomPercent
+                // A zoom below 100% lays the page out wider than the screen, which WebView allows
+                // only with a wide viewport.
+                state.webSettings.androidWebSettings.useWideViewPort = pageZoomByScript && textZoomPercent < 100
 
                 val cookieManager = CookieManager.getInstance()
                 cookieManager.setAcceptCookie(true)

@@ -5,7 +5,7 @@
   brand_strings.xml: fewer merge conflicts on every upstream sync.
 -->
 <resources>
-    <string name="text_size_title">Text size</string>
+    <string name="text_size_title">Page zoom</string>
     <string name="text_size_percent">%1$d%%</string>
     <string name="text_size_default">%1$d%% (default)</string>
 
@@ -47,7 +47,7 @@
     <string name="reload_to_apply">Reload to apply</string>
     <string name="hide_from_feed_title">Hide from your feed</string>
     <string name="amoled_black_summary">Pure black backgrounds in Facebook\'s dark mode (Facebook menu › Dark mode)</string>
-    <string name="text_size_layout_note">Above 115%, parts of Facebook\'s layout can overlap.</string>
+    <string name="text_size_layout_note">Makes Facebook\'s pages bigger or smaller: text, pictures and buttons together, so nothing overlaps.</string>
     <string name="app_lock_open_security_settings">Set a screen lock on this device to use app lock. Tap to open the security settings.</string>
     <string name="open_links_hint_text">On the next screen, tap Add link and select all the Facebook links.</string>
     <string name="open_links_hint_continue">Continue</string>
