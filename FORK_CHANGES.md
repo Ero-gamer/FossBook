@@ -426,6 +426,12 @@ leaving the app while a Facebook video or Reel is playing.
   get transport controls only). It is bound idle at PiP entry and only goes
   to the foreground at screen-off, so no notification shows during ordinary
   PiP use.
+- Lock-screen audio works again for Facebook's current player. Facebook now
+  plays most videos through Media Source Extensions (a `blob:` source the
+  native player can't open), so every lock skipped the hand-off and the audio
+  stopped. The hand-off now uses the MP4 that Facebook's player carries in
+  `data-video-url` (the same file video downloads use), which is the SD
+  version.
 
 ## Sharing, text size, shortcuts and developer options
 
@@ -584,7 +590,8 @@ From a hands-on pass through the app in light and dark mode on an emulator.
 - Lock-screen audio plays Facebook's signed video URL directly, and those
   URLs expire. If one expires during a long lock, native playback stops
   (no refresh); on unlock the WebView video is restored at the last known
-  position. It also only covers videos with a plain `https://` source, not
-  `blob:` (MSE) streams.
+  position. A `blob:` (MSE) video is covered only when its player carries a
+  `data-video-url` MP4 (the mobile site's players do), and plays that SD
+  file.
 - Store listing screenshots (`fastlane/metadata/.../phoneScreenshots/`)
   removed as stale; not replaced yet (need real device captures).

@@ -88,6 +88,10 @@ user-visible change.
   the PiP video's player as fully visible while PiP is engaged. To see why Facebook
   pauses/plays, hook `require('CoreVideoPlayerAutoplayClientUtils').log` in DevTools: it
   names the deciding autoplay rule.
+- Facebook plays most videos through Media Source Extensions, so a `<video>`'s
+  `currentSrc` is `blob:`. The mobile site's player (`data-mcomponent="MVideo"`) carries
+  the whole MP4 in `data-video-url`; downloads (`download_content.js`) and the lock-screen
+  audio hand-off (`PIP_HANDOFF_ARM_JS`) use that.
 - "Keep screen on" uses the host view's `keepScreenOn`, not the window flag the fullscreen
   host adds and clears.
 - Facebook's video viewer re-lays out only on a real fullscreen transition
