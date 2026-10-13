@@ -18,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -26,8 +27,24 @@ import com.multiplatform.webview.web.PlatformWebViewParams
 
 // src: https://github.com/KevinnZou/compose-webview-multiplatform
 
+/**
+ * The WebView clients every WebView in the app gets: file picker, fullscreen video and camera/
+ * microphone requests (chrome client), and [onRendererGone] when the page's renderer process is
+ * lost (see RendererGoneClient), after leaving fullscreen: its video view is gone with it.
+ */
 @Composable
-fun appWebViewParams(fullscreen: FullscreenController): PlatformWebViewParams {
+fun appWebViewParams(
+    fullscreen: FullscreenController,
+    onRendererGone: (WebView) -> Unit,
+): PlatformWebViewParams {
+    val currentOnRendererGone by rememberUpdatedState(onRendererGone)
+    val webViewClient = remember(fullscreen) {
+        RendererGoneClient { view ->
+            fullscreen.hide()
+            currentOnRendererGone(view)
+        }
+    }
+
     var fileChooserIntent by remember { mutableStateOf<Intent?>(null) }
 
     // Messenger calls: the camera/microphone request waiting for Android's permission prompt.
@@ -101,7 +118,7 @@ fun appWebViewParams(fullscreen: FullscreenController): PlatformWebViewParams {
         }
     }
 
-    return PlatformWebViewParams(chromeClient = webViewChromeClient)
+    return PlatformWebViewParams(client = webViewClient, chromeClient = webViewChromeClient)
 }
 
 private fun Intent.getUris(): List<Uri>? {

@@ -25,6 +25,7 @@ import com.eepiemi.materialbook.utils.DESKTOP_USER_AGENT
 import com.eepiemi.materialbook.utils.FullscreenController
 import com.eepiemi.materialbook.utils.MessagesLayerRoute
 import com.eepiemi.materialbook.utils.appWebViewParams
+import com.eepiemi.materialbook.utils.deadWebViewUrl
 import com.eepiemi.materialbook.utils.hardenWebView
 import com.eepiemi.materialbook.utils.jsBridge.installClipboardBridge
 import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
@@ -59,6 +60,8 @@ import com.multiplatform.webview.web.rememberWebViewState
  * - Back steps through the layer's own history (a reel back to the chat, a conversation back
  *   to the chat list), then closes the layer.
  * - Non-Facebook links go to [onExternalUrl], as in the main view.
+ * - If the page's renderer process is lost, [onRendererGone] gets the page it was showing, to
+ *   open a new layer there (by default the layer closes).
  */
 /** The page PiP acts on (see MaterialbookWebView): the Messages layer's while it's open. */
 class PipTarget(val navigator: WebViewNavigator, val state: WebViewState)
@@ -85,6 +88,7 @@ fun MessagesLayer(
     onOpenSettings: () -> Unit = {},
     onThemeColor: (Color) -> Unit = {},
     textZoom: Int = 100,
+    onRendererGone: (pageUrl: String?) -> Unit = { onClose() },
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -92,6 +96,7 @@ fun MessagesLayer(
     val currentOnLeave by rememberUpdatedState(onLeave)
     val currentOnOpenSettings by rememberUpdatedState(onOpenSettings)
     val currentOnThemeColor by rememberUpdatedState(onThemeColor)
+    val currentOnRendererGone by rememberUpdatedState(onRendererGone)
 
     // The user agent is applied by the library when it creates the WebView, before the
     // first load (setting it is idempotent, so doing it on every composition is fine).
@@ -191,7 +196,11 @@ fun MessagesLayer(
             modifier = Modifier.fillMaxSize(),
             state = state,
             navigator = navigator,
-            platformWebViewParams = appWebViewParams(fullscreen),
+            // The WebView can't be used once its renderer is gone (see RendererGoneClient):
+            // the caller replaces the layer, and onDispose below destroys this one.
+            platformWebViewParams = appWebViewParams(fullscreen, onRendererGone = { dead ->
+                currentOnRendererGone(deadWebViewUrl(dead) ?: state.lastLoadedUrl)
+            }),
             captureBackPresses = false,
             // The layer is gone for good once closed: free its WebView (and its page).
             onDispose = { webView -> webView.destroy() },

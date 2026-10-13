@@ -1,6 +1,7 @@
 package com.eepiemi.materialbook.ui.screens
 
 import android.content.Intent
+import android.os.SystemClock
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -29,6 +30,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -67,6 +69,8 @@ import com.eepiemi.materialbook.utils.FullscreenController
 import com.eepiemi.materialbook.utils.appOrientation
 import com.eepiemi.materialbook.utils.appWebViewParams
 import com.eepiemi.materialbook.utils.clearWebData
+import com.eepiemi.materialbook.utils.deadWebViewUrl
+import com.eepiemi.materialbook.utils.rendererRecoveryUrl
 import com.eepiemi.materialbook.utils.jsBridge.installClipboardBridge
 import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
 import com.eepiemi.materialbook.utils.jsBridge.installPageBridges
@@ -1476,78 +1480,114 @@ fun MaterialbookWebView(
             }
         )
 
-    WebView(
-        modifier = pageModifier,
-        state = state,
-        navigator = navigator,
-        platformWebViewParams = appWebViewParams(fullscreen),
-        captureBackPresses = false,
-        onCreated = { webView ->
-            hardenWebView(state, webView)
-            state.webSettings.androidWebSettings.textZoom = textZoomPercent
+    // A lost renderer (see RendererGoneClient) leaves the WebView unusable: a new one takes its
+    // place (the key below) with the same onCreated setup, and once it exists the navigator
+    // reopens the page that was showing. The navigator replays only its last event to a new
+    // WebView (see CLAUDE.md), so the load is sent after the WebView is there, not with the loss.
+    var webViewGeneration by remember { mutableIntStateOf(0) }
+    var pendingRecoveryUrl by remember { mutableStateOf<String?>(null) }
+    var replacementWebView by remember { mutableStateOf<android.webkit.WebView?>(null) }
+    var lastRendererLossAt by remember { mutableStateOf<Long?>(null) }
+    val deadWebViews = remember { mutableSetOf<android.webkit.WebView>() }
+    LaunchedEffect(replacementWebView) {
+        if (replacementWebView == null) return@LaunchedEffect
+        val recoveryUrl = pendingRecoveryUrl ?: return@LaunchedEffect
+        pendingRecoveryUrl = null
+        navigator.loadUrl(recoveryUrl)
+    }
 
-            val cookieManager = CookieManager.getInstance()
-            cookieManager.setAcceptCookie(true)
-            // Facebook and Messenger are first-party; refusing other sites' cookies in embeds
-            // (ads, link previews) keeps them from tracking across pages.
-            cookieManager.setAcceptThirdPartyCookies(webView, false)
-            cookieManager.flush()
+    key(webViewGeneration) {
+        WebView(
+            modifier = pageModifier,
+            state = state,
+            navigator = navigator,
+            platformWebViewParams = appWebViewParams(fullscreen, onRendererGone = { dead ->
+                val now = SystemClock.elapsedRealtime()
+                pendingRecoveryUrl = rendererRecoveryUrl(
+                    deadWebViewUrl(dead) ?: state.lastLoadedUrl, HOME_URL, lastRendererLossAt, now
+                )
+                lastRendererLossAt = now
+                // Its videos are gone with it; the reloaded page reports its own.
+                mainVideoPlaying = false
+                onVideoPlayingChanged(false, 0, 0)
+                replacementWebView = null
+                deadWebViews += dead
+                webViewGeneration++
+            }),
+            captureBackPresses = false,
+            // Only a WebView whose renderer is gone is destroyed here, once it's out of the layout.
+            onDispose = { webView -> if (deadWebViews.remove(webView)) webView.destroy() },
+            onCreated = { webView ->
+                hardenWebView(state, webView)
+                state.webSettings.androidWebSettings.textZoom = textZoomPercent
 
-            state.webSettings.apply {
-                isJavaScriptEnabled = true
+                val cookieManager = CookieManager.getInstance()
+                cookieManager.setAcceptCookie(true)
+                // Facebook and Messenger are first-party; refusing other sites' cookies in embeds
+                // (ads, link previews) keeps them from tracking across pages.
+                cookieManager.setAcceptThirdPartyCookies(webView, false)
+                cookieManager.flush()
 
-                androidWebSettings.apply {
-                    //isDebugInspectorInfoEnabled = true
-                    domStorageEnabled = true
-                    hideDefaultVideoPoster = true
-                    mediaPlaybackRequiresUserGesture = false
+                state.webSettings.apply {
+                    isJavaScriptEnabled = true
+
+                    androidWebSettings.apply {
+                        //isDebugInspectorInfoEnabled = true
+                        domStorageEnabled = true
+                        hideDefaultVideoPoster = true
+                        mediaPlaybackRequiresUserGesture = false
+                    }
                 }
-            }
 
-            webView.apply {
-                // Page -> app calls, downloads and copy to clipboard: Facebook's own main
-                // frame only.
-                installPageBridges(
-                    this,
-                    PageBridges(
-                        settings = MaterialbookSettings { settingsToggle = true },
-                        theme = ThemeChange { if (!settingsToggle) viewModel.setThemeColor(Color(it)) },
-                        pip = PipBridge(onVideoPlayingChanged, onPipPageVisible),
-                        screen = ScreenBridge { mainVideoPlaying = it },
-                        share = { link ->
-                            val send = Intent(Intent.ACTION_SEND)
-                                .setType("text/plain")
-                                .putExtra(Intent.EXTRA_TEXT, link)
-                            runCatching {
-                                context.startActivity(Intent.createChooser(send, resources.getString(R.string.share_via)))
-                            }
-                        },
+                webView.apply {
+                    // Page -> app calls, downloads and copy to clipboard: Facebook's own main
+                    // frame only.
+                    installPageBridges(
+                        this,
+                        PageBridges(
+                            settings = MaterialbookSettings { settingsToggle = true },
+                            theme = ThemeChange { if (!settingsToggle) viewModel.setThemeColor(Color(it)) },
+                            pip = PipBridge(onVideoPlayingChanged, onPipPageVisible),
+                            screen = ScreenBridge { mainVideoPlaying = it },
+                            share = { link ->
+                                val send = Intent(Intent.ACTION_SEND)
+                                    .setType("text/plain")
+                                    .putExtra(Intent.EXTRA_TEXT, link)
+                                runCatching {
+                                    context.startActivity(Intent.createChooser(send, resources.getString(R.string.share_via)))
+                                }
+                            },
+                        )
                     )
-                )
-                installDownloadBridge(this, context)
-                installClipboardBridge(this, context)
-                addJavascriptInterface(
-                    MaterialYouBridge({ currentPrimaryColor }, { currentOnPrimaryColor }),
-                    "MaterialYouBridge"
-                )
-                installPipVisibilityScript(this)
+                    installDownloadBridge(this, context)
+                    installClipboardBridge(this, context)
+                    addJavascriptInterface(
+                        MaterialYouBridge({ currentPrimaryColor }, { currentOnPrimaryColor }),
+                        "MaterialYouBridge"
+                    )
+                    installPipVisibilityScript(this)
 
-                setLayerType(View.LAYER_TYPE_HARDWARE, null)
+                    setLayerType(View.LAYER_TYPE_HARDWARE, null)
 
-                overScrollMode = View.OVER_SCROLL_NEVER
-                isVerticalScrollBarEnabled = false
-                isHorizontalScrollBarEnabled = false
+                    overScrollMode = View.OVER_SCROLL_NEVER
+                    isVerticalScrollBarEnabled = false
+                    isHorizontalScrollBarEnabled = false
 
-                settings.setSupportZoom(true)
-                settings.builtInZoomControls = true
-                settings.displayZoomControls = false
+                    settings.setSupportZoom(true)
+                    settings.builtInZoomControls = true
+                    settings.displayZoomControls = false
+                }
+                if (pendingRecoveryUrl != null) replacementWebView = webView
             }
-        }
-    )
+        )
+    }
 
+    var layerGeneration by remember { mutableIntStateOf(0) }
+    var lastLayerRendererLossAt by remember { mutableStateOf<Long?>(null) }
     messagesLayerUrl?.let { layerUrl ->
-        // A new Messages link while the layer is open (a notification, say) recreates it.
-        key(layerUrl) {
+        // A new Messages link while the layer is open (a notification, say) recreates it, and
+        // so does a lost renderer (onRendererGone), at the page it was showing.
+        key(layerUrl, layerGeneration) {
             MessagesLayer(
                 url = layerUrl,
                 userScripts = userScripts,
@@ -1574,6 +1614,12 @@ fun MaterialbookWebView(
                 },
                 onOpenSettings = { settingsToggle = true },
                 onThemeColor = { layerThemeColor = it },
+                onRendererGone = { pageUrl ->
+                    val now = SystemClock.elapsedRealtime()
+                    messagesLayerUrl = rendererRecoveryUrl(pageUrl, layerUrl, lastLayerRendererLossAt, now)
+                    lastLayerRendererLossAt = now
+                    layerGeneration++
+                },
                 onExternalUrl = { externalUrl -> openExternalUrl(fbRedirectSanitizer(externalUrl)) }
             )
         }
