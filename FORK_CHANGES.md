@@ -656,6 +656,11 @@ From a hands-on pass through the app in light and dark mode on an emulator.
   them all. Nothing is notified while the app is on screen. Covered by `FacebookCountsTest` and
   `FacebookCountsNotificationTest`.
 
+- v1.25.1 and v1.25.2 crashed at launch: WorkManager, added for Facebook notifications, opens its
+  database by reflection, and R8's full mode stripped the constructor it calls
+  (`NoSuchMethodException: WorkDatabase_Impl.<init>`). A keep rule in `proguard-rules.pro` keeps
+  Room databases' constructors. Debug builds and tests aren't minified, so nothing caught it.
+
 ## Known limitations
 
 - On Reels specifically, Facebook's own web player can re-pause a video
