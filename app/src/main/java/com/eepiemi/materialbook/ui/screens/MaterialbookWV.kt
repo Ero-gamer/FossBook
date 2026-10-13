@@ -48,6 +48,9 @@ import androidx.core.graphics.ColorUtils
 import androidx.core.net.toUri
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.multiplatform.webview.web.LoadingState
 import com.multiplatform.webview.web.WebView
@@ -66,6 +69,7 @@ import com.eepiemi.materialbook.utils.ExternalRequestInterceptor
 import com.eepiemi.materialbook.utils.externalLinkAction
 import com.eepiemi.materialbook.utils.isMessengerAppLink
 import com.eepiemi.materialbook.utils.FullscreenController
+import com.eepiemi.materialbook.utils.HOME_PAGE_URL
 import com.eepiemi.materialbook.utils.appOrientation
 import com.eepiemi.materialbook.utils.appWebViewParams
 import com.eepiemi.materialbook.utils.clearWebData
@@ -793,7 +797,7 @@ internal fun pipHandbackJs(positionMs: Long?, play: Boolean, rearm: Boolean): St
 })();
 """ + PIP_HANDOFF_DISARM_JS + (if (rearm) PIP_HANDOFF_ARM_JS else "")
 
-private const val HOME_URL = "https://facebook.com/"
+private const val HOME_URL = HOME_PAGE_URL
 
 /** A link the running app was sent (onNewIntent); [seq] tells two taps on the same link apart. */
 data class OpenLinkRequest(val seq: Int, val url: String)
@@ -1303,6 +1307,23 @@ fun MaterialbookWebView(
     DisposableEffect(hostView, keepScreenOn) {
         hostView.keepScreenOn = keepScreenOn
         onDispose { hostView.keepScreenOn = false }
+    }
+
+    // "Clear cache when leaving" (Settings): the HTTP cache (the photos, videos and pages
+    // Facebook sent, shared by every WebView in the app) is emptied each time the app goes out
+    // of sight. The login, site data and copied images stay: a copied image may be pasted in
+    // the app the user just switched to.
+    val clearCacheOnLeave by settingsVM.clearCacheOnLeave.collectAsState()
+    val currentClearCacheOnLeave by rememberUpdatedState(clearCacheOnLeave)
+    val lifecycle = (activity as? LifecycleOwner)?.lifecycle
+    DisposableEffect(lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP && currentClearCacheOnLeave) {
+                runCatching { state.nativeWebView }.getOrNull()?.clearCache(true)
+            }
+        }
+        lifecycle?.addObserver(observer)
+        onDispose { lifecycle?.removeObserver(observer) }
     }
 
     // The Messages tab hook, whenever Messages in desktop mode is on. userScripts only picks up

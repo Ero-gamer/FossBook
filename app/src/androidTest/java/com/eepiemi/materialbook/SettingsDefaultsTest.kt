@@ -117,4 +117,16 @@ class SettingsDefaultsTest {
         val viewModel = SettingsViewModel(app)
         assertFalse("textWrapOnZoom should default to false", viewModel.textWrapOnZoom.value)
     }
+
+    @Test
+    fun startPageAndPrivacyOptionsAreOffByDefault() {
+        // Opt-in: each changes what the user is used to (start page, lock timing,
+        // screenshots, page load speed).
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val viewModel = SettingsViewModel(app)
+        assertFalse("startOnFeeds should default to false", viewModel.startOnFeeds.value)
+        assertFalse("appLockOnScreenOff should default to false", viewModel.appLockOnScreenOff.value)
+        assertFalse("blockScreenshots should default to false", viewModel.blockScreenshots.value)
+        assertFalse("clearCacheOnLeave should default to false", viewModel.clearCacheOnLeave.value)
+    }
 }

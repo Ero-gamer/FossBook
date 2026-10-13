@@ -8,6 +8,9 @@ import androidx.lifecycle.viewModelScope
 import com.eepiemi.materialbook.data.local.SettingsDataStore
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.AMOLED_BLACK
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.APP_LOCK
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.APP_LOCK_ON_SCREEN_OFF
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.BLOCK_SCREENSHOTS
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.CLEAR_CACHE_ON_LEAVE
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DESKTOP_LAYOUT
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.DEVELOPER_OPTIONS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.ENABLE_COPY_TO_CLIPBOARD
@@ -27,6 +30,7 @@ import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_ENABL
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_LOCKSCREEN_AUDIO
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.PIP_PORTRAIT_RATIO
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.REMOVE_ADS
+import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.START_ON_FEEDS
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.STICKY_NAVBAR
 import com.eepiemi.materialbook.data.local.SettingsDataStore.Companion.TEXT_WRAP_ON_ZOOM
 import com.eepiemi.materialbook.utils.AppLock
@@ -160,6 +164,28 @@ class SettingsViewModel(
         scope = viewModelScope,
         initialValue = initialPrefs[APP_LOCK] ?: AppLock.OFF,
         started = SharingStarted.Eagerly
+    )
+    // Eagerly: MainActivity's screen-off receiver reads it, with nothing collecting it.
+    val appLockOnScreenOff = dataStore.appLockOnScreenOff.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[APP_LOCK_ON_SCREEN_OFF] ?: false,
+        started = SharingStarted.Eagerly
+    )
+    val blockScreenshots = dataStore.blockScreenshots.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[BLOCK_SCREENSHOTS] ?: false,
+        started = SharingStarted.WhileSubscribed()
+    )
+    val clearCacheOnLeave = dataStore.clearCacheOnLeave.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[CLEAR_CACHE_ON_LEAVE] ?: false,
+        started = SharingStarted.WhileSubscribed()
+    )
+    // Read once, for the page the app starts on.
+    val startOnFeeds = dataStore.startOnFeeds.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[START_ON_FEEDS] ?: false,
+        started = SharingStarted.WhileSubscribed()
     )
     val textZoom = dataStore.textZoom.stateIn(
         scope = viewModelScope,
@@ -324,6 +350,30 @@ class SettingsViewModel(
     fun setWebViewDebugging(enabled: Boolean) {
         viewModelScope.launch {
             dataStore.setWebViewDebugging(enabled)
+        }
+    }
+
+    fun setAppLockOnScreenOff(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.setAppLockOnScreenOff(enabled)
+        }
+    }
+
+    fun setBlockScreenshots(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.setBlockScreenshots(enabled)
+        }
+    }
+
+    fun setClearCacheOnLeave(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.setClearCacheOnLeave(enabled)
+        }
+    }
+
+    fun setStartOnFeeds(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.setStartOnFeeds(enabled)
         }
     }
 
