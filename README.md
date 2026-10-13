@@ -76,6 +76,19 @@ Always on:
 *  And more!
 
 <h2 align="middle">
+    📱 Screenshots
+</h2>
+
+<p align="middle">
+    <img src='./assets/screenshots/page.png' alt="A Facebook Page in the app" width="19%">
+    <img src='./assets/screenshots/page_zoom_130.png' alt="The same Page at 130% page zoom" width="19%">
+    <img src='./assets/screenshots/pip.jpg' alt="A video in Picture-in-Picture over the home screen" width="19%">
+    <img src='./assets/screenshots/settings.png' alt="Astryxbook settings" width="19%">
+    <img src='./assets/screenshots/settings_notifications.png' alt="Facebook notifications and privacy settings" width="19%">
+</p>
+<p align="middle"><sub>A Page at 100% and 130% page zoom · Picture-in-Picture · Settings</sub></p>
+
+<h2 align="middle">
     🖼️ Picture-in-Picture
 </h2>
 

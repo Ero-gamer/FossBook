@@ -28,6 +28,8 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
 - Local badge assets (`download.svg`, `open_issue.svg`) and the store
   listing icon/banner recolored to match; downloads badge swapped from an
   opaque third-party worker to a themed, GitHub-API-backed shields.io badge.
+- README Screenshots section (`assets/screenshots/`): a Page at 100% and 130% page zoom,
+  Picture-in-Picture, and Settings, taken on the emulator with public NASA content.
 - README banner (the store feature graphic) now shows what sets this fork
   apart: Picture-in-Picture, lock-screen audio and in-app Messages chips, and a
   second row for app lock, Messenger calls, share & shortcuts and text wrap (with a small
