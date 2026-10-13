@@ -193,6 +193,23 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   count when no letter, mark or digit touches them; the Hebrew `ממומן` was added, and two
   fragments that would now match ordinary words (Amharic `ተደረገ`, Hindi `प`) were dropped
   (their full labels stay). Covered by `ReelAdsJsTest`.
+- Right-to-left languages (Hebrew, Arabic…): the Settings gears sit where they belong in
+  Facebook's mirrored bars. On the feed the gear covered the Facebook logo (it's now beside
+  Search and Menu on the left), on Reels it covered Back (now at the bar's left end), and on
+  other pages it was missing (the mirrored Back arrow is another glyph, and the bar places its
+  items from the right). Facebook mirrors its bars without setting the page's `dir`, so each gear
+  follows its bar's own direction.
+- The page scripts run as one evaluation, so an error in one stopped every script after it.
+  On a photo opened directly (a link, a notification), Remove ads hit a label outside any post
+  and the Download and Copy buttons never appeared. Each script now runs in its own `try` block,
+  and Remove ads skips such labels. Covered by `BundledScriptsTest`.
+- Downloading a reel saved a still image: the button looked for media entirely on screen, and a
+  reel's video is taller than the screen. It now takes the media mostly on screen, the largest
+  first (on Reels the neighbouring reels are in the page too), and a video's full MP4 (with sound)
+  whenever its player has one. Covered by `MediaDownloadJsTest`.
+- In PiP, a link the page sends out of the app by itself (logged out, Facebook pushes its app
+  with `fb://` on load) is ignored: its "Open in another app?" dialog covered the video, and a
+  page in PiP can't be tapped, so no such link is the user's.
 
 ## CI/CD
 

@@ -1,11 +1,15 @@
 package com.eepiemi.materialbook.utils
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BundledScriptsTest {
 
     private fun contentFor(resourceId: Int) = "content-$resourceId;"
+
+    // The scripts' own text, in the order they appear in the bundle.
+    private fun contents(bundle: String) = Regex("content-\\d+;").findAll(bundle).map { it.value }.toList()
 
     @Test
     fun concatenatesEnabledScripts_inCallerOrder() {
@@ -14,7 +18,7 @@ class BundledScriptsTest {
             ::contentFor
         )
 
-        assertEquals("content-2;content-1;content-3;", result)
+        assertEquals(listOf("content-2;", "content-1;", "content-3;"), contents(result))
     }
 
     @Test
@@ -24,6 +28,14 @@ class BundledScriptsTest {
             ::contentFor
         )
 
-        assertEquals("content-1;", result)
+        assertEquals(listOf("content-1;"), contents(result))
+    }
+
+    @Test
+    fun eachScript_isInItsOwnTryBlock() {
+        val result = bundledScripts(listOf(Script(true, 1), Script(true, 2)), ::contentFor)
+
+        assertEquals(2, Regex("try \\{\\ncontent-\\d+;\\n\\} catch").findAll(result).count())
+        assertTrue(result.trimEnd().endsWith("}"))
     }
 }

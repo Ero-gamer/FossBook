@@ -892,7 +892,15 @@ fun MaterialbookWebView(
     // A Messenger app link (Facebook's Messages tab sends one) while Messages in desktop mode
     // is off: offered as desktop mode instead, so the tab isn't a dead end without Messenger.
     var pendingMessengerLink by remember { mutableStateOf<String?>(null) }
-    val openExternalUrl: (String) -> Unit = { externalUrl ->
+    val currentIsInPipMode by rememberUpdatedState(isInPipMode)
+    val openExternalUrl: (String) -> Unit = openExternalUrl@{ externalUrl ->
+        // A page in PiP can't be tapped, so a link leaving the app then is one the page sent by
+        // itself (logged out, Facebook pushes its app with fb:// on load): its dialog would cover
+        // the video, and nothing should open over the user's other app. Ignored.
+        if (currentIsInPipMode) {
+            Log.d("Astryxbook", "External link ignored in PiP: ${externalUrl.substringBefore(':')}:")
+            return@openExternalUrl
+        }
         // intent:// links are never used to launch the app they name (Facebook uses them to
         // push its own apps); if one carries a web fallback, that page is opened instead.
         val target = if (externalUrl.startsWith("intent:", ignoreCase = true)) {
