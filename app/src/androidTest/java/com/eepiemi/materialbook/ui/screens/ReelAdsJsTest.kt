@@ -12,6 +12,9 @@ import org.junit.runner.RunWith
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
+// evaluateJavascript returns strings JSON-quoted.
+private fun String.unquoted() = removeSurrounding("\"")
+
 /**
  * Tests for the Reels part of adblock.js against a real WebView, same harness approach as
  * BackHandlerJsTest. Each fixture reel is a `div.vertically-snappable`, as on m.facebook.com's
@@ -19,8 +22,6 @@ import java.util.concurrent.TimeUnit
  */
 @RunWith(AndroidJUnit4::class)
 class ReelAdsJsTest {
-
-    private fun String.unquoted() = removeSurrounding("\"")
 
     private class Harness {
         lateinit var webView: WebView
