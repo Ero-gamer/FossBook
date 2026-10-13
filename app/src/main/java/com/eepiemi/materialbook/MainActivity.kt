@@ -49,6 +49,8 @@ import com.eepiemi.materialbook.audio.LockScreenAudioService
 import com.eepiemi.materialbook.audio.PipHandback
 import com.eepiemi.materialbook.audio.isHandoffEligible
 import com.eepiemi.materialbook.audio.parseHandoffRead
+import com.eepiemi.materialbook.notifications.AppVisibility
+import com.eepiemi.materialbook.notifications.FacebookCountsWorker
 import com.eepiemi.materialbook.ui.screens.AppLockScreen
 import com.eepiemi.materialbook.ui.screens.MaterialbookWebView
 import com.eepiemi.materialbook.utils.AppLock
@@ -376,6 +378,7 @@ class MainActivity : FragmentActivity() {
 
     override fun onStop() {
         super.onStop()
+        AppVisibility.onScreen = false
         if (!isAuthenticating && !isChangingConfigurations) hiddenAt = SystemClock.elapsedRealtime()
     }
     // ---- end app lock ----
@@ -403,6 +406,11 @@ class MainActivity : FragmentActivity() {
         }
 
         publishAppShortcuts(this)
+        // "Facebook notifications" (Settings): the background checks follow the setting,
+        // including one restored from an imported settings file.
+        lifecycleScope.launch {
+            settingsVM.facebookNotifications.collect { FacebookCountsWorker.schedule(this@MainActivity, it) }
+        }
 
         val filter = IntentFilter(ACTION_PIP_TOGGLE)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -505,6 +513,8 @@ class MainActivity : FragmentActivity() {
     // becoming visible again (unlock while in PiP, or back to full screen).
     override fun onStart() {
         super.onStart()
+        AppVisibility.onScreen = true
+        FacebookCountsWorker.onAppShown(this)
         handBack("onStart")
         if (!isAuthenticating && (lockOnNextStart ||
                 shouldLockOnReturn(settingsVM.appLock.value, hiddenAt, SystemClock.elapsedRealtime()))

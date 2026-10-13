@@ -54,7 +54,7 @@ Off by default (opt-in):
     *  People you may know
 *  Hides the system bars (immersive mode)
 *  Allows pinch-to-zoom anywhere, and can wrap text to the screen when zoomed in, like Opera (Settings → *Wrap text when zoomed*)
-*  Changes the text size, from 85% to 150% (Settings → *Text size*)
+*  Zooms whole pages, text and pictures together, from 85% to 150% (Settings → *Page zoom*)
 *  Opens web links in a browser tab over the app instead of switching apps (Settings → *Open web links in the app*)
 *  Lets you access Messenger (Desktop layout only)
 *  Opens Messages inside the app on the desktop site, in its own layer over the feed, so Back returns you to where you were; it can turn to landscape for more room (Settings → *Messages in desktop mode*); links to a conversation keep it
@@ -63,6 +63,7 @@ Off by default (opt-in):
 *  Keeps a Picture-in-Picture video's audio playing when the screen locks
 *  Keeps the screen on while a video plays, or whenever the app is open (Settings → *Keep screen on*)
 *  Locks the app with your fingerprint, face or screen lock, and hides it in Recents (Settings → *App lock*)
+*  Notifies you of new Facebook notifications, unread chats and friend requests while the app is closed, checking every 15 minutes (Settings → *Facebook notifications*)
 
 Always on:
 *  Shares links from other apps to Facebook, and the page you're on to other apps (the share button in Settings), without tracking parameters
@@ -73,6 +74,19 @@ Always on:
 *  One-tap *Log out and clear data* in Settings
 *  Supports English, Arabic, Bengali, German, Hebrew (`עברית`), Italian, Spanish, French, Portuguese, and Traditional Chinese
 *  And more!
+
+<h2 align="middle">
+    📱 Screenshots
+</h2>
+
+<p align="middle">
+    <img src='./assets/screenshots/page.png' alt="A Facebook Page in the app" width="19%">
+    <img src='./assets/screenshots/page_zoom_130.png' alt="The same Page at 130% page zoom" width="19%">
+    <img src='./assets/screenshots/pip.jpg' alt="A video in Picture-in-Picture over the home screen" width="19%">
+    <img src='./assets/screenshots/settings.png' alt="Astryxbook settings" width="19%">
+    <img src='./assets/screenshots/settings_notifications.png' alt="Facebook notifications and privacy settings" width="19%">
+</p>
+<p align="middle"><sub>A Page at 100% and 130% page zoom · Picture-in-Picture · Settings</sub></p>
 
 <h2 align="middle">
     🖼️ Picture-in-Picture

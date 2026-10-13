@@ -14,11 +14,16 @@
 
         if (window.isDesktopMode()) return isHomeUrl;
 
-        const hasSpecialButton = Array.from(document.querySelectorAll('[role="button"] span'))
-            .some(span => span.textContent === '󱥆');
-
-        return isHomeUrl && hasSpecialButton;
+        return isHomeUrl && window.hasHomeTabs();
     };
+
+    // Home's tab bar, the one sign of the mobile feed at "/".
+    window.hasHomeTabs = () => Array.from(document.querySelectorAll('[role="button"] span'))
+        .some(span => span.textContent === '󱥆');
+
+    // The Feeds that "Start on Feeds" opened (open_feeds.js): also at "/", without the tab bar.
+    window.isStartFeeds = () => !!window.__astryxFeeds && !window.isDesktopMode() &&
+        window.location.pathname === '/' && !window.hasHomeTabs();
 })();
 
 
@@ -188,7 +193,7 @@
                 window.dispatchEvent(escapeEvent);
                 return "true";
             } else return "false"
-        } else if (window.isFeed() && !isMenu && !dialogs.length) {
+        } else if ((window.isFeed() || window.isStartFeeds()) && !isMenu && !dialogs.length) {
             return scrollToTop();
         } else return "false";
     }

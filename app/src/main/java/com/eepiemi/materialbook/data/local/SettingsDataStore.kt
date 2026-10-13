@@ -47,6 +47,7 @@ class SettingsDataStore(private val context: Context) {
         val APP_LOCK_ON_SCREEN_OFF = booleanPreferencesKey("app_lock_on_screen_off")
         val BLOCK_SCREENSHOTS = booleanPreferencesKey("block_screenshots")
         val CLEAR_CACHE_ON_LEAVE = booleanPreferencesKey("clear_cache_on_leave")
+        val FACEBOOK_NOTIFICATIONS = booleanPreferencesKey("facebook_notifications")
 
         // Legacy: set by the old auto-desktop logic when it wrote desktop_layout
         // on the user's behalf. Only read by the migration below.
@@ -204,6 +205,12 @@ class SettingsDataStore(private val context: Context) {
     val clearCacheOnLeave = context.dataStore.data.map { it[CLEAR_CACHE_ON_LEAVE] ?: false }
     suspend fun setClearCacheOnLeave(enabled: Boolean) {
         context.dataStore.edit { it[CLEAR_CACHE_ON_LEAVE] = enabled }
+    }
+
+    // Off by default: no background checks for Facebook's unread counts (FacebookCountsWorker).
+    val facebookNotifications = context.dataStore.data.map { it[FACEBOOK_NOTIFICATIONS] ?: false }
+    suspend fun setFacebookNotifications(enabled: Boolean) {
+        context.dataStore.edit { it[FACEBOOK_NOTIFICATIONS] = enabled }
     }
 
     // Off by default: the app opens on Facebook's Home feed, as Facebook orders it.

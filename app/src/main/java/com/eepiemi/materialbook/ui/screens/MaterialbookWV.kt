@@ -57,6 +57,8 @@ import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.rememberSaveableWebViewState
 import com.multiplatform.webview.web.rememberWebViewNavigator
 import com.eepiemi.materialbook.R
+import com.eepiemi.materialbook.notifications.FacebookCounts
+import com.eepiemi.materialbook.notifications.FacebookCountsWorker
 import com.eepiemi.materialbook.ui.components.ExternalLinkDialog
 import com.eepiemi.materialbook.ui.components.MessengerLinkDialog
 import com.eepiemi.materialbook.ui.components.NetworkErrorDialog
@@ -69,6 +71,7 @@ import com.eepiemi.materialbook.utils.ExternalRequestInterceptor
 import com.eepiemi.materialbook.utils.externalLinkAction
 import com.eepiemi.materialbook.utils.isMessengerAppLink
 import com.eepiemi.materialbook.utils.FullscreenController
+import com.eepiemi.materialbook.utils.FEEDS_PAGE_URL
 import com.eepiemi.materialbook.utils.HOME_PAGE_URL
 import com.eepiemi.materialbook.utils.appOrientation
 import com.eepiemi.materialbook.utils.appWebViewParams
@@ -100,6 +103,7 @@ import com.eepiemi.materialbook.utils.shareablePageUrl
 import com.eepiemi.materialbook.utils.rememberAutoDesktop
 import com.eepiemi.materialbook.utils.rememberImeHeight
 import com.eepiemi.materialbook.utils.shouldKeepScreenOn
+import androidx.webkit.ScriptHandler
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import kotlinx.coroutines.delay
@@ -536,6 +540,33 @@ internal fun installPipVisibilityScript(webView: android.webkit.WebView) {
         .onFailure { Log.w("AstryxbookPiP", "pip_visibility.js not installed", it) }
 }
 
+private val OPEN_FEEDS_ORIGINS = setOf("https://facebook.com", "https://*.facebook.com")
+
+// Installs page_zoom.js (page zoom, see the script) for [percent]; its handler removes it when
+// the setting changes. Null at 100% and without DOCUMENT_START_SCRIPT (Chrome 87+).
+internal fun installPageZoomScript(webView: android.webkit.WebView, percent: Int): ScriptHandler? {
+    if (percent == 100 || !WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) return null
+    val script = webView.resources.openRawResource(R.raw.page_zoom)
+        .bufferedReader().use { it.readText() }
+    return runCatching {
+        WebViewCompat.addDocumentStartJavaScript(
+            webView, "window.__astryxPageZoom = ${percent / 100.0};\n$script", OPEN_FEEDS_ORIGINS
+        )
+    }.onFailure { Log.w("Astryxbook", "page_zoom.js not installed", it) }.getOrNull()
+}
+
+// Installs open_feeds.js ("Start on Feeds", see the script) as a document-start script, so the
+// menu it starts from is hidden from the first frame. Returns false without DOCUMENT_START_SCRIPT
+// (Chrome 87+); the script is then run once the page has loaded instead.
+internal fun installOpenFeedsScript(webView: android.webkit.WebView): Boolean {
+    if (!WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) return false
+    val script = webView.resources.openRawResource(R.raw.open_feeds)
+        .bufferedReader().use { it.readText() }
+    return runCatching { WebViewCompat.addDocumentStartJavaScript(webView, script, OPEN_FEEDS_ORIGINS) }
+        .onFailure { Log.w("Astryxbook", "open_feeds.js not installed", it) }
+        .isSuccess
+}
+
 // Left PiP: stop guarding, so normal pauses (Facebook's or the user's) stick again.
 internal const val PIP_KEEP_PLAYING_DISARM_JS = """
 (function() {
@@ -799,6 +830,11 @@ internal fun pipHandbackJs(positionMs: Long?, play: Boolean, rearm: Boolean): St
 
 private const val HOME_URL = HOME_PAGE_URL
 
+// Leaving PiP after a lost renderer: how long the window takes to get its full size back, and
+// how many zoom-out steps (x0.8 each) can bring a page from the PiP window's width back.
+private const val PIP_EXIT_SETTLE_MS = 600L
+private const val MAX_ZOOM_OUT_STEPS = 20
+
 /** A link the running app was sent (onNewIntent); [seq] tells two taps on the same link apart. */
 data class OpenLinkRequest(val seq: Int, val url: String)
 
@@ -958,12 +994,36 @@ fun MaterialbookWebView(
         openLinkRequest?.let { openAppLink(it.url, whileRunning = true) }
     }
 
-    // Text size (Settings): applied when the WebView is created (onCreated) and, when it
-    // changes, on the WebView that's already there.
+    // Page zoom (Settings, stored as "Text size"): page_zoom.js at document start, installed when
+    // the WebView is created (onCreated). m.facebook.com cancels WebView's own textZoom, which is
+    // left for WebViews without document-start scripts. A change re-installs the script on the
+    // WebView that's there and reloads the page, with Facebook's viewport cookie set ahead so
+    // the server lays that page out for the new width too.
     val textZoom by settingsVM.textZoom.collectAsState()
     val textZoomPercent = TextZoom.percent(textZoom)
+    var pageZoomScript by remember { mutableStateOf<ScriptHandler?>(null) }
+    var pageZoomPercent by remember { mutableIntStateOf(textZoomPercent) }
+    var pageZoomByScript by remember { mutableStateOf(true) }
     LaunchedEffect(textZoomPercent) {
-        runCatching { state.nativeWebView }.getOrNull()?.settings?.textZoom = textZoomPercent
+        if (textZoomPercent == pageZoomPercent) return@LaunchedEffect
+        pageZoomPercent = textZoomPercent
+        val webView = runCatching { state.nativeWebView }.getOrNull() ?: return@LaunchedEffect
+        if (!pageZoomByScript) {
+            webView.settings.textZoom = textZoomPercent
+            return@LaunchedEffect
+        }
+        pageZoomScript?.remove()
+        pageZoomScript = installPageZoomScript(webView, textZoomPercent)
+        webView.settings.useWideViewPort = textZoomPercent < 100
+        if (webView.width > 0 && webView.height > 0) {
+            CookieManager.getInstance().setCookie(
+                "https://m.facebook.com",
+                TextZoom.viewportCookie(
+                    webView.width, webView.height, resources.displayMetrics.density, textZoomPercent
+                )
+            )
+        }
+        if (state.loadingState is LoadingState.Finished) navigator.reload()
     }
 
     // PiP follows the page on screen: the Messages layer's while it's open (it reports its
@@ -1315,12 +1375,30 @@ fun MaterialbookWebView(
     // the app the user just switched to.
     val clearCacheOnLeave by settingsVM.clearCacheOnLeave.collectAsState()
     val currentClearCacheOnLeave by rememberUpdatedState(clearCacheOnLeave)
+    // "Facebook notifications" (Settings): the counts the user leaves the app with are the ones
+    // background checks compare against, read from the page's tab bar (no network), or fetched
+    // once if the page has none (Feeds, a profile).
+    val facebookNotifications by settingsVM.facebookNotifications.collectAsState()
+    val currentFacebookNotifications by rememberUpdatedState(facebookNotifications)
     val lifecycle = (activity as? LifecycleOwner)?.lifecycle
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP && currentClearCacheOnLeave) {
-                runCatching { state.nativeWebView }.getOrNull()?.clearCache(true)
+            if (event != Lifecycle.Event.ON_STOP) return@LifecycleEventObserver
+            val webView = runCatching { state.nativeWebView }.getOrNull()
+            if (currentFacebookNotifications) {
+                if (webView != null && state.loadingState is LoadingState.Finished) {
+                    webView.evaluateJavascript(FacebookCounts.TAB_LABELS_JS) { result ->
+                        val labels = runCatching {
+                            val array = org.json.JSONArray(result)
+                            List(array.length()) { array.getString(it) }
+                        }.getOrNull()
+                        FacebookCountsWorker.onAppHidden(context, labels)
+                    }
+                } else {
+                    FacebookCountsWorker.onAppHidden(context, null)
+                }
             }
+            if (currentClearCacheOnLeave) webView?.clearCache(true)
         }
         lifecycle?.addObserver(observer)
         onDispose { lifecycle?.removeObserver(observer) }
@@ -1336,6 +1414,22 @@ fun MaterialbookWebView(
             val tabHook = resources.openRawResource(R.raw.messages_tab)
                 .bufferedReader().use { it.readText() }
             navigator.evaluateJavaScript(tabHook) {}
+        }
+    }
+
+    // "Start on Feeds" on a WebView without document-start scripts (installOpenFeedsScript): the
+    // script runs once the start page has loaded, so the menu shows for a moment. Facebook may
+    // have dropped the #astryx-feeds mark from the URL by then; __astryxFeedsForce stands in.
+    var openFeedsPending by remember { mutableStateOf(url == FEEDS_PAGE_URL) }
+    var openFeedsAtDocumentStart by remember { mutableStateOf(true) }
+    LaunchedEffect(loadingState) {
+        if (loadingState is LoadingState.Finished && openFeedsPending) {
+            openFeedsPending = false
+            if (!openFeedsAtDocumentStart) {
+                val openFeeds = resources.openRawResource(R.raw.open_feeds)
+                    .bufferedReader().use { it.readText() }
+                navigator.evaluateJavaScript("window.__astryxFeedsForce = true;\n$openFeeds") {}
+            }
         }
     }
 
@@ -1516,6 +1610,18 @@ fun MaterialbookWebView(
         pendingRecoveryUrl = null
         navigator.loadUrl(recoveryUrl)
     }
+    // A WebView that takes over in PiP starts out at the PiP window's size, and leaving PiP can
+    // leave its page zoomed in to that width (about 3x on a phone, seen with pinch to zoom on).
+    // Its page was loaded in PiP, so there's no zoom of the user's to keep: zoom it all the way
+    // out once the window is full size again.
+    var replacedInPip by remember { mutableStateOf(false) }
+    LaunchedEffect(isInPipMode) {
+        if (isInPipMode || !replacedInPip) return@LaunchedEffect
+        replacedInPip = false
+        delay(PIP_EXIT_SETTLE_MS)
+        val webView = runCatching { state.nativeWebView }.getOrNull() ?: return@LaunchedEffect
+        repeat(MAX_ZOOM_OUT_STEPS) { if (!webView.zoomOut()) return@LaunchedEffect }
+    }
 
     key(webViewGeneration) {
         WebView(
@@ -1528,6 +1634,7 @@ fun MaterialbookWebView(
                     deadWebViewUrl(dead) ?: state.lastLoadedUrl, HOME_URL, lastRendererLossAt, now
                 )
                 lastRendererLossAt = now
+                if (isInPipMode) replacedInPip = true
                 // Its videos are gone with it; the reloaded page reports its own.
                 mainVideoPlaying = false
                 onVideoPlayingChanged(false, 0, 0)
@@ -1540,7 +1647,13 @@ fun MaterialbookWebView(
             onDispose = { webView -> if (deadWebViews.remove(webView)) webView.destroy() },
             onCreated = { webView ->
                 hardenWebView(state, webView)
-                state.webSettings.androidWebSettings.textZoom = textZoomPercent
+                pageZoomPercent = textZoomPercent
+                pageZoomByScript = WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)
+                pageZoomScript = installPageZoomScript(webView, textZoomPercent)
+                state.webSettings.androidWebSettings.textZoom = if (pageZoomByScript) 100 else textZoomPercent
+                // A zoom below 100% lays the page out wider than the screen, which WebView allows
+                // only with a wide viewport.
+                state.webSettings.androidWebSettings.useWideViewPort = pageZoomByScript && textZoomPercent < 100
 
                 val cookieManager = CookieManager.getInstance()
                 cookieManager.setAcceptCookie(true)
@@ -1587,6 +1700,7 @@ fun MaterialbookWebView(
                         "MaterialYouBridge"
                     )
                     installPipVisibilityScript(this)
+                    openFeedsAtDocumentStart = installOpenFeedsScript(this)
 
                     setLayerType(View.LAYER_TYPE_HARDWARE, null)
 

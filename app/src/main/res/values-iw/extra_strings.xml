@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- See values/extra_strings.xml. -->
 <resources>
-    <string name="text_size_title">גודל טקסט</string>
+    <string name="text_size_title">הגדלת הדף</string>
     <string name="text_size_percent">%1$d%%</string>
     <string name="text_size_default">%1$d%% (ברירת מחדל)</string>
 
@@ -44,7 +44,7 @@
     <string name="reload_to_apply">טעינה מחדש להחלה</string>
     <string name="hide_from_feed_title">הסתרה מהפיד</string>
     <string name="amoled_black_summary">רקע שחור מלא במצב הכהה של פייסבוק (תפריט פייסבוק › מצב כהה)</string>
-    <string name="text_size_layout_note">מעל 115%, חלקים מהעיצוב של פייסבוק עלולים לחפוף.</string>
+    <string name="text_size_layout_note">מגדיל או מקטין את הדפים של פייסבוק: טקסט, תמונות וכפתורים יחד, כך ששום דבר לא חופף.</string>
     <string name="app_lock_open_security_settings">כדי להשתמש בנעילת אפליקציה, צריך להגדיר נעילת מסך במכשיר. אפשר להקיש כדי לפתוח את הגדרות האבטחה.</string>
     <string name="open_links_hint_text">במסך הבא, צריך להקיש על ״הוספת קישור״ ולבחור את כל הקישורים של פייסבוק.</string>
     <string name="open_links_hint_continue">המשך</string>
@@ -69,4 +69,26 @@
     <!-- Start page (Feed section) -->
     <string name="start_on_feeds_title">פתיחה בפידים</string>
     <string name="start_on_feeds_summary">פתיחת האפליקציה ב\"פידים\" של פייסבוק, הפוסטים החדשים ראשונים, במקום בדף הבית</string>
+
+    <!-- Facebook notifications (Notifications section) -->
+    <string name="settings_section_notifications">התראות</string>
+    <string name="facebook_notifications_title">התראות מפייסבוק</string>
+    <string name="facebook_notifications_summary">כשהאפליקציה סגורה, בודקת כל 15 דקות אם יש התראות, הודעות ובקשות חברות חדשות, דרך החיבור שלך לפייסבוק באפליקציה</string>
+    <string name="facebook_notifications_denied">ההתראות של Astryxbook כבויות בהגדרות של Android</string>
+    <string name="facebook_notifications_channel">התראות מפייסבוק</string>
+    <plurals name="facebook_new_notifications">
+        <item quantity="one">התראה חדשה אחת בפייסבוק</item>
+        <item quantity="two">%1$s התראות חדשות בפייסבוק</item>
+        <item quantity="other">%1$s התראות חדשות בפייסבוק</item>
+    </plurals>
+    <plurals name="facebook_new_messages">
+        <item quantity="one">צ\'אט אחד שלא נקרא</item>
+        <item quantity="two">%1$s צ\'אטים שלא נקראו</item>
+        <item quantity="other">%1$s צ\'אטים שלא נקראו</item>
+    </plurals>
+    <plurals name="facebook_new_friend_requests">
+        <item quantity="one">בקשת חברות חדשה אחת</item>
+        <item quantity="two">%1$s בקשות חברות חדשות</item>
+        <item quantity="other">%1$s בקשות חברות חדשות</item>
+    </plurals>
 </resources>

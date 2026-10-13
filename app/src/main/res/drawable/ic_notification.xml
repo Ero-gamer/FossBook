@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status bar icon: the "A" monogram of ic_launcher_monochrome, cropped to fill the icon. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="60"
+    android:viewportHeight="60">
+    <group
+        android:translateX="-24"
+        android:translateY="-24">
+        <path
+            android:fillColor="#ffffff"
+            android:pathData="M54,26L30,82L41,82Z M54,26L78,82L67,82Z M46.11,60L61.89,60L63.98,69L44.02,69Z" />
+    </group>
+</vector>

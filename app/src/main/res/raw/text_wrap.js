@@ -313,9 +313,15 @@
   // After a pinch: wrap, line the text that fills the screen up with its edge and fit the
   // other blocks to the view. After a pan: only wrap what came into view, fitted to the
   // view where it is, so the user can still move around freely.
+  // Pinch zoom on top of the scale the page rests at (page_zoom.js zooms whole pages).
+  function pinchScale() {
+    var rest = window.__astryxPageZoomScale ? window.__astryxPageZoomScale() : 1;
+    return vv.scale / rest;
+  }
+
   function update(afterPinch) {
     var anchor = anchorAt();
-    if (vv.scale <= MIN_SCALE) {
+    if (pinchScale() <= MIN_SCALE) {
       lastScale = vv.scale;
       if (!changed.length) return;
       unwrapAll();

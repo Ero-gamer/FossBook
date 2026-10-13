@@ -107,6 +107,7 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.webkit)
+    implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.browser)
     implementation(libs.androidx.biometric)
     // BiometricPrompt needs a FragmentActivity; pinned so biometric's old fragment 1.2 isn't used.

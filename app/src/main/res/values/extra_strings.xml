@@ -5,7 +5,7 @@
   brand_strings.xml: fewer merge conflicts on every upstream sync.
 -->
 <resources>
-    <string name="text_size_title">Text size</string>
+    <string name="text_size_title">Page zoom</string>
     <string name="text_size_percent">%1$d%%</string>
     <string name="text_size_default">%1$d%% (default)</string>
 
@@ -47,7 +47,7 @@
     <string name="reload_to_apply">Reload to apply</string>
     <string name="hide_from_feed_title">Hide from your feed</string>
     <string name="amoled_black_summary">Pure black backgrounds in Facebook\'s dark mode (Facebook menu › Dark mode)</string>
-    <string name="text_size_layout_note">Above 115%, parts of Facebook\'s layout can overlap.</string>
+    <string name="text_size_layout_note">Makes Facebook\'s pages bigger or smaller: text, pictures and buttons together, so nothing overlaps.</string>
     <string name="app_lock_open_security_settings">Set a screen lock on this device to use app lock. Tap to open the security settings.</string>
     <string name="open_links_hint_text">On the next screen, tap Add link and select all the Facebook links.</string>
     <string name="open_links_hint_continue">Continue</string>
@@ -72,4 +72,23 @@
     <!-- Start page (Feed section) -->
     <string name="start_on_feeds_title">Start on Feeds</string>
     <string name="start_on_feeds_summary">Open the app on Facebook\'s Feeds, the newest posts first, instead of Home</string>
+
+    <!-- Facebook notifications (Notifications section) -->
+    <string name="settings_section_notifications">Notifications</string>
+    <string name="facebook_notifications_title">Facebook notifications</string>
+    <string name="facebook_notifications_summary">While the app is closed, checks every 15 minutes for new notifications, messages and friend requests, using your Facebook login in the app</string>
+    <string name="facebook_notifications_denied">Notifications are off for Astryxbook in Android\'s settings</string>
+    <string name="facebook_notifications_channel">Facebook notifications</string>
+    <plurals name="facebook_new_notifications">
+        <item quantity="one">%1$s new notification on Facebook</item>
+        <item quantity="other">%1$s new notifications on Facebook</item>
+    </plurals>
+    <plurals name="facebook_new_messages">
+        <item quantity="one">%1$s unread chat</item>
+        <item quantity="other">%1$s unread chats</item>
+    </plurals>
+    <plurals name="facebook_new_friend_requests">
+        <item quantity="one">%1$s new friend request</item>
+        <item quantity="other">%1$s new friend requests</item>
+    </plurals>
 </resources>
