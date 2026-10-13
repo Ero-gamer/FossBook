@@ -353,6 +353,10 @@ observer.observe(document.body, { childList: true, subtree: true });
       if (btn && btn.style.position === 'fixed') btn.style.background = getBackdropColor();
     };
 
+    // Facebook mirrors its bars in right-to-left languages (Hebrew, Arabic…) with explicit
+    // positions, not the page's dir: the side a gear goes on follows the bar's own direction.
+    const isRtl = (el) => !!el && getComputedStyle(el).direction === 'rtl';
+
     const findInsertionPoint = () => {
       const iconSpan = Array.from(document.querySelectorAll('span'))
         .find(span => span.textContent === '󱥊');
@@ -362,17 +366,20 @@ observer.observe(document.body, { childList: true, subtree: true });
         '.x6s0dn4.x78zum5.x1s65kcs.x1n2onr6.x1ja2u2z'
       );
 
-      return { container, desktopTarget };
+      return { container, desktopTarget, rtl: isRtl(iconSpan?.closest('div[role="button"]')) };
     };
 
     const createButton = () => {
       const btn = document.createElement('button');
       btn.id = BUTTON_ID;
-      const mobile = findInsertionPoint().desktopTarget === null;
+      const { desktopTarget, rtl } = findInsertionPoint();
+      const mobile = desktopTarget === null;
+      // Next to Facebook's Search and Menu buttons: on the right, or on the left when the
+      // header is mirrored (the logo is then on the right).
       btn.setAttribute('style', `
         position: ${mobile ? 'fixed' : 'block'};
         top: ${mobile ? 4 : 8}px;
-        right: ${mobile ? 96 : 100}px;
+        ${rtl ? 'left' : 'right'}: ${mobile ? 96 : 100}px;
         width: ${mobile ? '36px' : 'auto'};
         height: ${mobile ? '36px' : 'auto'};
         padding: 0;
@@ -433,20 +440,30 @@ observer.observe(document.body, { childList: true, subtree: true });
       const main = document.getElementById(BUTTON_ID);
       return !!main && main.getClientRects().length > 0;
     };
+    // The right end of the bar, or the left end when it's mirrored (Back is then on the right).
+    // Checked on every tick: the bar may not be there yet when the button is first added.
+    const placeReelsButton = (btn) => {
+      const bar = document.elementFromPoint(window.innerWidth / 2, 30);
+      const rtl = isRtl(bar && bar !== btn && !btn.contains(bar) ? bar : document.querySelector('.m'));
+      btn.style.left = rtl ? '12px' : '';
+      btn.style.right = rtl ? '' : '12px';
+    };
     const updateReelsButton = () => {
       const existing = document.getElementById(REELS_BUTTON_ID);
       if (!isReelsPage() || mainButtonShown()) {
         existing?.remove();
         return;
       }
-      if (existing) return;
+      if (existing) {
+        placeReelsButton(existing);
+        return;
+      }
       const btn = document.createElement('button');
       btn.id = REELS_BUTTON_ID;
       btn.setAttribute('aria-label', 'Settings');
       btn.setAttribute('style', `
         position: fixed;
         top: 12px;
-        right: 12px;
         width: 40px;
         height: 48px;
         padding: 0;
@@ -458,6 +475,7 @@ observer.observe(document.body, { childList: true, subtree: true });
         z-index: 9999;
         pointer-events: auto;
       `);
+      placeReelsButton(btn);
       // The reels bar is always dark.
       btn.innerHTML = ICON_SVG.replace('%FILL%', '#ffffff');
       btn.onclick = () => window.AstryxPage
@@ -474,12 +492,13 @@ observer.observe(document.body, { childList: true, subtree: true });
     // from the Back button, whose icon is the same on every page. Checked once a second, like
     // the Reels button.
     const PAGE_BUTTON_ID = 'custom-settings-btn-page';
-    const BACK_GLYPH = '\u{F30DF}';
+    // Back points left, or right in a mirrored bar.
+    const BACK_GLYPHS = ['\u{F30DF}', '\u{F30E1}'];
     // The bar: the nearest ancestor of Back whose first child holds Back, then the title, then
     // the bar's buttons; the gear goes just before the buttons.
     const findPageBar = () => {
       const back = Array.from(document.querySelectorAll('span'))
-        .find(s => s.textContent === BACK_GLYPH && s.getBoundingClientRect().top < 160);
+        .find(s => BACK_GLYPHS.includes(s.textContent) && s.getBoundingClientRect().top < 160);
       let branch = back?.closest('div[role="button"]');
       for (let i = 0; branch && i < 3; i++) {
         const bar = branch.parentNode;
@@ -509,14 +528,19 @@ observer.observe(document.body, { childList: true, subtree: true });
       }
       existing?.remove();
       // The bar stacks its items with negative top margins and fixed left offsets, not normal
-      // flow: give the gear the same, just left of the bar's buttons, and narrow the title to
+      // flow: give the gear the same, just before the bar's buttons (left of them, right in a mirrored
+      // bar), and narrow the title to
       // make room.
       // Each item is pulled up by the previous one's height: the gear's own pull-up cancels the
       // title's, and its height is what the buttons' box then pulls back up.
       const size = 44;
       const height = -parseFloat(slot.style.marginTop) || slot.offsetHeight || 45;
       const pullUp = pageBar.title.offsetHeight || height;
-      const slotLeft = parseFloat(slot.style.marginLeft) || slot.offsetLeft;
+      // A mirrored bar places its items from the right (margin-right) instead of the left.
+      const side = slot.style.marginRight && !slot.style.marginLeft ? 'right' : 'left';
+      const slotOffset = side === 'right'
+        ? parseFloat(slot.style.marginRight)
+        : parseFloat(slot.style.marginLeft) || slot.offsetLeft;
       const title = pageBar.title;
       if (!title.dataset.astryxWidth) {
         title.dataset.astryxWidth = title.style.width;
@@ -534,7 +558,7 @@ observer.observe(document.body, { childList: true, subtree: true });
       btn.setAttribute('aria-label', 'Astryxbook settings');
       btn.setAttribute('style', `
         margin-top: -${pullUp}px;
-        margin-left: ${Math.max(0, slotLeft - size)}px;
+        margin-${side}: ${Math.max(0, slotOffset - size)}px;
         width: ${size}px;
         height: ${height}px;
         padding: 0;

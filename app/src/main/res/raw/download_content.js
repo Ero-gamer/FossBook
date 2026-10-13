@@ -65,6 +65,23 @@
   };
 
 
+  // The share of the element that's on screen (0 to 1). A reel's video is taller than the screen,
+  // so "entirely on screen" never held for it and the download fell through to a still image.
+  const shareOnScreen = (element) => {
+    const rect = element.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return 0;
+    const w = Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0);
+    const h = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+    return w > 0 && h > 0 ? (w * h) / (rect.width * rect.height) : 0;
+  };
+  const onScreenArea = (element) => {
+    const rect = element.getBoundingClientRect();
+    return shareOnScreen(element) * rect.width * rect.height;
+  };
+  const MOSTLY_ON_SCREEN = 0.5;
+
+  const sourceOf = (element) => element.currentSrc || element.src || "";
+
   // Find the appropriate container for the content
   const findContentContainer = (element) => {
     if (!element) return null;
@@ -77,27 +94,25 @@
     return element.parentElement;
   };
 
-  // Get the current visible media element
+  // The media on screen: by selector priority, then the one taking the most of the screen (on
+  // Reels the next and previous reels are in the page too, mostly off screen), videos first.
   const getCurrentMediaElement = () => {
-    // Try each selector in order of priority
-    for (const selector of SELECTORS.mediaElements) {
-      const elements = document.querySelectorAll(selector);
+    const mostShown = (elements) => elements
+      .filter(el => sourceOf(el) && shareOnScreen(el) >= MOSTLY_ON_SCREEN)
+      .sort((a, b) => onScreenArea(b) - onScreenArea(a))[0];
 
-      // Find the first visible element
-      for (const element of elements) {
-        if (isElementVisible(element) && element.src) {
-          return element;
-        }
-      }
+    for (const selector of SELECTORS.mediaElements) {
+      const element = mostShown(Array.from(document.querySelectorAll(selector)));
+      if (element) return element;
     }
 
-    // Fallback: look for any large visible media
-    return Array.from(
-      document.querySelectorAll('video:not([hidden]), img[src*="fbcdn"]:not([width="16"]):not([hidden])')
-    ).find(el => {
+    // Fallback: any large media on screen.
+    const large = (el) => {
       const rect = el.getBoundingClientRect();
-      return isElementVisible(el) && rect.width > 150 && rect.height > 150 && el.src;
-    });
+      return rect.width > 150 && rect.height > 150;
+    };
+    return mostShown(Array.from(document.querySelectorAll('video:not([hidden])')).filter(large)) ||
+      mostShown(Array.from(document.querySelectorAll('img[src*="fbcdn"]:not([width="16"]):not([hidden])')).filter(large));
   };
 
   // Check if we are in a story or reel view
@@ -127,12 +142,15 @@
 
   // Facebook plays videos through Media Source Extensions, so a <video>'s src is a blob: URL
   // that fetch() can't read. The player around it (data-mcomponent="MVideo") carries the whole
-  // file, video and audio in one MP4, in data-video-url: download that instead.
+  // file, video and audio in one MP4, in data-video-url: download that, whenever it's there
+  // (a reel's own https source may be a video-only stream).
   const mediaUrl = (element) => {
-    if (element.tagName !== "VIDEO" || !element.src.startsWith("blob:")) return element.src;
+    const src = sourceOf(element);
+    if (element.tagName !== "VIDEO") return src;
     const player = element.closest("[data-video-url]");
     const url = player && player.getAttribute("data-video-url");
-    return url && url.startsWith("https://") ? url : null;
+    if (url && url.startsWith("https://")) return url;
+    return src && !src.startsWith("blob:") ? src : null;
   };
 
   // Tells the app a video couldn't be downloaded, so the user sees a message instead of nothing.
@@ -196,14 +214,16 @@
     // Find current media element
     const mediaElement = getCurrentMediaElement();
 
-    if (mediaElement && mediaElement.src && downloadElement(mediaElement)) return;
+    if (mediaElement && sourceOf(mediaElement) && downloadElement(mediaElement)) return;
 
     // Get container to search in
     const container = currentContentContainer || document.body;
 
-    // Find videos first
-    const videoElement = container.querySelector("video:not([hidden])");
-    if (videoElement && videoElement.src && downloadElement(videoElement)) return;
+    // Find videos first: the one on screen, not the first in the page.
+    const videoElement = Array.from(container.querySelectorAll("video:not([hidden])"))
+      .filter(video => sourceOf(video) && shareOnScreen(video) >= MOSTLY_ON_SCREEN)
+      .sort((a, b) => onScreenArea(b) - onScreenArea(a))[0];
+    if (videoElement && downloadElement(videoElement)) return;
 
     // If no video, try with images
     const images = Array.from(container.querySelectorAll("img"))
