@@ -5,6 +5,7 @@ import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
@@ -39,6 +40,17 @@ class FacebookCountsNotificationTest {
     private fun title(counter: FacebookCounter) =
         shown(counter)?.extras?.getCharSequence(Notification.EXTRA_TITLE)?.toString()
 
+    // NotificationManager.notify and cancel are asynchronous: activeNotifications can lag behind
+    // them for a moment (seen on a fresh CI emulator). The count shown once it has settled on
+    // [expected] (null: no notification), or after 3 s.
+    private fun number(counter: FacebookCounter, expected: Int?): Int? {
+        val until = SystemClock.elapsedRealtime() + 3000
+        while (shown(counter)?.number != expected && SystemClock.elapsedRealtime() < until) {
+            SystemClock.sleep(50)
+        }
+        return shown(counter)?.number
+    }
+
     @Before
     fun setUp() {
         if (Build.VERSION.SDK_INT >= 33) {
@@ -46,6 +58,7 @@ class FacebookCountsNotificationTest {
                 .grantRuntimePermission(context.packageName, Manifest.permission.POST_NOTIFICATIONS)
         }
         FacebookCountsWorker.schedule(context, enabled = false)
+        FacebookCounter.entries.forEach { number(it, null) }
     }
 
     @After
@@ -54,36 +67,38 @@ class FacebookCountsNotificationTest {
     @Test
     fun newUnread_isNotified_withItsCount() {
         FacebookCountsWorker.applyCounts(context, counts(notifications = 3, friends = 1), notify = true)
-        assertEquals(3, shown(FacebookCounter.NOTIFICATIONS)?.number)
-        assertEquals(1, shown(FacebookCounter.FRIEND_REQUESTS)?.number)
-        assertNull(shown(FacebookCounter.MESSAGES))
+        assertEquals(3, number(FacebookCounter.NOTIFICATIONS, 3))
+        assertEquals(1, number(FacebookCounter.FRIEND_REQUESTS, 1))
+        assertNull(number(FacebookCounter.MESSAGES, null))
     }
 
     @Test
     fun fewerUnread_updatesIt_noneClearsIt() {
         FacebookCountsWorker.applyCounts(context, counts(notifications = 3), notify = true)
+        assertEquals(3, number(FacebookCounter.NOTIFICATIONS, 3))
         val first = title(FacebookCounter.NOTIFICATIONS)
         FacebookCountsWorker.applyCounts(context, counts(notifications = 1), notify = true)
-        assertEquals(1, shown(FacebookCounter.NOTIFICATIONS)?.number)
+        assertEquals(1, number(FacebookCounter.NOTIFICATIONS, 1))
         assertNotEquals(first, title(FacebookCounter.NOTIFICATIONS))
         FacebookCountsWorker.applyCounts(context, counts(notifications = 0), notify = true)
-        assertNull(shown(FacebookCounter.NOTIFICATIONS))
+        assertNull(number(FacebookCounter.NOTIFICATIONS, null))
     }
 
     @Test
     fun countsRecordedWithoutNotifying_areTheBaseline() {
         // What the user left the app with: not notified, and the same count later isn't either.
         FacebookCountsWorker.applyCounts(context, counts(messages = 2), notify = false)
-        assertNull(shown(FacebookCounter.MESSAGES))
+        assertNull(number(FacebookCounter.MESSAGES, null))
         FacebookCountsWorker.applyCounts(context, counts(messages = 2), notify = true)
-        assertNull(shown(FacebookCounter.MESSAGES))
+        assertNull(number(FacebookCounter.MESSAGES, null))
         FacebookCountsWorker.applyCounts(context, counts(messages = 4), notify = true)
-        assertEquals(4, shown(FacebookCounter.MESSAGES)?.number)
+        assertEquals(4, number(FacebookCounter.MESSAGES, 4))
     }
 
     @Test
     fun aNotificationTap_opensItsTab() {
         FacebookCountsWorker.applyCounts(context, counts(notifications = 2), notify = true)
+        assertEquals(2, number(FacebookCounter.NOTIFICATIONS, 2))
         val intent = shown(FacebookCounter.NOTIFICATIONS)?.contentIntent
         assertNotNull(intent)
         assertEquals(context.packageName, intent!!.creatorPackage)
