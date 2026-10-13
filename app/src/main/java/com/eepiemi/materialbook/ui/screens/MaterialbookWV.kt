@@ -688,7 +688,10 @@ internal const val PIP_RELAYOUT_AFTER_FULLSCREEN_JS = PIP_RELEASE_FULLSCREENCHAN
 // listener snapshots the PiP target video (same selection as PIP_TOGGLE_JS)
 // at the moment the page is hidden. On the way back (visible) it reports to
 // the app (AstryxPage, or PipBridge on older WebViews) while a handoff is active, one of
-// MainActivity's handback signals.
+// MainActivity's handback signals. Facebook plays most videos through Media Source
+// Extensions (a blob: currentSrc the native player can't open); the player around such a
+// video (data-mcomponent="MVideo") carries the whole MP4 in data-video-url, so the
+// snapshot uses that instead, as download_content.js does.
 internal const val PIP_HANDOFF_ARM_JS = """
 (function() {
   if (window.__astryxHandoffListener) return;
@@ -717,9 +720,15 @@ internal const val PIP_HANDOFF_ARM_JS = """
         if (area > bestArea) { bestArea = area; best = videos[i]; }
       }
     }
+    var src = best ? String(best.currentSrc || '') : '';
+    if (src.indexOf('blob:') === 0 && best.closest) {
+      var player = best.closest('[data-video-url]');
+      var fileUrl = player && player.getAttribute('data-video-url');
+      if (fileUrl && fileUrl.indexOf('https://') === 0) src = fileUrl;
+    }
     window.__astryxHandoffVideo = best || null;
     window.__astryxHandoffSnapshot = best
-      ? { src: String(best.currentSrc || ''), time: best.currentTime, wasPlaying: !best.paused }
+      ? { src: src, time: best.currentTime, wasPlaying: !best.paused }
       : null;
   };
   window.__astryxHandoffListener = listener;

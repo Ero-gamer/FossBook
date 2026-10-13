@@ -75,11 +75,21 @@ class PipHandoffJsTest {
     // Fixture: a marked PiP video plus a bigger unmarked one. currentSrc,
     // currentTime and paused are overridden per element so tests don't need
     // real media; play()/pause() are spied the same way PipFocusModeJsTest does.
-    private fun Harness.loadFixture(pipPlaying: Boolean = true, pipMuted: Boolean = false) {
+    // [pipSrc] replaces the PiP video's https source (e.g. a blob: one), and
+    // [pipPlayerUrl] wraps it in a player carrying data-video-url, like Facebook's MVideo.
+    private fun Harness.loadFixture(
+        pipPlaying: Boolean = true,
+        pipMuted: Boolean = false,
+        pipSrc: String? = null,
+        pipPlayerUrl: String? = null,
+    ) {
+        val pipVideo = """<video id="pip" data-astryx-pip-video="true" style="width:10px;height:10px;"></video>"""
+        val pipMarkup = if (pipPlayerUrl == null) pipVideo
+        else """<div data-mcomponent="MVideo" data-video-url="$pipPlayerUrl">$pipVideo</div>"""
         loadHtml(
             """
             <html><body>
-              <video id="pip" data-astryx-pip-video="true" style="width:10px;height:10px;"></video>
+              $pipMarkup
               <video id="other" style="width:500px;height:500px;"></video>
             </body></html>
             """.trimIndent()
@@ -95,7 +105,8 @@ class PipHandoffJsTest {
               var v = document.getElementById(id);
               v.__paused = true;
               Object.defineProperty(v, 'paused', { get: function() { return this.__paused; } });
-              Object.defineProperty(v, 'currentSrc', { get: function() { return 'https://video.example.net/' + id + '.mp4'; } });
+              var src = id === 'pip' && ${if (pipSrc == null) "null" else "'$pipSrc'"};
+              Object.defineProperty(v, 'currentSrc', { get: function() { return src || 'https://video.example.net/' + id + '.mp4'; } });
               v.__time = 12.5;
               Object.defineProperty(v, 'currentTime', {
                 get: function() { return this.__time; },
@@ -134,6 +145,46 @@ class PipHandoffJsTest {
         assertEquals("https://video.example.net/pip.mp4", read.getString("src"))
         assertEquals(12.5, read.getDouble("time"), 0.001)
         assertTrue("wasPlaying must reflect the state at hide", read.getBoolean("wasPlaying"))
+    }
+
+    @Test
+    fun read_usesThePlayersMp4_whenTheVideoPlaysFromABlob() {
+        val h = Harness()
+        h.loadFixture(
+            pipSrc = "blob:https://m.facebook.com/1234",
+            pipPlayerUrl = "https://video.fbcdn.example/v/pip.mp4?oh=1&amp;oe=2",
+        )
+        h.eval(PIP_HANDOFF_ARM_JS)
+        h.setVisibility("hidden")
+
+        val read = h.read()
+        assertEquals("https://video.fbcdn.example/v/pip.mp4?oh=1&oe=2", read.getString("src"))
+        assertEquals(12.5, read.getDouble("time"), 0.001)
+        assertTrue(read.getBoolean("wasPlaying"))
+    }
+
+    @Test
+    fun read_keepsTheBlob_whenThePlayerHasNoMp4() {
+        val h = Harness()
+        h.loadFixture(pipSrc = "blob:https://m.facebook.com/1234")
+        h.eval(PIP_HANDOFF_ARM_JS)
+        h.setVisibility("hidden")
+
+        // Not https, so MainActivity skips the handoff (isHandoffEligible).
+        assertEquals("blob:https://m.facebook.com/1234", h.read().getString("src"))
+    }
+
+    @Test
+    fun read_ignoresANonHttpsPlayerUrl() {
+        val h = Harness()
+        h.loadFixture(
+            pipSrc = "blob:https://m.facebook.com/1234",
+            pipPlayerUrl = "javascript:alert(1)",
+        )
+        h.eval(PIP_HANDOFF_ARM_JS)
+        h.setVisibility("hidden")
+
+        assertEquals("blob:https://m.facebook.com/1234", h.read().getString("src"))
     }
 
     @Test
