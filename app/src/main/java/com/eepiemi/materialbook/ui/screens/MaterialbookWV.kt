@@ -69,6 +69,7 @@ import com.eepiemi.materialbook.utils.ExternalRequestInterceptor
 import com.eepiemi.materialbook.utils.externalLinkAction
 import com.eepiemi.materialbook.utils.isMessengerAppLink
 import com.eepiemi.materialbook.utils.FullscreenController
+import com.eepiemi.materialbook.utils.FEEDS_PAGE_URL
 import com.eepiemi.materialbook.utils.HOME_PAGE_URL
 import com.eepiemi.materialbook.utils.appOrientation
 import com.eepiemi.materialbook.utils.appWebViewParams
@@ -536,6 +537,20 @@ internal fun installPipVisibilityScript(webView: android.webkit.WebView) {
         .onFailure { Log.w("AstryxbookPiP", "pip_visibility.js not installed", it) }
 }
 
+private val OPEN_FEEDS_ORIGINS = setOf("https://facebook.com", "https://*.facebook.com")
+
+// Installs open_feeds.js ("Start on Feeds", see the script) as a document-start script, so the
+// menu it starts from is hidden from the first frame. Returns false without DOCUMENT_START_SCRIPT
+// (Chrome 87+); the script is then run once the page has loaded instead.
+internal fun installOpenFeedsScript(webView: android.webkit.WebView): Boolean {
+    if (!WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) return false
+    val script = webView.resources.openRawResource(R.raw.open_feeds)
+        .bufferedReader().use { it.readText() }
+    return runCatching { WebViewCompat.addDocumentStartJavaScript(webView, script, OPEN_FEEDS_ORIGINS) }
+        .onFailure { Log.w("Astryxbook", "open_feeds.js not installed", it) }
+        .isSuccess
+}
+
 // Left PiP: stop guarding, so normal pauses (Facebook's or the user's) stick again.
 internal const val PIP_KEEP_PLAYING_DISARM_JS = """
 (function() {
@@ -798,6 +813,11 @@ internal fun pipHandbackJs(positionMs: Long?, play: Boolean, rearm: Boolean): St
 """ + PIP_HANDOFF_DISARM_JS + (if (rearm) PIP_HANDOFF_ARM_JS else "")
 
 private const val HOME_URL = HOME_PAGE_URL
+
+// Leaving PiP after a lost renderer: how long the window takes to get its full size back, and
+// how many zoom-out steps (x0.8 each) can bring a page from the PiP window's width back.
+private const val PIP_EXIT_SETTLE_MS = 600L
+private const val MAX_ZOOM_OUT_STEPS = 20
 
 /** A link the running app was sent (onNewIntent); [seq] tells two taps on the same link apart. */
 data class OpenLinkRequest(val seq: Int, val url: String)
@@ -1339,6 +1359,22 @@ fun MaterialbookWebView(
         }
     }
 
+    // "Start on Feeds" on a WebView without document-start scripts (installOpenFeedsScript): the
+    // script runs once the start page has loaded, so the menu shows for a moment. Facebook may
+    // have dropped the #astryx-feeds mark from the URL by then; __astryxFeedsForce stands in.
+    var openFeedsPending by remember { mutableStateOf(url == FEEDS_PAGE_URL) }
+    var openFeedsAtDocumentStart by remember { mutableStateOf(true) }
+    LaunchedEffect(loadingState) {
+        if (loadingState is LoadingState.Finished && openFeedsPending) {
+            openFeedsPending = false
+            if (!openFeedsAtDocumentStart) {
+                val openFeeds = resources.openRawResource(R.raw.open_feeds)
+                    .bufferedReader().use { it.readText() }
+                navigator.evaluateJavaScript("window.__astryxFeedsForce = true;\n$openFeeds") {}
+            }
+        }
+    }
+
     LaunchedEffect(loadingState, userScripts) {
         if (loadingState is LoadingState.Finished) {
             userScripts?.let { scripts ->
@@ -1516,6 +1552,18 @@ fun MaterialbookWebView(
         pendingRecoveryUrl = null
         navigator.loadUrl(recoveryUrl)
     }
+    // A WebView that takes over in PiP starts out at the PiP window's size, and leaving PiP can
+    // leave its page zoomed in to that width (about 3x on a phone, seen with pinch to zoom on).
+    // Its page was loaded in PiP, so there's no zoom of the user's to keep: zoom it all the way
+    // out once the window is full size again.
+    var replacedInPip by remember { mutableStateOf(false) }
+    LaunchedEffect(isInPipMode) {
+        if (isInPipMode || !replacedInPip) return@LaunchedEffect
+        replacedInPip = false
+        delay(PIP_EXIT_SETTLE_MS)
+        val webView = runCatching { state.nativeWebView }.getOrNull() ?: return@LaunchedEffect
+        repeat(MAX_ZOOM_OUT_STEPS) { if (!webView.zoomOut()) return@LaunchedEffect }
+    }
 
     key(webViewGeneration) {
         WebView(
@@ -1528,6 +1576,7 @@ fun MaterialbookWebView(
                     deadWebViewUrl(dead) ?: state.lastLoadedUrl, HOME_URL, lastRendererLossAt, now
                 )
                 lastRendererLossAt = now
+                if (isInPipMode) replacedInPip = true
                 // Its videos are gone with it; the reloaded page reports its own.
                 mainVideoPlaying = false
                 onVideoPlayingChanged(false, 0, 0)
@@ -1587,6 +1636,7 @@ fun MaterialbookWebView(
                         "MaterialYouBridge"
                     )
                     installPipVisibilityScript(this)
+                    openFeedsAtDocumentStart = installOpenFeedsScript(this)
 
                     setLayerType(View.LAYER_TYPE_HARDWARE, null)
 
