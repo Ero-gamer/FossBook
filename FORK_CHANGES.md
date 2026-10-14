@@ -682,10 +682,11 @@ From a hands-on pass through the app in light and dark mode on an emulator.
 
 ## Share photos and videos into Facebook
 
-- **Post to Facebook** and **Facebook story** in other apps' share sheet (a gallery, the camera,
-  a file manager): photos shared to the first open Facebook's **Create post** with them attached,
-  several at once; photos and videos shared to the second open Facebook's story creator with the
-  first one in it. The user writes the caption, adds music or text, and posts or shares: the app
+- **Your story** and **Feed** in other apps' share sheet (a gallery, the camera, a file manager),
+  named and ordered like the Facebook app's own entries: photos and videos shared to the first
+  open Facebook's story creator with the first one in it; photos shared to the second open
+  Facebook's **Create post** with them attached, several at once. (They were *Facebook story* and
+  *Post to Facebook* in v1.27.0.) The user writes the caption, adds music or text, and posts or shares: the app
   never posts anything itself. Two `activity-alias` entries for `MainActivity` tell the targets
   apart. Off-type items (a video for the feed) and items over the limits (30 photos or 10 story
   items; 40 MB a photo, 250 MB a video) are left out, with a message.

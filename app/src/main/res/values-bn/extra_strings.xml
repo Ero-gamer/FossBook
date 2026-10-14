@@ -61,8 +61,8 @@
     <string name="facebook_notifications_summary">অ্যাপ বন্ধ থাকলে প্রতি ১৫ মিনিটে নতুন নোটিফিকেশন, মেসেজ ও ফ্রেন্ড রিকোয়েস্ট দেখে, অ্যাপে আপনার ফেসবুক লগইন ব্যবহার করে</string>
     <string name="facebook_notifications_denied">Android সেটিংসে Astryxbook-এর নোটিফিকেশন বন্ধ আছে</string>
     <string name="facebook_notifications_channel">ফেসবুক নোটিফিকেশন</string>
-    <string name="share_target_feed">ফেসবুকে পোস্ট করুন</string>
-    <string name="share_target_story">ফেসবুক স্টোরি</string>
+    <string name="share_target_feed">ফিড</string>
+    <string name="share_target_story">আপনার স্টোরি</string>
     <string name="share_media_nothing_feed">এখান থেকে ফিডে শুধু ছবি পোস্ট করা যায়। ভিডিও স্টোরিতে দেওয়া যায়।</string>
     <string name="share_media_nothing_story">শেয়ার করার কিছু নেই: স্টোরিতে ছবি ও ভিডিও দেওয়া যায়।</string>
     <plurals name="share_media_skipped">

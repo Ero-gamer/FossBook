@@ -78,26 +78,11 @@
 
         </activity>
 
-        <!-- Share photos into Facebook's composer ("Post to Facebook") or story creator
-             ("Facebook story") from another app's share sheet: two entries for MainActivity,
-             told apart by the alias the share arrives through (see ShareMedia). The feed's
-             composer on the mobile site takes photos only, so only stories take videos. -->
-        <activity-alias
-            android:name=".ShareToFeed"
-            android:targetActivity=".MainActivity"
-            android:exported="true"
-            android:icon="@mipmap/ic_launcher"
-            android:label="@string/share_target_feed">
-            <intent-filter>
-                <action android:name="android.intent.action.SEND" />
-                <action android:name="android.intent.action.SEND_MULTIPLE" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-
-                <data android:mimeType="image/*" />
-            </intent-filter>
-        </activity-alias>
-
+        <!-- Share photos and videos into Facebook from another app's share sheet, named and
+             ordered like the Facebook app's own entries: "Your story" (the story creator) and
+             "Feed" (the post composer). Two entries for MainActivity, told apart by the alias the
+             share arrives through (see ShareMedia). The feed's composer on the mobile site takes
+             photos only, so only stories take videos. -->
         <activity-alias
             android:name=".ShareToStory"
             android:targetActivity=".MainActivity"
@@ -112,6 +97,22 @@
 
                 <data android:mimeType="image/*" />
                 <data android:mimeType="video/*" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ShareToFeed"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/share_target_feed">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="image/*" />
             </intent-filter>
         </activity-alias>
 

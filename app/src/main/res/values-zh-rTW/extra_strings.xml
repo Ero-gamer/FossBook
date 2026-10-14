@@ -60,8 +60,8 @@
     <string name="facebook_notifications_summary">應用程式關閉時，每 15 分鐘使用你在應用程式中的 Facebook 登入檢查新通知、訊息和交友邀請</string>
     <string name="facebook_notifications_denied">Android 設定中已關閉 Astryxbook 的通知</string>
     <string name="facebook_notifications_channel">Facebook 通知</string>
-    <string name="share_target_feed">發佈到 Facebook</string>
-    <string name="share_target_story">Facebook 限時動態</string>
+    <string name="share_target_feed">動態消息</string>
+    <string name="share_target_story">你的限時動態</string>
     <string name="share_media_nothing_feed">從這裡只能將相片發佈到動態消息。影片可以發佈到限時動態。</string>
     <string name="share_media_nothing_story">沒有可分享的內容：限時動態接受相片和影片。</string>
     <plurals name="share_media_skipped">
