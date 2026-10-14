@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- See values/privacy_strings.xml. -->
+<resources>
+    <string name="app_lock_title">Verrouillage de l\'application</string>
+    <string name="app_lock_off">Désactivé</string>
+    <string name="app_lock_immediately">Verrouiller dès que je quitte</string>
+    <string name="app_lock_after_1_min">Verrouiller après 1 minute d\'absence</string>
+    <string name="app_lock_after_5_min">Verrouiller après 5 minutes d\'absence</string>
+    <string name="app_lock_after_15_min">Verrouiller après 15 minutes d\'absence</string>
+    <string name="app_lock_locked">%1$s est verrouillé</string>
+    <string name="app_lock_unlock">Déverrouiller</string>
+    <string name="app_lock_prompt_title">Déverrouiller %1$s</string>
+    <string name="app_lock_on_screen_off_title">Verrouiller à l\'extinction de l\'écran</string>
+    <string name="app_lock_on_screen_off_summary">Éteindre l\'écran verrouille l\'application tout de suite, quel que soit le délai ci-dessus</string>
+    <string name="block_screenshots_title">Bloquer les captures d\'écran</string>
+    <string name="block_screenshots_summary">Les captures, l\'enregistrement d\'écran, la diffusion et l\'aperçu des applications récentes montrent l\'application en noir</string>
+    <string name="clear_cache_on_leave_title">Vider le cache en quittant</string>
+    <string name="clear_cache_on_leave_summary">Supprime les photos, vidéos et pages mises en cache par l\'application chaque fois que vous la quittez. Vous restez connecté ; les pages se chargent plus lentement et consomment plus de données</string>
+    <string name="log_out_title">Se déconnecter et effacer les données</string>
+    <string name="log_out_summary">Retirer de cette application la connexion Facebook, les cookies, le cache et les données des sites</string>
+    <string name="log_out_confirm_title">Se déconnecter et effacer les données ?</string>
+    <string name="log_out_confirm_text">Vous serez déconnecté de Facebook dans cette application, et ses cookies, son cache et ses données des sites seront effacés. Vos paramètres sont conservés.</string>
+    <string name="log_out_confirm">Se déconnecter</string>
+    <string name="cancel">Annuler</string>
+</resources>

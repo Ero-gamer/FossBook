@@ -67,6 +67,7 @@ Off by default (opt-in):
 
 Always on:
 *  Shares links from other apps to Facebook, and the page you're on to other apps (the share button in Settings), without tracking parameters
+*  Posts photos from other apps to your feed, or photos and videos to your story: pick *Post to Facebook* or *Facebook story* in the share sheet, then caption and post in Facebook's own composer
 *  Launcher shortcuts for Messages, Notifications and Marketplace (long-press the app icon)
 *  Exports your settings to a file and imports them on another phone (Settings → *Export / Import settings*)
 *  Supports real fullscreen video, including landscape, from Facebook's fullscreen button

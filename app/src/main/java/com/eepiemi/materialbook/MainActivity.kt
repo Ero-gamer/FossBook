@@ -58,6 +58,13 @@ import com.eepiemi.materialbook.utils.canUseAppLock
 import com.eepiemi.materialbook.utils.isAppLockEnabled
 import com.eepiemi.materialbook.utils.locksOnScreenOff
 import com.eepiemi.materialbook.utils.startPageUrl
+import com.eepiemi.materialbook.utils.FEED_COMPOSER_PAGE_URL
+import com.eepiemi.materialbook.utils.ShareMedia
+import com.eepiemi.materialbook.utils.ShareMediaQueue
+import com.eepiemi.materialbook.utils.ShareTarget
+import com.eepiemi.materialbook.utils.copySharedMedia
+import com.eepiemi.materialbook.utils.sharedUris
+import com.eepiemi.materialbook.ui.screens.ShareMediaRequest
 import com.eepiemi.materialbook.utils.shouldLockOnReturn
 import com.eepiemi.materialbook.ui.screens.OpenLinkRequest
 import com.eepiemi.materialbook.utils.appLinkUrl
@@ -67,7 +74,9 @@ import com.eepiemi.materialbook.utils.publishAppShortcuts
 import com.eepiemi.materialbook.ui.theme.MaterialbookTheme
 import com.eepiemi.materialbook.ui.viewmodel.SettingsViewModel
 import com.google.common.util.concurrent.ListenableFuture
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private const val TAG = "AstryxbookPiP"
 private const val ACTION_PIP_TOGGLE = "com.astryx.book.PIP_TOGGLE_PLAYBACK"
@@ -154,6 +163,10 @@ class MainActivity : FragmentActivity() {
 
     // A link sent while the app runs (singleTask: onNewIntent) opens in the existing WebView.
     private var openLinkRequest by mutableStateOf<OpenLinkRequest?>(null)
+
+    // Photos or videos shared from another app ("Post to Facebook", "Facebook story"), once
+    // they're copied into the cache: the WebView opens Facebook's composer for them.
+    private var shareMediaRequest by mutableStateOf<ShareMediaRequest?>(null)
 
     // Bound at PiP entry (option B: binding creates the service idle, not in
     // the foreground), used at screen-off to start playback and at handback
@@ -429,7 +442,14 @@ class MainActivity : FragmentActivity() {
         lockIfEnabled()
 
         // Read once: the page the app starts on (a link it was opened with, or Home/Feeds).
-        val startUrl = startPageUrl(linkUrl(intent), settingsVM.startOnFeeds.value)
+        // Photos shared to the feed start on Home, where the composer's Photo button is.
+        val mediaTarget = mediaShareTarget(intent)
+        val startUrl = when (mediaTarget) {
+            ShareTarget.FEED -> FEED_COMPOSER_PAGE_URL
+            ShareTarget.STORY -> startPageUrl(null, settingsVM.startOnFeeds.value)
+            null -> startPageUrl(linkUrl(intent), settingsVM.startOnFeeds.value)
+        }
+        mediaTarget?.let { receiveSharedMedia(intent, it) }
 
         setContent {
             val materialYou by settingsVM.materialYou.collectAsState()
@@ -447,6 +467,7 @@ class MainActivity : FragmentActivity() {
                         pipHandoffReadTrigger = pipHandoffReadTrigger,
                         pipHandback = pipHandback,
                         openLinkRequest = openLinkRequest,
+                        shareMediaRequest = shareMediaRequest,
                         onPipHandoffRead = ::onPipHandoffRead,
                         onPipPageVisible = { runOnUiThread { handBack("page visible") } },
                         isAppLocked = isAppLocked,
@@ -492,8 +513,48 @@ class MainActivity : FragmentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        mediaShareTarget(intent)?.let {
+            receiveSharedMedia(intent, it)
+            return
+        }
         val url = linkUrl(intent) ?: return
         openLinkRequest = OpenLinkRequest((openLinkRequest?.seq ?: 0) + 1, url)
+    }
+
+    /** The target of photos or videos shared through one of the share entries, if this is one. */
+    private fun mediaShareTarget(intent: Intent?): ShareTarget? {
+        if (intent?.action != Intent.ACTION_SEND && intent?.action != Intent.ACTION_SEND_MULTIPLE) return null
+        return ShareMedia.targetOf(intent.component?.className)
+    }
+
+    /**
+     * Copies the shared items the target takes into the cache (off the main thread; the sharing
+     * app's permission to read them lasts only while this activity has the intent), then has the
+     * WebView open Facebook's composer for them. Says so when some or all were left out.
+     */
+    private fun receiveSharedMedia(intent: Intent, target: ShareTarget) {
+        val uris = sharedUris(intent)
+        val type = intent.type
+        lifecycleScope.launch {
+            val (files, skipped) = withContext(Dispatchers.IO) {
+                copySharedMedia(this@MainActivity, target, uris, type)
+            }
+            if (files.isEmpty()) {
+                val nothing = if (target == ShareTarget.FEED) R.string.share_media_nothing_feed
+                else R.string.share_media_nothing_story
+                Toast.makeText(this@MainActivity, nothing, Toast.LENGTH_LONG).show()
+                return@launch
+            }
+            if (skipped > 0) {
+                Toast.makeText(
+                    this@MainActivity,
+                    resources.getQuantityString(R.plurals.share_media_skipped, skipped, skipped),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            ShareMediaQueue.start(target, files)
+            shareMediaRequest = ShareMediaRequest((shareMediaRequest?.seq ?: 0) + 1, target)
+        }
     }
 
     /**

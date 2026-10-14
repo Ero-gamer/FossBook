@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- See values/privacy_strings.xml. -->
+<resources>
+    <string name="app_lock_title">قفل التطبيق</string>
+    <string name="app_lock_off">متوقف</string>
+    <string name="app_lock_immediately">القفل فور مغادرتي</string>
+    <string name="app_lock_after_1_min">القفل بعد دقيقة من المغادرة</string>
+    <string name="app_lock_after_5_min">القفل بعد 5 دقائق من المغادرة</string>
+    <string name="app_lock_after_15_min">القفل بعد 15 دقيقة من المغادرة</string>
+    <string name="app_lock_locked">%1$s مقفل</string>
+    <string name="app_lock_unlock">إلغاء القفل</string>
+    <string name="app_lock_prompt_title">إلغاء قفل %1$s</string>
+    <string name="app_lock_on_screen_off_title">القفل عند إيقاف الشاشة</string>
+    <string name="app_lock_on_screen_off_summary">إيقاف الشاشة يقفل التطبيق فورًا، بغض النظر عن المدة أعلاه</string>
+    <string name="block_screenshots_title">منع لقطات الشاشة</string>
+    <string name="block_screenshots_summary">تظهر لقطات الشاشة وتسجيل الشاشة والبث ومعاينة التطبيقات الأخيرة باللون الأسود</string>
+    <string name="clear_cache_on_leave_title">مسح ذاكرة التخزين المؤقت عند المغادرة</string>
+    <string name="clear_cache_on_leave_summary">حذف الصور والفيديوهات والصفحات التي خزّنها التطبيق في كل مرة تغادره. تبقى مسجّل الدخول؛ تُحمَّل الصفحات أبطأ وتستهلك بيانات أكثر</string>
+    <string name="log_out_title">تسجيل الخروج ومسح البيانات</string>
+    <string name="log_out_summary">إزالة تسجيل الدخول إلى فيسبوك وملفات تعريف الارتباط وذاكرة التخزين المؤقت وبيانات المواقع من هذا التطبيق</string>
+    <string name="log_out_confirm_title">تسجيل الخروج ومسح البيانات؟</string>
+    <string name="log_out_confirm_text">سيتم تسجيل خروجك من فيسبوك في هذا التطبيق، وستُحذف ملفات تعريف الارتباط وذاكرة التخزين المؤقت وبيانات المواقع. تُحفظ إعداداتك.</string>
+    <string name="log_out_confirm">تسجيل الخروج</string>
+    <string name="cancel">إلغاء</string>
+</resources>

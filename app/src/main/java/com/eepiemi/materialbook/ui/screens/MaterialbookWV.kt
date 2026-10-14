@@ -72,6 +72,10 @@ import com.eepiemi.materialbook.utils.externalLinkAction
 import com.eepiemi.materialbook.utils.isMessengerAppLink
 import com.eepiemi.materialbook.utils.FullscreenController
 import com.eepiemi.materialbook.utils.FEEDS_PAGE_URL
+import com.eepiemi.materialbook.utils.FEED_COMPOSER_PAGE_URL
+import com.eepiemi.materialbook.utils.STORY_CREATE_URL
+import com.eepiemi.materialbook.utils.ShareMediaQueue
+import com.eepiemi.materialbook.utils.ShareTarget
 import com.eepiemi.materialbook.utils.HOME_PAGE_URL
 import com.eepiemi.materialbook.utils.appOrientation
 import com.eepiemi.materialbook.utils.appWebViewParams
@@ -80,6 +84,7 @@ import com.eepiemi.materialbook.utils.deadWebViewUrl
 import com.eepiemi.materialbook.utils.rendererRecoveryUrl
 import com.eepiemi.materialbook.utils.jsBridge.installClipboardBridge
 import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
+import com.eepiemi.materialbook.utils.jsBridge.installShareMediaBridge
 import com.eepiemi.materialbook.utils.jsBridge.installPageBridges
 import com.eepiemi.materialbook.utils.jsBridge.PageBridges
 import com.eepiemi.materialbook.utils.jsBridge.MaterialbookSettings
@@ -838,6 +843,16 @@ private const val MAX_ZOOM_OUT_STEPS = 20
 /** A link the running app was sent (onNewIntent); [seq] tells two taps on the same link apart. */
 data class OpenLinkRequest(val seq: Int, val url: String)
 
+/** Photos or videos shared into the app for [target]; [seq] tells two shares apart. */
+data class ShareMediaRequest(val seq: Int, val target: ShareTarget)
+
+/** share_media.js for [target], with the target it's run for. */
+internal fun shareMediaScript(resources: android.content.res.Resources, target: ShareTarget): String {
+    val script = resources.openRawResource(R.raw.share_media).bufferedReader().use { it.readText() }
+    val name = if (target == ShareTarget.FEED) "feed" else "story"
+    return "window.__astryxShareTarget = '$name';\n$script"
+}
+
 @Composable
 fun MaterialbookWebView(
     url: String,
@@ -849,6 +864,7 @@ fun MaterialbookWebView(
     pipHandoffReadTrigger: Int = 0,
     pipHandback: PipHandback? = null,
     openLinkRequest: OpenLinkRequest? = null,
+    shareMediaRequest: ShareMediaRequest? = null,
     onPipHandoffRead: (String?) -> Unit = {},
     onPipPageVisible: () -> Unit = {},
     isAppLocked: Boolean = false,
@@ -1212,7 +1228,12 @@ fun MaterialbookWebView(
                 val backHandled = it.removeSurrounding("\"")
                 when (backHandled) {
                     "false" -> {
-                        if (navigator.canGoBack) {
+                        // Asked of the WebView itself, as in the Messages layer: Facebook opens
+                        // some pages in-page (the composer a share opens), which
+                        // navigator.canGoBack doesn't always pick up, so Back left the app.
+                        val canGoBack = runCatching { state.nativeWebView.canGoBack() }
+                            .getOrDefault(navigator.canGoBack)
+                        if (canGoBack) {
                             navigator.navigateBack()
                         } else {
                             leaveApp()
@@ -1703,6 +1724,7 @@ fun MaterialbookWebView(
                     )
                     installDownloadBridge(this, context)
                     installClipboardBridge(this, context)
+                    installShareMediaBridge(this, context)
                     addJavascriptInterface(
                         MaterialYouBridge({ currentPrimaryColor }, { currentOnPrimaryColor }),
                         "MaterialYouBridge"
@@ -1727,6 +1749,39 @@ fun MaterialbookWebView(
 
     var layerGeneration by remember { mutableIntStateOf(0) }
     var lastLayerRendererLossAt by remember { mutableStateOf<Long?>(null) }
+
+    // Photos and videos shared from another app (ShareMedia): the feed's composer on Home, or
+    // the desktop story creator in the layer; share_media.js hands them to Facebook's page.
+    // The feed's script waits for a fresh load of Home it asked for (a page already showing, or
+    // the one before, could be gone a moment later).
+    var feedSharePending by remember { mutableStateOf(false) }
+    var feedShareLoadSeen by remember { mutableStateOf(false) }
+    LaunchedEffect(shareMediaRequest?.seq) {
+        val request = shareMediaRequest ?: return@LaunchedEffect
+        when (request.target) {
+            ShareTarget.FEED -> {
+                messagesLayerUrl = null
+                feedSharePending = true
+                feedShareLoadSeen = false
+                navigator.loadUrl(FEED_COMPOSER_PAGE_URL)
+            }
+            ShareTarget.STORY -> {
+                messagesLayerUrl = STORY_CREATE_URL
+                layerGeneration++
+            }
+        }
+    }
+    LaunchedEffect(loadingState, feedSharePending) {
+        if (!feedSharePending) return@LaunchedEffect
+        if (loadingState is LoadingState.Loading) {
+            feedShareLoadSeen = true
+        } else if (loadingState is LoadingState.Finished && feedShareLoadSeen) {
+            feedSharePending = false
+            if (ShareMediaQueue.pending(ShareTarget.FEED)) {
+                navigator.evaluateJavaScript(shareMediaScript(resources, ShareTarget.FEED)) {}
+            }
+        }
+    }
     messagesLayerUrl?.let { layerUrl ->
         // A new Messages link while the layer is open (a notification, say) recreates it, and
         // so does a lost renderer (onRendererGone), at the page it was showing.
@@ -1740,7 +1795,11 @@ fun MaterialbookWebView(
                 background = barColor,
                 primaryColor = primaryColor,
                 onPrimaryColor = onPrimaryColor,
-                onClose = { messagesLayerUrl = null },
+                onClose = {
+                    // Closing the layer gives up the stories still waiting to be offered.
+                    if (ShareMediaQueue.pending(ShareTarget.STORY)) ShareMediaQueue.clear()
+                    messagesLayerUrl = null
+                },
                 pipEnabled = pipEnabled,
                 onPipTarget = { layerPipTarget = it },
                 onVideoPlayingChanged = onVideoPlayingChanged,
@@ -1748,7 +1807,14 @@ fun MaterialbookWebView(
                 trackVideoPlaying = trackVideoPlaying,
                 textZoom = textZoomPercent,
                 onScreenVideoPlayingChanged = { layerVideoPlaying = it },
-                onLeave = { mainUrl ->
+                onLeave = leave@{ mainUrl ->
+                    // A story was shared and Facebook moved on (to its feed): the next shared
+                    // file gets the story creator again instead.
+                    if (ShareMediaQueue.pending(ShareTarget.STORY)) {
+                        messagesLayerUrl = STORY_CREATE_URL
+                        layerGeneration++
+                        return@leave
+                    }
                     // Both the interceptor and the in-page watcher can report the same exit.
                     if (messagesLayerUrl != null) {
                         messagesLayerUrl = null

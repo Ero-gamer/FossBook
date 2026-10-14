@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- See values/privacy_strings.xml. -->
+<resources>
+    <string name="app_lock_title">অ্যাপ লক</string>
+    <string name="app_lock_off">বন্ধ</string>
+    <string name="app_lock_immediately">বের হওয়ার সাথে সাথে লক করুন</string>
+    <string name="app_lock_after_1_min">১ মিনিট দূরে থাকলে লক করুন</string>
+    <string name="app_lock_after_5_min">৫ মিনিট দূরে থাকলে লক করুন</string>
+    <string name="app_lock_after_15_min">১৫ মিনিট দূরে থাকলে লক করুন</string>
+    <string name="app_lock_locked">%1$s লক করা আছে</string>
+    <string name="app_lock_unlock">আনলক করুন</string>
+    <string name="app_lock_prompt_title">%1$s আনলক করুন</string>
+    <string name="app_lock_on_screen_off_title">স্ক্রিন বন্ধ হলে লক করুন</string>
+    <string name="app_lock_on_screen_off_summary">স্ক্রিন বন্ধ করলেই অ্যাপ লক হয়ে যায়, উপরের সময় যা-ই হোক</string>
+    <string name="block_screenshots_title">স্ক্রিনশট ব্লক করুন</string>
+    <string name="block_screenshots_summary">স্ক্রিনশট, স্ক্রিন রেকর্ডিং, কাস্টিং ও সাম্প্রতিক অ্যাপের প্রিভিউতে অ্যাপটি কালো দেখায়</string>
+    <string name="clear_cache_on_leave_title">বের হলে ক্যাশে মুছুন</string>
+    <string name="clear_cache_on_leave_summary">প্রতিবার অ্যাপ থেকে বের হলে এর ক্যাশে রাখা ছবি, ভিডিও ও পেজ মুছে দিন। আপনি লগইন থাকবেন; পেজ ধীরে লোড হবে ও বেশি ডেটা লাগবে</string>
+    <string name="log_out_title">লগআউট ও ডেটা মুছুন</string>
+    <string name="log_out_summary">এই অ্যাপ থেকে ফেসবুক লগইন, কুকি, ক্যাশে ও সাইট ডেটা সরান</string>
+    <string name="log_out_confirm_title">লগআউট করে ডেটা মুছবেন?</string>
+    <string name="log_out_confirm_text">এই অ্যাপে আপনি ফেসবুক থেকে লগআউট হবেন, এবং এর কুকি, ক্যাশে ও সাইট ডেটা মুছে যাবে। আপনার সেটিংস থাকবে।</string>
+    <string name="log_out_confirm">লগআউট</string>
+    <string name="cancel">বাতিল</string>
+</resources>

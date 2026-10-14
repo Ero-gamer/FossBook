@@ -76,6 +76,18 @@
     <string name="facebook_notifications_summary">כשהאפליקציה סגורה, בודקת כל 15 דקות אם יש התראות, הודעות ובקשות חברות חדשות, דרך החיבור שלך לפייסבוק באפליקציה</string>
     <string name="facebook_notifications_denied">ההתראות של Astryxbook כבויות בהגדרות של Android</string>
     <string name="facebook_notifications_channel">התראות מפייסבוק</string>
+    <!-- Share photos and videos into Facebook (share sheet entries and messages) -->
+    <string name="share_target_feed">פרסום בפייסבוק</string>
+    <string name="share_target_story">סטורי בפייסבוק</string>
+    <string name="share_media_nothing_feed">מכאן אפשר לפרסם בפיד רק תמונות. סרטונים אפשר לשתף בסטורי.</string>
+    <string name="share_media_nothing_story">אין מה לשתף: סטורי מקבל תמונות וסרטונים.</string>
+    <plurals name="share_media_skipped">
+        <item quantity="one">פריט אחד לא נכלל (גדול מדי, יותר מדי פריטים או סוג שלא נתמך)</item>
+        <item quantity="two">%1$d פריטים לא נכללו (גדולים מדי, יותר מדי פריטים או סוג שלא נתמך)</item>
+        <item quantity="other">%1$d פריטים לא נכללו (גדולים מדי, יותר מדי פריטים או סוג שלא נתמך)</item>
+    </plurals>
+    <string name="share_media_no_composer">לא הצלחנו לפתוח את חלון הפרסום של פייסבוק. האם התחברת?</string>
+    <string name="share_media_failed">הדף של פייסבוק לא קיבל את הקבצים. אפשר לנסות דרך כפתור התמונה שלו.</string>
     <string name="facebook_notification_text_title">הצגת תוכן ההתראות</string>
     <string name="facebook_notification_text_summary">מוסיף את הטקסט של התראות פייסבוק חדשות (לא של צ\'אטים). מוסתר במסך הנעילה</string>
     <plurals name="facebook_new_notifications">
@@ -93,4 +105,7 @@
         <item quantity="two">%1$s בקשות חברות חדשות</item>
         <item quantity="other">%1$s בקשות חברות חדשות</item>
     </plurals>
+    <!-- Fork strings that upstream's strings.xml has no copy of here -->
+    <string name="messages_desktop_title">הודעות במצב מחשב</string>
+    <string name="messages_desktop_desc">פתיחת ההודעות בתוך האפליקציה באמצעות אתר המחשב (רק בחלק הזה)</string>
 </resources>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- See values/extra_strings.xml. -->
+<resources>
+    <string name="text_size_title">تكبير الصفحة</string>
+    <string name="text_size_percent">%1$d%%</string>
+    <string name="text_size_default">%1$d%% (افتراضي)</string>
+    <string name="share_page">مشاركة هذه الصفحة</string>
+    <string name="share_only_links">يمكن مشاركة الروابط فقط على فيسبوك</string>
+    <string name="shortcut_messages">الرسائل</string>
+    <string name="shortcut_notifications">الإشعارات</string>
+    <string name="shortcut_marketplace">Marketplace</string>
+    <string name="app_version">%1$s %2$s</string>
+    <string name="developer_options_enabled">خيارات المطوّرين مفعّلة</string>
+    <string name="webview_debugging_title">تصحيح WebView</string>
+    <string name="webview_debugging_summary">السماح لحاسوب مزوّد بتصحيح USB بفحص الصفحة والتحكم بها (chrome://inspect). أوقفه عند الانتهاء.</string>
+    <string name="external_link_title">الفتح في تطبيق آخر؟</string>
+    <string name="external_link_open">فتح</string>
+    <string name="open_links_title">فتح روابط فيسبوك هنا</string>
+    <string name="open_links_summary">اختر روابط فيسبوك التي تُفتح في هذا التطبيق بدلاً من المتصفح</string>
+    <string name="open_web_links_in_app_title">فتح روابط الويب في التطبيق</string>
+    <string name="open_web_links_in_app_summary">عرضها في علامة تبويب متصفح فوق التطبيق بدلاً من التبديل بين التطبيقات. لا تستخدم علامة التبويب تسجيل دخولك إلى فيسبوك هنا.</string>
+    <string name="export_settings_title">تصدير الإعدادات</string>
+    <string name="export_settings_summary">حفظ إعداداتك في ملف</string>
+    <string name="import_settings_title">استيراد الإعدادات</string>
+    <string name="import_settings_summary">استعادة الإعدادات من ملف مُصدَّر</string>
+    <string name="settings_exported">تم تصدير الإعدادات</string>
+    <string name="settings_export_failed">تعذّر تصدير الإعدادات</string>
+    <string name="settings_import_failed">هذا ليس ملف إعدادات Astryxbook</string>
+    <plurals name="settings_imported">
+        <item quantity="zero">لم يُستورد أي إعداد</item>
+        <item quantity="one">تم استيراد إعداد واحد</item>
+        <item quantity="two">تم استيراد إعدادين</item>
+        <item quantity="few">تم استيراد %1$d إعدادات</item>
+        <item quantity="many">تم استيراد %1$d إعدادًا</item>
+        <item quantity="other">تم استيراد %1$d إعداد</item>
+    </plurals>
+    <string name="settings_section_feed">آخر الأخبار</string>
+    <string name="settings_section_appearance">المظهر</string>
+    <string name="settings_section_video">الفيديو</string>
+    <string name="settings_section_messages_links">الرسائل والروابط</string>
+    <string name="settings_section_privacy">الخصوصية والأمان</string>
+    <string name="settings_section_backup">النسخ الاحتياطي</string>
+    <string name="reload_to_apply">أعد التحميل للتطبيق</string>
+    <string name="hide_from_feed_title">الإخفاء من آخر الأخبار</string>
+    <string name="amoled_black_summary">خلفيات سوداء بالكامل في الوضع الداكن لفيسبوك (قائمة فيسبوك › الوضع الداكن)</string>
+    <string name="text_size_layout_note">يكبّر صفحات فيسبوك أو يصغّرها: النصوص والصور والأزرار معًا، فلا يتداخل شيء.</string>
+    <string name="app_lock_open_security_settings">اضبط قفل شاشة على هذا الجهاز لاستخدام قفل التطبيق. انقر لفتح إعدادات الأمان.</string>
+    <string name="open_links_hint_text">في الشاشة التالية، انقر على إضافة رابط واختر كل روابط فيسبوك.</string>
+    <string name="open_links_hint_continue">متابعة</string>
+    <string name="external_link_text">يفتح هذا الرابط تطبيقًا آخر على هاتفك (%1$s).</string>
+    <string name="no_app_for_link">لا يوجد تطبيق على هذا الهاتف يمكنه فتح هذا الرابط</string>
+    <string name="messenger_link_title">قراءة رسائلك هنا؟</string>
+    <string name="messenger_link_text">يريد فيسبوك فتح تطبيق Messenger. مع الرسائل في وضع سطح المكتب، يمكنك قراءة الرسائل وإرسالها في هذا التطبيق بدلاً من ذلك.</string>
+    <string name="messenger_link_use_desktop">استخدام وضع سطح المكتب</string>
+    <string name="messenger_link_open_app">فتح Messenger</string>
+    <string name="share_via">مشاركة عبر…</string>
+    <string name="download_open">فتح</string>
+    <string name="download_already_saved">موجود بالفعل في التنزيلات</string>
+    <string name="text_wrap_on_zoom_title">التفاف النص عند التكبير</string>
+    <string name="text_wrap_on_zoom_summary">يجعل النص الذي تكبّره يناسب الشاشة، فلا تحتاج إلى التمرير جانبيًا</string>
+    <string name="start_on_feeds_title">البدء في الخلاصات</string>
+    <string name="start_on_feeds_summary">فتح التطبيق على خلاصات فيسبوك، الأحدث أولاً، بدلاً من الصفحة الرئيسية</string>
+    <string name="settings_section_notifications">الإشعارات</string>
+    <string name="facebook_notifications_title">إشعارات فيسبوك</string>
+    <string name="facebook_notifications_summary">أثناء إغلاق التطبيق، يتحقق كل 15 دقيقة من الإشعارات والرسائل وطلبات الصداقة الجديدة، باستخدام تسجيل دخولك إلى فيسبوك في التطبيق</string>
+    <string name="facebook_notifications_denied">الإشعارات متوقفة لـ Astryxbook في إعدادات Android</string>
+    <string name="facebook_notifications_channel">إشعارات فيسبوك</string>
+    <string name="share_target_feed">النشر على فيسبوك</string>
+    <string name="share_target_story">قصة فيسبوك</string>
+    <string name="share_media_nothing_feed">يمكن نشر الصور فقط في آخر الأخبار من هنا. يمكن مشاركة الفيديوهات في قصة.</string>
+    <string name="share_media_nothing_story">لا شيء للمشاركة: القصص تقبل الصور والفيديوهات.</string>
+    <plurals name="share_media_skipped">
+        <item quantity="zero">لم يُستبعد أي عنصر</item>
+        <item quantity="one">تم استبعاد عنصر واحد (كبير جدًا، أو كثير جدًا، أو نوع غير مدعوم)</item>
+        <item quantity="two">تم استبعاد عنصرين (كبيرة جدًا، أو كثيرة جدًا، أو نوع غير مدعوم)</item>
+        <item quantity="few">تم استبعاد %1$d عناصر (كبيرة جدًا، أو كثيرة جدًا، أو نوع غير مدعوم)</item>
+        <item quantity="many">تم استبعاد %1$d عنصرًا (كبيرة جدًا، أو كثيرة جدًا، أو نوع غير مدعوم)</item>
+        <item quantity="other">تم استبعاد %1$d عنصر (كبيرة جدًا، أو كثيرة جدًا، أو نوع غير مدعوم)</item>
+    </plurals>
+    <string name="share_media_no_composer">تعذّر فتح نافذة النشر في فيسبوك. هل سجّلت الدخول؟</string>
+    <string name="share_media_failed">لم تقبل صفحة فيسبوك الملفات. جرّب زر الصورة الخاص بها.</string>
+    <string name="facebook_notification_text_title">عرض محتواها</string>
+    <string name="facebook_notification_text_summary">يضيف نص إشعارات فيسبوك الجديدة (وليس المحادثات). مخفي على شاشة القفل</string>
+    <plurals name="facebook_new_notifications">
+        <item quantity="zero">لا إشعارات جديدة على فيسبوك</item>
+        <item quantity="one">إشعار جديد واحد على فيسبوك</item>
+        <item quantity="two">إشعاران جديدان على فيسبوك</item>
+        <item quantity="few">%1$s إشعارات جديدة على فيسبوك</item>
+        <item quantity="many">%1$s إشعارًا جديدًا على فيسبوك</item>
+        <item quantity="other">%1$s إشعار جديد على فيسبوك</item>
+    </plurals>
+    <plurals name="facebook_new_messages">
+        <item quantity="zero">لا محادثات غير مقروءة</item>
+        <item quantity="one">محادثة واحدة غير مقروءة</item>
+        <item quantity="two">محادثتان غير مقروءتين</item>
+        <item quantity="few">%1$s محادثات غير مقروءة</item>
+        <item quantity="many">%1$s محادثة غير مقروءة</item>
+        <item quantity="other">%1$s محادثة غير مقروءة</item>
+    </plurals>
+    <plurals name="facebook_new_friend_requests">
+        <item quantity="zero">لا طلبات صداقة جديدة</item>
+        <item quantity="one">طلب صداقة جديد واحد</item>
+        <item quantity="two">طلبا صداقة جديدان</item>
+        <item quantity="few">%1$s طلبات صداقة جديدة</item>
+        <item quantity="many">%1$s طلب صداقة جديدًا</item>
+        <item quantity="other">%1$s طلب صداقة جديد</item>
+    </plurals>
+    <!-- Fork strings that upstream's strings.xml has no copy of here -->
+    <string name="messages_desktop_title">الرسائل في وضع سطح المكتب</string>
+    <string name="messages_desktop_desc">فتح الرسائل داخل التطبيق باستخدام موقع سطح المكتب (لهذا القسم فقط)</string>
+    <string name="video_download_unavailable">لا يمكن تنزيل هذا الفيديو</string>
+</resources>

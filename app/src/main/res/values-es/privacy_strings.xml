@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- See values/privacy_strings.xml. -->
+<resources>
+    <string name="app_lock_title">Bloqueo de la aplicación</string>
+    <string name="app_lock_off">Desactivado</string>
+    <string name="app_lock_immediately">Bloquear en cuanto salga</string>
+    <string name="app_lock_after_1_min">Bloquear tras 1 minuto fuera</string>
+    <string name="app_lock_after_5_min">Bloquear tras 5 minutos fuera</string>
+    <string name="app_lock_after_15_min">Bloquear tras 15 minutos fuera</string>
+    <string name="app_lock_locked">%1$s está bloqueado</string>
+    <string name="app_lock_unlock">Desbloquear</string>
+    <string name="app_lock_prompt_title">Desbloquear %1$s</string>
+    <string name="app_lock_on_screen_off_title">Bloquear al apagar la pantalla</string>
+    <string name="app_lock_on_screen_off_summary">Apagar la pantalla bloquea la aplicación al instante, sea cual sea el tiempo de arriba</string>
+    <string name="block_screenshots_title">Bloquear capturas de pantalla</string>
+    <string name="block_screenshots_summary">Las capturas, la grabación de pantalla, la transmisión y la vista previa de Recientes muestran la aplicación en negro</string>
+    <string name="clear_cache_on_leave_title">Borrar la caché al salir</string>
+    <string name="clear_cache_on_leave_summary">Borra las fotos, vídeos y páginas que la aplicación guarda en caché cada vez que sales. Sigues con la sesión iniciada; las páginas cargan más despacio y usan más datos</string>
+    <string name="log_out_title">Cerrar sesión y borrar datos</string>
+    <string name="log_out_summary">Quita de esta aplicación la sesión de Facebook, las cookies, la caché y los datos de sitios</string>
+    <string name="log_out_confirm_title">¿Cerrar sesión y borrar datos?</string>
+    <string name="log_out_confirm_text">Se cerrará tu sesión de Facebook en esta aplicación y se borrarán sus cookies, su caché y sus datos de sitios. Tus ajustes se conservan.</string>
+    <string name="log_out_confirm">Cerrar sesión</string>
+    <string name="cancel">Cancelar</string>
+</resources>

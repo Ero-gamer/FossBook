@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- See values/extra_strings.xml. -->
+<resources>
+    <string name="text_size_title">পেজ জুম</string>
+    <string name="text_size_percent">%1$d%%</string>
+    <string name="text_size_default">%1$d%% (ডিফল্ট)</string>
+    <string name="share_page">এই পেজ শেয়ার করুন</string>
+    <string name="share_only_links">ফেসবুকে শুধু লিংক শেয়ার করা যায়</string>
+    <string name="shortcut_messages">মেসেজ</string>
+    <string name="shortcut_notifications">নোটিফিকেশন</string>
+    <string name="shortcut_marketplace">Marketplace</string>
+    <string name="app_version">%1$s %2$s</string>
+    <string name="developer_options_enabled">ডেভেলপার অপশন চালু হয়েছে</string>
+    <string name="webview_debugging_title">WebView ডিবাগিং</string>
+    <string name="webview_debugging_summary">USB ডিবাগিং আছে এমন কম্পিউটারকে পেজটি দেখতে ও নিয়ন্ত্রণ করতে দিন (chrome://inspect)। কাজ শেষে বন্ধ করে দিন।</string>
+    <string name="external_link_title">অন্য অ্যাপে খুলবেন?</string>
+    <string name="external_link_open">খুলুন</string>
+    <string name="open_links_title">ফেসবুক লিংক এখানে খুলুন</string>
+    <string name="open_links_summary">কোন ফেসবুক লিংক ব্রাউজারের বদলে এই অ্যাপে খুলবে তা বেছে নিন</string>
+    <string name="open_web_links_in_app_title">ওয়েব লিংক অ্যাপে খুলুন</string>
+    <string name="open_web_links_in_app_summary">অ্যাপ বদলানোর বদলে অ্যাপের উপরে একটি ব্রাউজার ট্যাবে দেখান। ট্যাবটি এখানে আপনার ফেসবুক লগইন ব্যবহার করে না।</string>
+    <string name="export_settings_title">সেটিংস এক্সপোর্ট করুন</string>
+    <string name="export_settings_summary">আপনার সেটিংস একটি ফাইলে সেভ করুন</string>
+    <string name="import_settings_title">সেটিংস ইমপোর্ট করুন</string>
+    <string name="import_settings_summary">এক্সপোর্ট করা ফাইল থেকে সেটিংস ফিরিয়ে আনুন</string>
+    <string name="settings_exported">সেটিংস এক্সপোর্ট হয়েছে</string>
+    <string name="settings_export_failed">সেটিংস এক্সপোর্ট করা যায়নি</string>
+    <string name="settings_import_failed">এটি Astryxbook সেটিংস ফাইল নয়</string>
+    <plurals name="settings_imported">
+        <item quantity="one">%1$dটি সেটিং ইমপোর্ট হয়েছে</item>
+        <item quantity="other">%1$dটি সেটিং ইমপোর্ট হয়েছে</item>
+    </plurals>
+    <string name="settings_section_feed">ফিড</string>
+    <string name="settings_section_appearance">চেহারা</string>
+    <string name="settings_section_video">ভিডিও</string>
+    <string name="settings_section_messages_links">মেসেজ ও লিংক</string>
+    <string name="settings_section_privacy">গোপনীয়তা ও নিরাপত্তা</string>
+    <string name="settings_section_backup">ব্যাকআপ</string>
+    <string name="reload_to_apply">প্রয়োগ করতে রিলোড করুন</string>
+    <string name="hide_from_feed_title">আপনার ফিড থেকে লুকান</string>
+    <string name="amoled_black_summary">ফেসবুকের ডার্ক মোডে সম্পূর্ণ কালো ব্যাকগ্রাউন্ড (ফেসবুক মেনু › ডার্ক মোড)</string>
+    <string name="text_size_layout_note">ফেসবুকের পেজ বড় বা ছোট করে: লেখা, ছবি ও বোতাম একসাথে, তাই কিছু একটার উপর আরেকটা পড়ে না।</string>
+    <string name="app_lock_open_security_settings">অ্যাপ লক ব্যবহার করতে এই ডিভাইসে স্ক্রিন লক সেট করুন। নিরাপত্তা সেটিংস খুলতে ট্যাপ করুন।</string>
+    <string name="open_links_hint_text">পরের স্ক্রিনে, লিংক যোগ করুন ট্যাপ করে সব ফেসবুক লিংক বেছে নিন।</string>
+    <string name="open_links_hint_continue">চালিয়ে যান</string>
+    <string name="external_link_text">এই লিংকটি আপনার ফোনের অন্য একটি অ্যাপ খোলে (%1$s)।</string>
+    <string name="no_app_for_link">এই ফোনের কোনো অ্যাপ এই লিংক খুলতে পারে না</string>
+    <string name="messenger_link_title">আপনার মেসেজ এখানে পড়বেন?</string>
+    <string name="messenger_link_text">ফেসবুক Messenger অ্যাপ খুলতে চায়। ডেস্কটপ মোডে মেসেজ চালু থাকলে, আপনি এই অ্যাপেই মেসেজ পড়তে ও পাঠাতে পারবেন।</string>
+    <string name="messenger_link_use_desktop">ডেস্কটপ মোড ব্যবহার করুন</string>
+    <string name="messenger_link_open_app">Messenger খুলুন</string>
+    <string name="share_via">এর মাধ্যমে শেয়ার করুন…</string>
+    <string name="download_open">খুলুন</string>
+    <string name="download_already_saved">ইতিমধ্যে ডাউনলোডে আছে</string>
+    <string name="text_wrap_on_zoom_title">জুম করলে লেখা মোড়ানো</string>
+    <string name="text_wrap_on_zoom_summary">যে লেখায় জুম করেন তা স্ক্রিনে মানিয়ে দেয়, তাই পাশে স্ক্রল করতে হয় না</string>
+    <string name="start_on_feeds_title">ফিডস দিয়ে শুরু</string>
+    <string name="start_on_feeds_summary">হোমের বদলে ফেসবুকের ফিডসে অ্যাপ খুলুন, নতুন পোস্ট আগে</string>
+    <string name="settings_section_notifications">নোটিফিকেশন</string>
+    <string name="facebook_notifications_title">ফেসবুক নোটিফিকেশন</string>
+    <string name="facebook_notifications_summary">অ্যাপ বন্ধ থাকলে প্রতি ১৫ মিনিটে নতুন নোটিফিকেশন, মেসেজ ও ফ্রেন্ড রিকোয়েস্ট দেখে, অ্যাপে আপনার ফেসবুক লগইন ব্যবহার করে</string>
+    <string name="facebook_notifications_denied">Android সেটিংসে Astryxbook-এর নোটিফিকেশন বন্ধ আছে</string>
+    <string name="facebook_notifications_channel">ফেসবুক নোটিফিকেশন</string>
+    <string name="share_target_feed">ফেসবুকে পোস্ট করুন</string>
+    <string name="share_target_story">ফেসবুক স্টোরি</string>
+    <string name="share_media_nothing_feed">এখান থেকে ফিডে শুধু ছবি পোস্ট করা যায়। ভিডিও স্টোরিতে দেওয়া যায়।</string>
+    <string name="share_media_nothing_story">শেয়ার করার কিছু নেই: স্টোরিতে ছবি ও ভিডিও দেওয়া যায়।</string>
+    <plurals name="share_media_skipped">
+        <item quantity="one">%1$dটি আইটেম বাদ পড়েছে (খুব বড়, খুব বেশি বা অসমর্থিত ধরন)</item>
+        <item quantity="other">%1$dটি আইটেম বাদ পড়েছে (খুব বড়, খুব বেশি বা অসমর্থিত ধরন)</item>
+    </plurals>
+    <string name="share_media_no_composer">ফেসবুকের পোস্ট লেখার জায়গা খোলা যায়নি। আপনি কি লগইন করেছেন?</string>
+    <string name="share_media_failed">ফেসবুকের পেজ ফাইলগুলো নেয়নি। এর নিজের ছবির বোতাম চেষ্টা করুন।</string>
+    <string name="facebook_notification_text_title">কী লেখা আছে দেখান</string>
+    <string name="facebook_notification_text_summary">নতুন ফেসবুক নোটিফিকেশনের লেখা যোগ করে (চ্যাটের নয়)। লক স্ক্রিনে লুকানো থাকে</string>
+    <plurals name="facebook_new_notifications">
+        <item quantity="one">ফেসবুকে %1$sটি নতুন নোটিফিকেশন</item>
+        <item quantity="other">ফেসবুকে %1$sটি নতুন নোটিফিকেশন</item>
+    </plurals>
+    <plurals name="facebook_new_messages">
+        <item quantity="one">%1$sটি না-পড়া চ্যাট</item>
+        <item quantity="other">%1$sটি না-পড়া চ্যাট</item>
+    </plurals>
+    <plurals name="facebook_new_friend_requests">
+        <item quantity="one">%1$sটি নতুন ফ্রেন্ড রিকোয়েস্ট</item>
+        <item quantity="other">%1$sটি নতুন ফ্রেন্ড রিকোয়েস্ট</item>
+    </plurals>
+    <!-- Fork strings that upstream's strings.xml has no copy of here -->
+    <string name="pip_title">পিকচার-ইন-পিকচার</string>
+    <string name="shrink_into_a_floating_window_when_leaving_while_a_video_plays">ভিডিও চলার সময় অ্যাপ ছেড়ে গেলে একটি ভাসমান উইন্ডোতে ছোট হয়ে যায়</string>
+    <string name="messages_desktop_title">ডেস্কটপ মোডে মেসেজ</string>
+    <string name="messages_desktop_desc">ডেস্কটপ সাইট ব্যবহার করে অ্যাপের ভেতরেই মেসেজ খুলুন (শুধু সেই অংশের জন্য)</string>
+    <string name="video_download_unavailable">এই ভিডিওটি ডাউনলোড করা যাবে না</string>
+</resources>
