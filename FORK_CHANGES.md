@@ -694,6 +694,13 @@ From a hands-on pass through the app in light and dark mode on an emulator.
   music and trimming. The creator is wider than a phone, so the layer lays it out wide and fits it
   to the screen (its preview was off screen). When Facebook moves on after a story, the layer
   reopens the creator for the next item; closing the layer gives up the rest.
+- The story preview shows the whole story. Facebook sizes the 9:16 story frame from the window's
+  height and centres it, clipped, in the preview column; on a phone's tall screen the frame was
+  wider than the column, so only a narrow middle strip showed (and the photo looked cropped).
+  `share_media.js` now reports a window height that makes Facebook size the frame to the column,
+  and makes the column as tall as that frame; Facebook's own editor (text, music, zoom, rotate)
+  works on it as before. The real height comes back once the story is shared or discarded. The
+  story page also ignores *Page zoom* (larger text cut off the creator's sidebar labels).
 - The files are copied into the app's cache when shared (the sharing app's permission ends with
   the activity) and reach only Facebook's own page: `share_media.js` asks for them through the
   `AstryxShare` message listener (main frame of Facebook pages only), which sends them as binary
