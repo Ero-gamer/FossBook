@@ -713,16 +713,22 @@ From a hands-on pass through the app in light and dark mode on an emulator.
   site's creator (`www.facebook.com/stories/create`) in the Messages layer's desktop WebView. Its
   file input takes one photo or video, so several shared items become one story each: the next
   opens in the creator once the user shares (or discards) the one before, each with its own text,
-  music and trimming. The creator is wider than a phone, so the layer lays it out wide and fits it
-  to the screen (its preview was off screen). When Facebook moves on after a story, the layer
-  reopens the creator for the next item; closing the layer gives up the rest.
-- The story preview shows the whole story. Facebook sizes the 9:16 story frame from the window's
-  height and centres it, clipped, in the preview column; on a phone's tall screen the frame was
-  wider than the column, so only a narrow middle strip showed (and the photo looked cropped).
-  `share_media.js` now reports a window height that makes Facebook size the frame to the column,
-  and makes the column as tall as that frame; Facebook's own editor (text, music, zoom, rotate)
-  works on it as before. The real height comes back once the story is shared or discarded. The
-  story page also ignores *Page zoom* (larger text cut off the creator's sidebar labels).
+  music and trimming. When Facebook moves on after a story, the layer reopens the creator for the
+  next item; closing the layer gives up the rest.
+- The story editor is laid out like the Facebook app's (`story_layout.js`): the story fills the
+  screen at the phone's own width (normal-size text), the creator's tools (Add text, Add music,
+  Alternative text...) are round buttons along the bottom of the story, and privacy, Discard and
+  Share to story sit in a bar at the bottom of the screen. Facebook's popups (the music list, text
+  style, a sticker's options) open centred under the header instead of off the screen, and text
+  and music stickers can be dragged with a finger (Facebook's editor follows only the mouse, so a
+  finger's drag is replayed as a mouse drag; taps stay as they are). Facebook builds the creator
+  for a desktop window: a sidebar beside a preview whose 9:16 frame it sizes from the window's
+  height; the script reports a window height that makes Facebook size the frame to fit the screen
+  (the real height comes back once the story is shared or discarded), and finds everything by its
+  role and place in the page, not its translated label. Choosing a story (before the first one,
+  after Discard) keeps Facebook's own page, fitted to the screen. The story page ignores *Page
+  zoom*. v1.28.0 showed the whole story, but in the desktop layout: tiny text, and a music sticker
+  that couldn't be moved. Covered by `StoryLayoutJsTest`.
 - The files are copied into the app's cache when shared (the sharing app's permission ends with
   the activity) and reach only Facebook's own page: `share_media.js` asks for them through the
   `AstryxShare` message listener (main frame of Facebook pages only), which sends them as binary

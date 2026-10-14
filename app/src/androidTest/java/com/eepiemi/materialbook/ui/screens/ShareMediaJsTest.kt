@@ -139,37 +139,6 @@ class ShareMediaJsTest {
     }
 
     @Test
-    fun story_isLaidOutWide_andFittedToTheScreen() {
-        val h = Harness()
-        h.load("https://www.facebook.com/stories/create", STORY_PAGE)
-        h.files(Triple("0_a.jpg", "image/jpeg", 4))
-        h.run("story")
-
-        assertTrue(h.waitFor("!!document.querySelector('meta[name=viewport]')"))
-        assertTrue(h.eval("document.querySelector('meta[name=viewport]').content"), h.waitFor(
-            "/^width=(6|7|8|9|1)\\d+, initial-scale=0\\.\\d+/.test(document.querySelector('meta[name=viewport]').content)"
-        ))
-    }
-
-    @Test
-    fun story_frameIsSizedToThePreviewColumn_asA9to16Frame() {
-        // Facebook sizes the frame from the window's height: on a phone it comes out wider than
-        // the column, and only its middle shows.
-        val h = Harness()
-        h.load("https://www.facebook.com/stories/create", STORY_PAGE + STORY_FRAME)
-        h.eval("window.__showFrame()")
-        h.files(Triple("0_a.jpg", "image/jpeg", 4))
-        h.run("story")
-
-        assertTrue(h.eval("JSON.stringify(window.__frameSize())"), h.waitFor(
-            "(function (s) { return s.width === 300 && Math.abs(s.boxHeight - (300 * 16 / 9 + 68)) <= 1; })(window.__frameSize())"
-        ))
-        // The story is shared or discarded: the page gets its real height back.
-        h.eval("window.__hideFrame()")
-        assertTrue(h.waitFor("window.innerHeight === window.__realHeight"))
-    }
-
-    @Test
     fun profilePicture_goesToUploadPhoto_throughTheProfilePictureMenu() {
         val h = Harness()
         h.load("https://m.facebook.com/profile.php", PROFILE_PAGE)
@@ -298,22 +267,6 @@ class ShareMediaJsTest {
                 "  d.lastChild.addEventListener('change', function (e) {" +
                 "    window.__got = e.target.files[0].name + ':' + e.target.files[0].type + ':' + e.target.files[0].size;" +
                 "    e.target.value = ''; }); });" +
-                "</script>"
-
-        // The desktop story creator's preview: a 316 px column whose frame is sized like Facebook's,
-        // (innerHeight - 256) x 9/16 wide on every resize, clipped and centred in its box.
-        const val STORY_FRAME =
-            "<div id='column' style='position:relative;width:316px;height:1500px;overflow:hidden'>" +
-                "<div id='box' style='position:absolute;left:0;right:0;top:0;bottom:0'></div></div>" +
-                "<script>window.__realHeight = window.innerHeight;" +
-                "function __size() { var f = document.getElementById('frame'); if (!f) return;" +
-                "  f.setAttribute('style', 'height: calc(100% - 68px); top: 16px; width: ' + ((window.innerHeight - 256) * 9 / 16) + 'px;'); }" +
-                "window.addEventListener('resize', __size);" +
-                "window.__showFrame = function () { document.getElementById('box').innerHTML =" +
-                "  \"<div id='frame' style='position:absolute'><img width='10' height='10'></div>\"; __size(); };" +
-                "window.__hideFrame = function () { document.getElementById('box').innerHTML = ''; };" +
-                "window.__frameSize = function () { var f = document.getElementById('frame');" +
-                "  return { width: Math.round(parseFloat(f.style.width)), boxHeight: document.getElementById('box').getBoundingClientRect().height }; };" +
                 "</script>"
 
         // The desktop story creator: an input ready on load; after a story, a new one replaces it.

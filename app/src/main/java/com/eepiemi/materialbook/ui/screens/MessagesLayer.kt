@@ -159,11 +159,16 @@ fun MessagesLayer(
         }
     }
 
-    // A story share (ShareMedia): the desktop story creator takes the shared files one at a time.
-    // A reel share: the reels page's Create reel takes the shared video.
+    // A story share (ShareMedia): the desktop story creator takes the shared files one at a time,
+    // laid out like the Facebook app's story editor (story_layout.js). A reel share: the reels
+    // page's Create reel takes the shared video.
     LaunchedEffect(loadingState) {
         if (loadingState !is LoadingState.Finished) return@LaunchedEffect
         val page = state.lastLoadedUrl
+        if (isStoryCreatePage(page)) {
+            val layout = resources.openRawResource(R.raw.story_layout).bufferedReader().use { it.readText() }
+            navigator.evaluateJavaScript(layout) {}
+        }
         val target = when {
             isStoryCreatePage(page) && ShareMediaQueue.pending(ShareTarget.STORY) -> ShareTarget.STORY
             reelShare && isReelCreatePage(page) && ShareMediaQueue.pending(ShareTarget.REEL) -> ShareTarget.REEL

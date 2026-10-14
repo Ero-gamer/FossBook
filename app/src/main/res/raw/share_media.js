@@ -17,7 +17,7 @@
 //   preview with Update.
 // - Story: the creator's input is ready when the page shows; it gets one file at a time. When
 //   the page is back to choosing a story (after Share to story or Discard), the next one comes.
-//   (The layer lays that page out wide and fits it to the screen, so its preview shows.)
+//   (story_layout.js lays that page out like the Facebook app's story editor.)
 // - Reel: the reels page's Create reel (found by its icon) opens the creator, whose video input
 //   gets the shared video.
 // ES5 on purpose, like the PiP scripts.
@@ -289,68 +289,10 @@
     setInterval(fit, 500);
   }
 
-  // The story itself: Facebook sizes its frame from the window's height (width = (innerHeight -
-  // a constant) x 9/16, height = its box's height - a constant) and centres it, clipped, in the
-  // preview column. A phone's window is tall, so the frame comes out wider than the column and
-  // only its middle shows. Report a window height that gives a frame as wide as the column, make
-  // the box as tall as a 9:16 frame of that width, and let Facebook resize its frame. The
-  // constants are read from the page.
-  function fitStoryFrame() {
-    var own = Object.getOwnPropertyDescriptor(window, 'innerHeight');
-    var reported = 0;
-    var margin = null; // innerHeight - the frame's height, in Facebook's sizing
-    function realHeight() {
-      return own && own.get ? own.get.call(window) : document.documentElement.clientHeight;
-    }
-    try {
-      Object.defineProperty(window, 'innerHeight', {
-        configurable: true,
-        get: function () { return reported || realHeight(); }
-      });
-    } catch (e) {
-      return;
-    }
-    function storyFrame() {
-      var boxes = document.querySelectorAll('div[style*="calc(100% - "]');
-      for (var i = 0; i < boxes.length; i++) {
-        var style = boxes[i].getAttribute('style') || '';
-        if (/width:\s*[\d.]+px/.test(style) && boxes[i].querySelector('img, video')) return boxes[i];
-      }
-      return null;
-    }
-    function fit() {
-      var frame = storyFrame();
-      if (!frame) {
-        if (reported) {
-          reported = 0;
-          window.dispatchEvent(new Event('resize'));
-        }
-        return;
-      }
-      var box = frame.parentElement;
-      var width = parseFloat(frame.style.width);
-      // The frame sits `top` px into its box, with the same space on each side.
-      var wanted = Math.floor(box.clientWidth - (parseFloat(frame.style.top) || 0));
-      if (!width || wanted <= 0) return;
-      if (margin === null) margin = realHeight() - width * 16 / 9;
-      var below = parseFloat((/calc\(100% - ([\d.]+)px\)/.exec(frame.style.height) || [])[1]) || 0;
-      var height = Math.round(wanted * 16 / 9 + below) + 'px';
-      if (box.style.height !== height) box.style.height = height;
-      var next = Math.round(wanted * 16 / 9 + margin);
-      if (next === reported || Math.abs(width - wanted) < 1) return;
-      reported = next;
-      window.dispatchEvent(new Event('resize'));
-    }
-    setInterval(fit, 500);
-  }
-
   function shareToStory(first) {
-    if (first) {
-      fitStoryPage();
-      fitStoryFrame();
-    }
     // The first file waits for the page to load; the next ones for the user to finish a story.
-    waitFor(readyStoryInput, first ? FIND_MS : 0, function (input) {
+    // The first file waits for the creator (a cold start can take a while), up to 45 s.
+    waitFor(readyStoryInput, first ? Math.max(FIND_MS, window.__astryxShareFindMs ? 0 : 45000) : 0, function (input) {
       if (!input) { send({ call: 'failed', reason: 'noComposer' }); return; }
       receiveFiles('next', function (files, header) {
         if (!files.length) { send({ call: 'finished' }); return; }

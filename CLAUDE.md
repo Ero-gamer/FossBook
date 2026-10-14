@@ -139,8 +139,12 @@ user-visible change.
   order); files are copied to the cache and handed to the page through the `AstryxShare` listener.
   Feed, group and profile picture: a mobile button's click on its hidden file input is answered with
   the files. Story and reel: the desktop creators in the Messages layer (m.facebook.com sends them to
-  the app), laid out wide (`useWideViewPort` + a viewport rewrite); the story frame is sized to its
-  column through a reported `innerHeight` (`fitStoryFrame`). A reel share keeps `/reel/` in the layer.
+  the app). The story editor is laid out like the app's by `story_layout.js` (phone width, tools on
+  the story, a bottom bar; the frame sized through a reported `innerHeight`; finger drags replayed
+  as mouse drags, which is all Facebook's editor follows); the reel creator is laid out wide
+  (`useWideViewPort` + a viewport rewrite). A reel share keeps `/reel/` in the layer. To iterate on
+  story_layout.js live, `window.__astryxStoryLayout.stop()` undoes it, then evaluate the new copy;
+  after a few rounds Facebook's page keeps stale sizes, so check a fresh share before trusting it.
   The emulator account is in no group, so group shares are only covered by `ShareMediaJsTest`.
   Nothing ever presses Post/Share: when testing, discard drafts. `am start --eu` can't grant a gallery
   item or pass several files; serve test files through the app's own FileProvider instead.
