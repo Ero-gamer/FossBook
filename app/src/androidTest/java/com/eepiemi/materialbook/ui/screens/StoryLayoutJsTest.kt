@@ -136,6 +136,8 @@ class StoryLayoutJsTest {
         assertEquals("true", h.hidden("#narrow-discard"))
         assertEquals("true", h.hidden("#narrow-privacy"))
         assertEquals("false", h.hidden("#frame"))
+        // Other text buttons outside the sidebar (a panel's "See all") stay.
+        assertEquals("false", h.hidden("#see-all"))
         // The tools sit on the story, above its bottom edge.
         assertTrue(h.waitFor(
             "document.getElementById('tools').getBoundingClientRect().bottom <= document.getElementById('frame').getBoundingClientRect().bottom"
@@ -153,6 +155,29 @@ class StoryLayoutJsTest {
         h.eval("window.__showFrame()")
         assertTrue(h.waitFor("document.getElementById('open-popup').hasAttribute('data-astryx-story-popup')"))
         assertEquals("false", h.eval("document.getElementById('closed-popup').hasAttribute('data-astryx-story-popup')"))
+    }
+
+    @Test
+    fun aPanelsIconButtons_areLabelled_andThePanelGetsADoneThatTapsTheStory() {
+        val h = Harness()
+        h.load(CREATOR + STICKER_PANEL)
+        h.eval("window.__astryxStoryDone = 'Fertig';")
+        h.run()
+        h.eval("window.__showFrame()")
+
+        assertTrue(h.waitFor("document.querySelectorAll('#styles [data-astryx-story-caption]').length === 4"))
+        assertTrue(h.waitFor(
+            "getComputedStyle(document.querySelector('#styles [role=button]'), '::after').content.indexOf('Large lyrics style') >= 0"
+        ))
+        // The clip bar has no text: labelled, but Facebook's own Done is enough.
+        assertTrue(h.waitFor("document.querySelectorAll('#clip [data-astryx-story-caption]').length === 3"))
+        assertEquals("0", h.eval("document.querySelectorAll('#clip-layer [data-astryx-story-done]').length"))
+
+        assertTrue(h.waitFor("!!document.querySelector('#sticker-layer [data-astryx-story-done]')"))
+        assertEquals("Fertig", h.eval("document.querySelector('[data-astryx-story-done]').textContent").unquoted())
+        h.eval(RECORD_MOUSE)
+        h.eval("document.querySelector('[data-astryx-story-done]').click()")
+        assertTrue(h.eval("window.__mouse.join(' ')"), h.waitFor("window.__mouse.join(' ').indexOf('mousedown@') >= 0 && window.__mouse.join(' ').indexOf('mouseup@') >= 0"))
     }
 
     @Test
@@ -197,6 +222,7 @@ class StoryLayoutJsTest {
                 "<div role='main' id='main'>" +
                 "<div id='narrow'><div role='button' id='narrow-privacy' aria-label='Story privacy settings'><svg width='20' height='20'></svg></div>" +
                 "<div role='button' id='narrow-discard'>Discard</div><div role='button'>Share to story</div></div>" +
+                "<div id='panel'><div role='button' id='see-all'>See all</div><div role='button'>Browse</div></div>" +
                 "<div id='column' style='position:relative;width:316px;height:1500px;overflow:hidden'>" +
                 "<div id='box' style='position:absolute;left:0;right:0;top:0;bottom:0'></div></div>" +
                 "</div></div>" +
@@ -217,6 +243,24 @@ class StoryLayoutJsTest {
             "<div id='open-popup' style='position: fixed; transform: translate(355px, 157px);'><div>Search music</div></div>" +
                 "<div id='closed-popup' style='position: fixed; transform: translate(355px, 157px);'>" +
                 "<div style='visibility: hidden'><img width='10' height='10'>Hidden</div></div>"
+
+        // A music sticker's panel (song, Remove, four style buttons named only for screen readers)
+        // and the song clip bar (Pause, Undo, Done; no text). Facebook's fixed layers.
+        const val STICKER_PANEL =
+            "<div id='sticker-layer' style='position: fixed; transform: translate(40px, 300px);'><div style='background:#222;width:300px'>" +
+                "<div>Hotel California</div><div role='button'>Remove</div>" +
+                "<div id='styles' style='display:flex'>" +
+                "<div role='button' aria-label='Large lyrics style' style='width:40px;height:40px'><svg width='20' height='20'></svg></div>" +
+                "<div role='button' aria-label='Light lyrics style' style='width:40px;height:40px'><svg width='20' height='20'></svg></div>" +
+                "<div role='button' aria-label='Dark lyrics style' style='width:40px;height:40px'><svg width='20' height='20'></svg></div>" +
+                "<div role='button' aria-label='Floating lyrics style' style='width:40px;height:40px'><svg width='20' height='20'></svg></div>" +
+                "</div></div></div>" +
+                "<div id='clip-layer' style='position: fixed; transform: translate(10px, 700px);'><div id='clip' style='display:flex;width:360px'>" +
+                "<div role='button' aria-label='Pause' style='width:40px;height:40px'><svg width='20' height='20'></svg></div>" +
+                "<div style='width:300px;height:40px'></div>" +
+                "<div role='button' aria-label='Undo' style='width:40px;height:40px'><svg width='20' height='20'></svg></div>" +
+                "<div role='button' aria-label='Done' style='width:40px;height:40px'><svg width='20' height='20'></svg></div>" +
+                "</div></div>"
 
         const val RECORD_MOUSE = "window.__mouse = [];" +
             "['pointerdown', 'mousedown', 'pointermove', 'mousemove', 'pointerup', 'mouseup'].forEach(function (t) {" +

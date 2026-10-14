@@ -71,6 +71,7 @@
     <string name="share_media_nothing_story">Rien à partager : les stories acceptent les photos et les vidéos.</string>
     <string name="share_media_nothing_photos">Seules les photos peuvent être partagées ici. Les vidéos peuvent aller dans une story ou un reel.</string>
     <string name="share_media_nothing_reel">Rien à partager : les reels acceptent une vidéo.</string>
+    <string name="story_panel_done">OK</string>
     <plurals name="share_media_skipped">
         <item quantity="one">%1$d élément a été ignoré (trop grand, trop nombreux ou type non pris en charge)</item>
         <item quantity="many">%1$d éléments ont été ignorés (trop grands, trop nombreux ou type non pris en charge)</item>
