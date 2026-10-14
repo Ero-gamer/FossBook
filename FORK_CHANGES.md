@@ -220,6 +220,11 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
 - In PiP, a link the page sends out of the app by itself (logged out, Facebook pushes its app
   with `fb://` on load) is ignored: its "Open in another app?" dialog covered the video, and a
   page in PiP can't be tapped, so no such link is the user's.
+- The "Open app" bar under a post's photos is hidden. Upstream's script hides Facebook's small
+  bottom banners but skips Home's address, and Facebook opens a post's photos in-page, where the
+  address stays Home's. On that address it now also hides a bar holding a single full-width
+  button with only a label (any language); the comment box and other bars with icons or a text
+  field stay.
 
 ## CI/CD
 
