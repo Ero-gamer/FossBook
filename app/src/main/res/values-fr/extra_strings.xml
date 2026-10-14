@@ -31,14 +31,14 @@
         <item quantity="many">%1$d paramètres importés</item>
         <item quantity="other">%1$d paramètres importés</item>
     </plurals>
-    <string name="settings_section_feed">Fil</string>
+    <string name="settings_section_feed">Flux</string>
     <string name="settings_section_appearance">Apparence</string>
     <string name="settings_section_video">Vidéo</string>
     <string name="settings_section_messages_links">Messages et liens</string>
     <string name="settings_section_privacy">Confidentialité et sécurité</string>
     <string name="settings_section_backup">Sauvegarde</string>
     <string name="reload_to_apply">Recharger pour appliquer</string>
-    <string name="hide_from_feed_title">Masquer de votre fil</string>
+    <string name="hide_from_feed_title">Masquer de votre flux</string>
     <string name="amoled_black_summary">Arrière-plans noirs purs dans le mode sombre de Facebook (menu Facebook › Mode sombre)</string>
     <string name="text_size_layout_note">Agrandit ou réduit les pages de Facebook : texte, images et boutons ensemble, pour que rien ne se chevauche.</string>
     <string name="app_lock_open_security_settings">Configurez un verrouillage de l\'écran sur cet appareil pour utiliser le verrouillage de l\'application. Appuyez pour ouvrir les paramètres de sécurité.</string>
@@ -64,7 +64,7 @@
     <string name="facebook_notifications_channel">Notifications Facebook</string>
     <string name="share_target_feed">Publier sur Facebook</string>
     <string name="share_target_story">Story Facebook</string>
-    <string name="share_media_nothing_feed">Seules les photos peuvent être publiées dans le fil d\'ici. Les vidéos peuvent aller dans une story.</string>
+    <string name="share_media_nothing_feed">Seules les photos peuvent être publiées dans le flux depuis ici. Les vidéos peuvent aller dans une story.</string>
     <string name="share_media_nothing_story">Rien à partager : les stories acceptent les photos et les vidéos.</string>
     <plurals name="share_media_skipped">
         <item quantity="one">%1$d élément a été ignoré (trop grand, trop nombreux ou type non pris en charge)</item>
