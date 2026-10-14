@@ -671,8 +671,39 @@ From a hands-on pass through the app in light and dark mode on an emulator.
   (`NoSuchMethodException: WorkDatabase_Impl.<init>`). A keep rule in `proguard-rules.pro` keeps
   Room databases' constructors. Debug builds and tests aren't minified, so nothing caught it.
 
+## Share photos and videos into Facebook
+
+- **Post to Facebook** and **Facebook story** in other apps' share sheet (a gallery, the camera,
+  a file manager): photos shared to the first open Facebook's **Create post** with them attached,
+  several at once; photos and videos shared to the second open Facebook's story creator with the
+  first one in it. The user writes the caption, adds music or text, and posts or shares: the app
+  never posts anything itself. Two `activity-alias` entries for `MainActivity` tell the targets
+  apart. Off-type items (a video for the feed) and items over the limits (30 photos or 10 story
+  items; 40 MB a photo, 250 MB a video) are left out, with a message.
+- Feed: m.facebook.com's composer takes photos only. Its Photo button (found by its icon glyph,
+  the same in every language) sets up a hidden file input and clicks it, which would open
+  Android's picker; `share_media.js` answers that click with the shared photos instead.
+- Story: m.facebook.com sends story creation to the Facebook app, so stories use the desktop
+  site's creator (`www.facebook.com/stories/create`) in the Messages layer's desktop WebView. Its
+  file input takes one photo or video, so several shared items become one story each: the next
+  opens in the creator once the user shares (or discards) the one before, each with its own text,
+  music and trimming. The creator is wider than a phone, so the layer lays it out wide and fits it
+  to the screen (its preview was off screen). When Facebook moves on after a story, the layer
+  reopens the creator for the next item; closing the layer gives up the rest.
+- The files are copied into the app's cache when shared (the sharing app's permission ends with
+  the activity) and reach only Facebook's own page: `share_media.js` asks for them through the
+  `AstryxShare` message listener (main frame of Facebook pages only), which sends them as binary
+  messages (base64 on WebViews without them). The copies are deleted once handed over.
+- Back in a composer the app opened (and other pages Facebook opens in-page) now goes back in the
+  page, which shows Facebook's "Discard post?", instead of leaving the app: Back asks the WebView
+  whether it can go back, as the Messages layer already did. Covered by `ShareMediaTest` and
+  `ShareMediaJsTest`.
+
 ## Known limitations
 
+- Shared videos can only go to a story: m.facebook.com's post composer takes photos only. Several
+  items shared to a story are offered one story at a time; Facebook's web story creator takes a
+  single photo or video per story.
 - On Reels specifically, Facebook's own web player can re-pause a video
   shortly after it's resumed from the PiP overlay's Play button. Facebook's
   player enforces which single video is allowed to play at a time on its own

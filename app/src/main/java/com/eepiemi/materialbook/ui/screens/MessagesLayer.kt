@@ -29,6 +29,10 @@ import com.eepiemi.materialbook.utils.deadWebViewUrl
 import com.eepiemi.materialbook.utils.hardenWebView
 import com.eepiemi.materialbook.utils.jsBridge.installClipboardBridge
 import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
+import com.eepiemi.materialbook.utils.jsBridge.installShareMediaBridge
+import com.eepiemi.materialbook.utils.ShareMediaQueue
+import com.eepiemi.materialbook.utils.ShareTarget
+import com.eepiemi.materialbook.utils.isStoryCreatePage
 import com.eepiemi.materialbook.utils.jsBridge.installPageBridges
 import com.eepiemi.materialbook.utils.jsBridge.PageBridges
 import com.eepiemi.materialbook.utils.jsBridge.LayerBridge
@@ -149,6 +153,15 @@ fun MessagesLayer(
         }
     }
 
+    // A story share (ShareMedia): the desktop story creator takes the shared files one at a time.
+    LaunchedEffect(loadingState) {
+        if (loadingState is LoadingState.Finished && isStoryCreatePage(state.lastLoadedUrl) &&
+            ShareMediaQueue.pending(ShareTarget.STORY)
+        ) {
+            navigator.evaluateJavaScript(shareMediaScript(resources, ShareTarget.STORY)) {}
+        }
+    }
+
     // The desktop site's in-page navigation, for leaving to a section (see messagesLayerExit).
     LaunchedEffect(loadingState) {
         if (loadingState is LoadingState.Finished) {
@@ -207,6 +220,12 @@ fun MessagesLayer(
             onCreated = { webView ->
                 hardenWebView(state, webView)
                 state.webSettings.androidWebSettings.textZoom = textZoom
+                // The story creator (a story share) is laid out for a desktop window: at phone width its
+                // preview is off screen. Lay it out wide and fit it to the screen instead.
+                if (isStoryCreatePage(url)) {
+                    state.webSettings.androidWebSettings.useWideViewPort = true
+                    webView.settings.loadWithOverviewMode = true
+                }
                 CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false)
                 state.webSettings.apply {
                     isJavaScriptEnabled = true
@@ -219,6 +238,7 @@ fun MessagesLayer(
                 webView.apply {
                     installDownloadBridge(this, context)
                     installClipboardBridge(this, context)
+                    installShareMediaBridge(this, context)
                     addJavascriptInterface(MaterialYouBridge({ primaryColor }, { onPrimaryColor }), "MaterialYouBridge")
                     installPageBridges(
                         this,
