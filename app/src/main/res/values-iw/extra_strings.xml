@@ -77,8 +77,8 @@
     <string name="facebook_notifications_denied">ההתראות של Astryxbook כבויות בהגדרות של Android</string>
     <string name="facebook_notifications_channel">התראות מפייסבוק</string>
     <!-- Share photos and videos into Facebook (share sheet entries and messages) -->
-    <string name="share_target_feed">פרסום בפייסבוק</string>
-    <string name="share_target_story">סטורי בפייסבוק</string>
+    <string name="share_target_feed">פיד</string>
+    <string name="share_target_story">הסטורי שלך</string>
     <string name="share_media_nothing_feed">מכאן אפשר לפרסם בפיד רק תמונות. סרטונים אפשר לשתף בסטורי.</string>
     <string name="share_media_nothing_story">אין מה לשתף: סטורי מקבל תמונות וסרטונים.</string>
     <plurals name="share_media_skipped">

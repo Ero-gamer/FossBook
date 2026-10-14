@@ -140,9 +140,11 @@ fun MessagesLayer(
         if (canGoBack) navigator.navigateBack() else onClose()
     }
 
-    // Text size (Settings), when it changes while the layer is open.
-    LaunchedEffect(textZoom) {
-        runCatching { state.nativeWebView }.getOrNull()?.settings?.textZoom = textZoom
+    // Text size (Settings), when it changes while the layer is open. Not on the story creator: its
+    // desktop layout is fitted to the screen, and larger text overflows its fixed-width sidebar.
+    val layerTextZoom = if (isStoryCreatePage(url)) 100 else textZoom
+    LaunchedEffect(layerTextZoom) {
+        runCatching { state.nativeWebView }.getOrNull()?.settings?.textZoom = layerTextZoom
     }
 
     // Same page scripts as the main view (download hook, theme, ...).
@@ -219,7 +221,7 @@ fun MessagesLayer(
             onDispose = { webView -> webView.destroy() },
             onCreated = { webView ->
                 hardenWebView(state, webView)
-                state.webSettings.androidWebSettings.textZoom = textZoom
+                state.webSettings.androidWebSettings.textZoom = layerTextZoom
                 // The story creator (a story share) is laid out for a desktop window: at phone width its
                 // preview is off screen. Lay it out wide and fit it to the screen instead.
                 if (isStoryCreatePage(url)) {

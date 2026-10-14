@@ -61,8 +61,8 @@
     <string name="facebook_notifications_summary">Prüft bei geschlossener App alle 15 Minuten auf neue Benachrichtigungen, Nachrichten und Freundschaftsanfragen, mit deiner Facebook-Anmeldung in der App</string>
     <string name="facebook_notifications_denied">Benachrichtigungen für Astryxbook sind in den Android-Einstellungen deaktiviert</string>
     <string name="facebook_notifications_channel">Facebook-Benachrichtigungen</string>
-    <string name="share_target_feed">Auf Facebook posten</string>
-    <string name="share_target_story">Facebook-Story</string>
+    <string name="share_target_feed">Feed</string>
+    <string name="share_target_story">Deine Story</string>
     <string name="share_media_nothing_feed">Von hier können nur Fotos im Feed gepostet werden. Videos können in eine Story.</string>
     <string name="share_media_nothing_story">Nichts zu teilen: Storys nehmen Fotos und Videos.</string>
     <plurals name="share_media_skipped">

@@ -290,12 +290,24 @@
 })();
 
 // Hide annoying bottom banners
+// The "Open app" bar under a post's photos (opened in-page, so the URL stays "/"): a lone,
+// full-width button holding only its label, in any language. Other bars on "/" (a comment box)
+// have icons or a text field.
+const isOpenAppBar = (element) => {
+  const buttons = element.querySelectorAll('[role="button"]');
+  if (buttons.length !== 1 || element.querySelector('img, svg, input, textarea, [contenteditable]')) return false;
+  const button = buttons[0];
+  return button.getBoundingClientRect().width >= element.getBoundingClientRect().width * 0.9
+    && button.querySelectorAll('[data-mcomponent]').length === 1;
+};
+
 const observer = new MutationObserver(() => {
 
-  if (location.pathname === '/'
-  && document.querySelector('div[role="button"][aria-label*="Facebook"]') === null) return;
-
   const element = document.querySelector('.bottom.fixed-container');
+  if (location.pathname === '/'
+  && document.querySelector('div[role="button"][aria-label*="Facebook"]') === null
+  && !(element && isOpenAppBar(element))) return;
+
   if (
     element &&
     !element.hasAttribute('data-shift-on-keyboard-shown')

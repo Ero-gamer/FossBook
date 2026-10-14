@@ -80,8 +80,8 @@
     <string name="facebook_notifications_denied">Notifications are off for Astryxbook in Android\'s settings</string>
     <string name="facebook_notifications_channel">Facebook notifications</string>
     <!-- Share photos and videos into Facebook (share sheet entries and messages) -->
-    <string name="share_target_feed">Post to Facebook</string>
-    <string name="share_target_story">Facebook story</string>
+    <string name="share_target_feed">Feed</string>
+    <string name="share_target_story">Your story</string>
     <string name="share_media_nothing_feed">Only photos can be posted to the feed from here. Videos can go to a story.</string>
     <string name="share_media_nothing_story">Nothing to share: stories take photos and videos.</string>
     <plurals name="share_media_skipped">

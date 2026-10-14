@@ -220,6 +220,11 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
 - In PiP, a link the page sends out of the app by itself (logged out, Facebook pushes its app
   with `fb://` on load) is ignored: its "Open in another app?" dialog covered the video, and a
   page in PiP can't be tapped, so no such link is the user's.
+- The "Open app" bar under a post's photos is hidden. Upstream's script hides Facebook's small
+  bottom banners but skips Home's address, and Facebook opens a post's photos in-page, where the
+  address stays Home's. On that address it now also hides a bar holding a single full-width
+  button with only a label (any language); the comment box and other bars with icons or a text
+  field stay.
 
 ## CI/CD
 
@@ -677,10 +682,11 @@ From a hands-on pass through the app in light and dark mode on an emulator.
 
 ## Share photos and videos into Facebook
 
-- **Post to Facebook** and **Facebook story** in other apps' share sheet (a gallery, the camera,
-  a file manager): photos shared to the first open Facebook's **Create post** with them attached,
-  several at once; photos and videos shared to the second open Facebook's story creator with the
-  first one in it. The user writes the caption, adds music or text, and posts or shares: the app
+- **Your story** and **Feed** in other apps' share sheet (a gallery, the camera, a file manager),
+  named and ordered like the Facebook app's own entries: photos and videos shared to the first
+  open Facebook's story creator with the first one in it; photos shared to the second open
+  Facebook's **Create post** with them attached, several at once. (They were *Facebook story* and
+  *Post to Facebook* in v1.27.0.) The user writes the caption, adds music or text, and posts or shares: the app
   never posts anything itself. Two `activity-alias` entries for `MainActivity` tell the targets
   apart. Off-type items (a video for the feed) and items over the limits (30 photos or 10 story
   items; 40 MB a photo, 250 MB a video) are left out, with a message.
@@ -694,6 +700,13 @@ From a hands-on pass through the app in light and dark mode on an emulator.
   music and trimming. The creator is wider than a phone, so the layer lays it out wide and fits it
   to the screen (its preview was off screen). When Facebook moves on after a story, the layer
   reopens the creator for the next item; closing the layer gives up the rest.
+- The story preview shows the whole story. Facebook sizes the 9:16 story frame from the window's
+  height and centres it, clipped, in the preview column; on a phone's tall screen the frame was
+  wider than the column, so only a narrow middle strip showed (and the photo looked cropped).
+  `share_media.js` now reports a window height that makes Facebook size the frame to the column,
+  and makes the column as tall as that frame; Facebook's own editor (text, music, zoom, rotate)
+  works on it as before. The real height comes back once the story is shared or discarded. The
+  story page also ignores *Page zoom* (larger text cut off the creator's sidebar labels).
 - The files are copied into the app's cache when shared (the sharing app's permission ends with
   the activity) and reach only Facebook's own page: `share_media.js` asks for them through the
   `AstryxShare` message listener (main frame of Facebook pages only), which sends them as binary
