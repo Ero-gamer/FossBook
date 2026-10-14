@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.eepiemi.materialbook.R
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -169,6 +170,55 @@ class ShareMediaJsTest {
     }
 
     @Test
+    fun profilePicture_goesToUploadPhoto_throughTheProfilePictureMenu() {
+        val h = Harness()
+        h.load("https://m.facebook.com/profile.php", PROFILE_PAGE)
+        h.eval(UPLOAD_ICON)
+        h.files(Triple("0_me.jpg", "image/jpeg", 5), Triple("1_other.jpg", "image/jpeg", 6))
+        h.run("profile")
+
+        assertTrue("the upload never got the photo", h.waitFor("!!window.__got"))
+        assertEquals("0_me.jpg:image/jpeg:5", h.eval("window.__got.join(',')").unquoted())
+        assertEquals("0", h.eval("window.__pickerOpened"))
+    }
+
+    @Test
+    fun group_photosGoIntoTheComposer_onceAGroupIsOpen() {
+        val h = Harness()
+        h.load("https://m.facebook.com/groups/123456/", feedPage(label = "Photo"))
+        h.files(Triple("0_a.jpg", "image/jpeg", 3), Triple("1_b.jpg", "image/jpeg", 4))
+        h.run("group")
+
+        assertTrue(h.waitFor("!!window.__got"))
+        assertEquals("0_a.jpg:image/jpeg:3,1_b.jpg:image/jpeg:4", h.eval("window.__got.join(',')").unquoted())
+    }
+
+    @Test
+    fun group_notOnTheGroupsListOrHome() {
+        // The list where the user picks the group (and Home, if they go back there) has a Photo
+        // button too: the photos wait for a group.
+        val h = Harness()
+        h.load("https://m.facebook.com/groups/feed/", feedPage(label = "Photo"))
+        h.files(Triple("0_a.jpg", "image/jpeg", 3))
+        h.run("group")
+
+        assertFalse(h.waitFor("!!window.__got", 2500))
+        assertEquals("", h.calls())
+    }
+
+    @Test
+    fun reel_videoGoesToTheCreatorInputThatTakesIt() {
+        val h = Harness()
+        h.load("https://www.facebook.com/reel/", REEL_PAGE)
+        h.files(Triple("0_v.mp4", "video/mp4", 9))
+        h.run("reel")
+
+        assertTrue("the creator never got the video", h.waitFor("!!window.__got", 8000))
+        assertEquals("0_v.mp4:video/mp4:9", h.eval("window.__got").unquoted())
+        assertTrue(h.waitFor("window.__calls.indexOf('finished:reel') >= 0", 5000))
+    }
+
+    @Test
     fun filesSentAsBase64_onOlderWebViews_arriveWhole() {
         val h = Harness()
         h.load("https://www.facebook.com/stories/create", STORY_PAGE)
@@ -218,6 +268,37 @@ class ShareMediaJsTest {
 
         // The Photo button's icon glyph (U+F323C), put in by script: no private-use character here.
         const val PHOTO_ICON = "document.getElementById('icon').textContent = String.fromCharCode(0xDB8C, 0xDE3C);"
+
+        // The mobile profile: the profile picture (a large square button) opens a menu whose Upload
+        // photo sets up a hidden input and clicks it.
+        const val PROFILE_PAGE =
+            "<div role='button' id='picture' style='width:155px;height:155px'><img width='155' height='155'></div>" +
+                "<div id='menu'></div><input type='file' id='in' style='display:none'>" +
+                "<script>window.__pickerOpened = 0;" +
+                "document.getElementById('picture').addEventListener('click', function () {" +
+                "  document.getElementById('menu').innerHTML = \"<div role='button' id='upload'><span id='uicon'></span><span>Upload photo</span></div>\";" +
+                "  document.getElementById('uicon').textContent = window.__uploadIcon;" +
+                "  document.getElementById('upload').addEventListener('click', function () {" +
+                "    var i = document.getElementById('in'); i.accept = 'image/*'; i.click(); }); });" +
+                "document.getElementById('in').addEventListener('change', function (e) {" +
+                "  window.__got = Array.prototype.map.call(e.target.files, function (f) { return f.name + ':' + f.type + ':' + f.size; }); });" +
+                "</script>"
+
+        // The profile menu's Upload photo icon (U+F16E6), put in by script.
+        const val UPLOAD_ICON = "window.__uploadIcon = String.fromCharCode(0xDB85, 0xDEE6);"
+
+        // The desktop reels page: Create reel (a clapperboard icon) opens the creator, which has two
+        // video inputs; only the second is wired to it, and it clears the input it reads.
+        const val REEL_PAGE =
+            "<div role='button' id='create'><svg viewBox='0 0 16 16'><path d='M5.79 1.016 6.724 4h3.179z'></path></svg></div>" +
+                "<div id='dialog'></div>" +
+                "<script>document.getElementById('create').addEventListener('click', function () {" +
+                "  var d = document.getElementById('dialog');" +
+                "  d.innerHTML = \"<input type='file' accept='video/*'><input type='file' accept='video/*'>\";" +
+                "  d.lastChild.addEventListener('change', function (e) {" +
+                "    window.__got = e.target.files[0].name + ':' + e.target.files[0].type + ':' + e.target.files[0].size;" +
+                "    e.target.value = ''; }); });" +
+                "</script>"
 
         // The desktop story creator's preview: a 316 px column whose frame is sized like Facebook's,
         // (innerHeight - 256) x 9/16 wide on every resize, clipped and centred in its box.

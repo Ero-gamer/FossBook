@@ -78,9 +78,14 @@
     <string name="facebook_notifications_channel">התראות מפייסבוק</string>
     <!-- Share photos and videos into Facebook (share sheet entries and messages) -->
     <string name="share_target_feed">פיד</string>
+    <string name="share_target_profile_picture">הגדרה כתמונת פרופיל</string>
+    <string name="share_target_group">הקבוצות שלך</string>
+    <string name="share_target_reel">Reels</string>
     <string name="share_target_story">הסטורי שלך</string>
     <string name="share_media_nothing_feed">מכאן אפשר לפרסם בפיד רק תמונות. סרטונים אפשר לשתף בסטורי.</string>
     <string name="share_media_nothing_story">אין מה לשתף: סטורי מקבל תמונות וסרטונים.</string>
+    <string name="share_media_nothing_photos">אפשר לשתף כאן רק תמונות. סרטונים אפשר לשתף בסטורי או ב-Reel.</string>
+    <string name="share_media_nothing_reel">אין מה לשתף: Reels מקבלים סרטון.</string>
     <plurals name="share_media_skipped">
         <item quantity="one">פריט אחד לא נכלל (גדול מדי, יותר מדי פריטים או סוג שלא נתמך)</item>
         <item quantity="two">%1$d פריטים לא נכללו (גדולים מדי, יותר מדי פריטים או סוג שלא נתמך)</item>

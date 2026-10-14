@@ -66,9 +66,14 @@
     <string name="facebook_notifications_denied">الإشعارات متوقفة لـ Astryxbook في إعدادات Android</string>
     <string name="facebook_notifications_channel">إشعارات فيسبوك</string>
     <string name="share_target_feed">آخر الأخبار</string>
+    <string name="share_target_profile_picture">تعيين كصورة الملف الشخصي</string>
+    <string name="share_target_group">مجموعاتك</string>
+    <string name="share_target_reel">Reels</string>
     <string name="share_target_story">قصتك</string>
     <string name="share_media_nothing_feed">يمكن نشر الصور فقط في آخر الأخبار من هنا. يمكن مشاركة الفيديوهات في قصة.</string>
     <string name="share_media_nothing_story">لا شيء للمشاركة: القصص تقبل الصور والفيديوهات.</string>
+    <string name="share_media_nothing_photos">يمكن مشاركة الصور فقط هنا. يمكن مشاركة الفيديوهات في قصة أو Reel.</string>
+    <string name="share_media_nothing_reel">لا شيء للمشاركة: مقاطع Reels تقبل فيديو.</string>
     <plurals name="share_media_skipped">
         <item quantity="zero">لم يُستبعد أي عنصر</item>
         <item quantity="one">تم استبعاد عنصر واحد (كبير جدًا، أو كثير جدًا، أو نوع غير مدعوم)</item>

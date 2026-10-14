@@ -38,7 +38,7 @@ Off by default (opt-in):
 Always on:
 <ul>
     <li>Shares links from other apps to Facebook, and the page you're on to other apps, without tracking parameters</li>
-    <li>Posts photos from other apps to your feed, or photos and videos to your story, through Facebook's own composer</li>
+    <li>Shares photos and videos from other apps to your story, feed, profile picture, groups or reels, through Facebook's own composer</li>
     <li>Launcher shortcuts for Messages, Notifications and Marketplace</li>
     <li>Exports your settings to a file and imports them on another phone</li>
     <li>Plays videos in real fullscreen, including landscape</li>

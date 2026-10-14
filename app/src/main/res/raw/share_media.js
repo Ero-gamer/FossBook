@@ -1,7 +1,9 @@
 // Shares photos and videos from another app into Facebook's own composer (ShareMedia.kt).
-// Run by the app, with window.__astryxShareTarget set: 'feed' on m.facebook.com's Home, 'story'
-// on the desktop site's story creator (www.facebook.com/stories/create, in the Messages layer).
-// The user writes the caption and posts; nothing here posts anything.
+// Run by the app, with window.__astryxShareTarget set: 'feed' on m.facebook.com's Home, 'profile'
+// on the user's mobile profile, 'group' on the mobile groups (the user picks one), 'story' on the
+// desktop site's story creator (www.facebook.com/stories/create) and 'reel' on its reels page
+// (both in the Messages layer). The user writes the caption and posts (or saves the profile
+// picture); nothing here posts anything.
 //
 // The files come from the app through the AstryxShare message listener (ShareMediaBridge.kt):
 // a header (JSON) and then each file's bytes (an ArrayBuffer, or base64 on WebViews without
@@ -9,9 +11,15 @@
 // - Feed: the Photo button sets the input up and clicks it, which would open Android's picker.
 //   The click is intercepted and the input gets the shared photos instead. The button is found
 //   by its icon (a font glyph, the same in every language), or its English label.
+//   A group's composer works the same way, once the user has opened the group.
+// - Profile picture: the profile picture (a large square button) opens a menu whose Upload photo
+//   (found by its icon) clicks the input; that click gets the shared photo, and Facebook shows its
+//   preview with Update.
 // - Story: the creator's input is ready when the page shows; it gets one file at a time. When
 //   the page is back to choosing a story (after Share to story or Discard), the next one comes.
 //   (The layer lays that page out wide and fits it to the screen, so its preview shows.)
+// - Reel: the reels page's Create reel (found by its icon) opens the creator, whose video input
+//   gets the shared video.
 // ES5 on purpose, like the PiP scripts.
 (function () {
   var target = window.__astryxShareTarget;
@@ -20,6 +28,10 @@
   window.__astryxShareRunning = true;
 
   var PHOTO_ICON = String.fromCharCode(0xDB8C, 0xDE3C); // U+F323C, the Photo button's icon
+  var UPLOAD_ICON = String.fromCharCode(0xDB85, 0xDEE6); // U+F16E6, the profile menu's Upload photo
+  // The start of the path of the desktop Create reel button's icon (a clapperboard).
+  var REEL_ICON_PATH = 'M5.79 1.016';
+  var GROUP_PICK_MS = 10 * 60 * 1000; // the app gives up a group share after that too
   var FIND_MS = window.__astryxShareFindMs || 20000; // tests shorten it
   var TAKE_MS = 5000;
   var STORY_MIN_WIDTH = 600;
@@ -104,24 +116,132 @@
     return null;
   }
 
+  // Presses button, whose page then clicks a hidden file input (which would open Android's
+  // picker): that click gets the files instead. Reports whether the page took them.
+  function answerFileClick(button, files) {
+    var nativeClick = HTMLInputElement.prototype.click;
+    var taken = false;
+    HTMLInputElement.prototype.click = function () {
+      if (this.type !== 'file') return nativeClick.apply(this, arguments);
+      HTMLInputElement.prototype.click = nativeClick;
+      taken = true;
+      giveFiles(this, this.multiple ? files : files.slice(0, 1));
+    };
+    button.click();
+    setTimeout(function () {
+      HTMLInputElement.prototype.click = nativeClick;
+      send(taken ? { call: 'finished' } : { call: 'failed', reason: 'notTaken' });
+    }, TAKE_MS);
+  }
+
   function shareToFeed() {
     waitFor(photoButton, FIND_MS, function (button) {
       if (!button) { send({ call: 'failed', reason: 'noComposer' }); return; }
       receiveFiles('all', function (files) {
         if (!files.length) { send({ call: 'finished' }); return; }
-        var nativeClick = HTMLInputElement.prototype.click;
-        var taken = false;
-        HTMLInputElement.prototype.click = function () {
-          if (this.type !== 'file') return nativeClick.apply(this, arguments);
-          HTMLInputElement.prototype.click = nativeClick;
-          taken = true;
-          giveFiles(this, this.multiple ? files : files.slice(0, 1));
-        };
-        button.click();
-        setTimeout(function () {
-          HTMLInputElement.prototype.click = nativeClick;
-          send(taken ? { call: 'finished' } : { call: 'failed', reason: 'notTaken' });
-        }, TAKE_MS);
+        answerFileClick(button, files);
+      });
+    });
+  }
+
+  // A group's own page (not the groups list or one of its tabs) with its composer's Photo button.
+  function groupPhotoButton() {
+    var path = window.location.pathname;
+    if (!/^\/groups\/[^\/]+\/?$/.test(path)) return null;
+    if (/^\/groups\/(feed|discover|joins|create|notifications)\/?$/.test(path)) return null;
+    return photoButton();
+  }
+
+  // The user picks one of their groups; its page may open in-page or as a new load (where the
+  // app runs this again).
+  function shareToGroup() {
+    waitFor(groupPhotoButton, GROUP_PICK_MS, function (button) {
+      if (!button) return;
+      receiveFiles('all', function (files) {
+        if (!files.length) { send({ call: 'finished' }); return; }
+        answerFileClick(button, files);
+      });
+    });
+  }
+
+  // The profile picture: on the user's own profile, the large square button at the top.
+  function profilePictureButton() {
+    var labelled = document.querySelector('[role="button"][aria-label="Edit profile photo"]');
+    if (labelled) return labelled;
+    var buttons = document.querySelectorAll('[role="button"]');
+    for (var i = 0; i < buttons.length; i++) {
+      var box = buttons[i].getBoundingClientRect();
+      if (box.width >= 100 && Math.abs(box.width - box.height) < 4 && buttons[i].querySelector('img')) return buttons[i];
+    }
+    return null;
+  }
+
+  function uploadPhotoItem() {
+    var buttons = document.querySelectorAll('[role="button"]');
+    for (var i = 0; i < buttons.length; i++) {
+      var text = (buttons[i].textContent || '').replace(/^\s+/, '');
+      if (text.indexOf(UPLOAD_ICON) === 0 || text === 'Upload photo') return buttons[i];
+    }
+    return null;
+  }
+
+  function shareToProfilePicture() {
+    waitFor(profilePictureButton, FIND_MS, function (picture) {
+      if (!picture) { send({ call: 'failed', reason: 'noComposer' }); return; }
+      picture.click();
+      waitFor(uploadPhotoItem, TAKE_MS, function (upload) {
+        if (!upload) { send({ call: 'failed', reason: 'noComposer' }); return; }
+        receiveFiles('next', function (files) {
+          if (!files.length) { send({ call: 'finished' }); return; }
+          answerFileClick(upload, files);
+        });
+      });
+    });
+  }
+
+  function createReelButton() {
+    var buttons = document.querySelectorAll('[role="button"], a');
+    for (var i = 0; i < buttons.length; i++) {
+      var path = buttons[i].querySelector('svg path');
+      var d = path ? path.getAttribute('d') || '' : '';
+      if (d.indexOf(REEL_ICON_PATH) === 0 || (buttons[i].textContent || '').replace(/^\s+|\s+$/g, '') === 'Create reel') {
+        return buttons[i];
+      }
+    }
+    return null;
+  }
+
+  function reelInput() {
+    var inputs = document.querySelectorAll('input[type="file"]');
+    for (var i = 0; i < inputs.length; i++) {
+      if ((inputs[i].accept || '').indexOf('video') !== -1 && !inputs[i].__astryxShared) return inputs[i];
+    }
+    return null;
+  }
+
+  function shareToReel() {
+    fitStoryPage();
+    waitFor(createReelButton, FIND_MS, function (button) {
+      if (!button) { send({ call: 'failed', reason: 'noComposer' }); return; }
+      button.click();
+      waitFor(reelInput, TAKE_MS, function (input) {
+        if (!input) { send({ call: 'failed', reason: 'notTaken' }); return; }
+        receiveFiles('next', function (files) {
+          if (!files.length) { send({ call: 'finished' }); return; }
+          // The creator has several video inputs and only one of them is wired to it (nothing
+          // tells which). Facebook clears (or removes) the input it reads; one that ignores the
+          // video keeps it. Try them in turn until one takes it.
+          (function tryNext() {
+            var next = reelInput();
+            if (!next) { send({ call: 'failed', reason: 'notTaken' }); return; }
+            next.__astryxShared = true;
+            giveFiles(next, files.slice(0, 1));
+            setTimeout(function () {
+              if (!document.contains(next) || !next.files || !next.files.length) send({ call: 'finished' });
+              else tryNext();
+            }, 1500);
+          })();
+        });
       });
     });
   }
@@ -243,5 +363,8 @@
   }
 
   if (target === 'feed') shareToFeed();
+  else if (target === 'group') shareToGroup();
+  else if (target === 'profile') shareToProfilePicture();
   else if (target === 'story') shareToStory(true);
+  else if (target === 'reel') shareToReel();
 })();

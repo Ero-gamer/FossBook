@@ -72,10 +72,11 @@ import com.eepiemi.materialbook.utils.externalLinkAction
 import com.eepiemi.materialbook.utils.isMessengerAppLink
 import com.eepiemi.materialbook.utils.FullscreenController
 import com.eepiemi.materialbook.utils.FEEDS_PAGE_URL
-import com.eepiemi.materialbook.utils.FEED_COMPOSER_PAGE_URL
+import com.eepiemi.materialbook.utils.REEL_CREATE_URL
 import com.eepiemi.materialbook.utils.STORY_CREATE_URL
 import com.eepiemi.materialbook.utils.ShareMediaQueue
 import com.eepiemi.materialbook.utils.ShareTarget
+import com.eepiemi.materialbook.utils.shareStartPageUrl
 import com.eepiemi.materialbook.utils.HOME_PAGE_URL
 import com.eepiemi.materialbook.utils.appOrientation
 import com.eepiemi.materialbook.utils.appWebViewParams
@@ -849,8 +850,7 @@ data class ShareMediaRequest(val seq: Int, val target: ShareTarget)
 /** share_media.js for [target], with the target it's run for. */
 internal fun shareMediaScript(resources: android.content.res.Resources, target: ShareTarget): String {
     val script = resources.openRawResource(R.raw.share_media).bufferedReader().use { it.readText() }
-    val name = if (target == ShareTarget.FEED) "feed" else "story"
-    return "window.__astryxShareTarget = '$name';\n$script"
+    return "window.__astryxShareTarget = '${target.key}';\n$script"
 }
 
 @Composable
@@ -1750,35 +1750,39 @@ fun MaterialbookWebView(
     var layerGeneration by remember { mutableIntStateOf(0) }
     var lastLayerRendererLossAt by remember { mutableStateOf<Long?>(null) }
 
-    // Photos and videos shared from another app (ShareMedia): the feed's composer on Home, or
-    // the desktop story creator in the layer; share_media.js hands them to Facebook's page.
-    // The feed's script waits for a fresh load of Home it asked for (a page already showing, or
-    // the one before, could be gone a moment later).
-    var feedSharePending by remember { mutableStateOf(false) }
-    var feedShareLoadSeen by remember { mutableStateOf(false) }
+    // Photos and videos shared from another app (ShareMedia): a mobile page in the main view (the
+    // feed's composer on Home, the profile, the groups), or a desktop creator in the layer
+    // (stories, reels); share_media.js hands them to Facebook's page. A main-view share's script
+    // waits for a fresh load of the page it asked for (a page already showing, or the one before,
+    // could be gone a moment later).
+    var pageShareTarget by remember { mutableStateOf<ShareTarget?>(null) }
+    var pageShareLoadSeen by remember { mutableStateOf(false) }
     LaunchedEffect(shareMediaRequest?.seq) {
         val request = shareMediaRequest ?: return@LaunchedEffect
-        when (request.target) {
-            ShareTarget.FEED -> {
-                messagesLayerUrl = null
-                feedSharePending = true
-                feedShareLoadSeen = false
-                navigator.loadUrl(FEED_COMPOSER_PAGE_URL)
-            }
-            ShareTarget.STORY -> {
-                messagesLayerUrl = STORY_CREATE_URL
-                layerGeneration++
-            }
+        val pageUrl = shareStartPageUrl(request.target)
+        if (pageUrl != null) {
+            messagesLayerUrl = null
+            pageShareTarget = request.target
+            pageShareLoadSeen = false
+            navigator.loadUrl(pageUrl)
+        } else {
+            messagesLayerUrl = if (request.target == ShareTarget.REEL) REEL_CREATE_URL else STORY_CREATE_URL
+            layerGeneration++
         }
     }
-    LaunchedEffect(loadingState, feedSharePending) {
-        if (!feedSharePending) return@LaunchedEffect
+    LaunchedEffect(loadingState, pageShareTarget) {
+        val target = pageShareTarget ?: return@LaunchedEffect
         if (loadingState is LoadingState.Loading) {
-            feedShareLoadSeen = true
-        } else if (loadingState is LoadingState.Finished && feedShareLoadSeen) {
-            feedSharePending = false
-            if (ShareMediaQueue.pending(ShareTarget.FEED)) {
-                navigator.evaluateJavaScript(shareMediaScript(resources, ShareTarget.FEED)) {}
+            pageShareLoadSeen = true
+        } else if (loadingState is LoadingState.Finished && pageShareLoadSeen) {
+            // A group share waits on every page while the user picks the group (opening one can
+            // be a full load), for up to GROUP_PICK_MS; the others run once.
+            if (target == ShareTarget.GROUP && ShareMediaQueue.olderThan(ShareMediaQueue.GROUP_PICK_MS)) {
+                ShareMediaQueue.clear()
+            }
+            if (target != ShareTarget.GROUP || !ShareMediaQueue.pending(target)) pageShareTarget = null
+            if (ShareMediaQueue.pending(target)) {
+                navigator.evaluateJavaScript(shareMediaScript(resources, target)) {}
             }
         }
     }
@@ -1796,8 +1800,10 @@ fun MaterialbookWebView(
                 primaryColor = primaryColor,
                 onPrimaryColor = onPrimaryColor,
                 onClose = {
-                    // Closing the layer gives up the stories still waiting to be offered.
-                    if (ShareMediaQueue.pending(ShareTarget.STORY)) ShareMediaQueue.clear()
+                    // Closing the layer gives up the stories (or the reel) still waiting to be offered.
+                    if (ShareMediaQueue.pending(ShareTarget.STORY) || ShareMediaQueue.pending(ShareTarget.REEL)) {
+                        ShareMediaQueue.clear()
+                    }
                     messagesLayerUrl = null
                 },
                 pipEnabled = pipEnabled,

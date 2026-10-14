@@ -20,8 +20,56 @@ class ShareMediaTest {
     fun theTarget_comesFromTheShareEntryUsed() {
         assertEquals(ShareTarget.FEED, ShareMedia.targetOf("com.eepiemi.materialbook.ShareToFeed"))
         assertEquals(ShareTarget.STORY, ShareMedia.targetOf("com.eepiemi.materialbook.ShareToStory"))
+        assertEquals(ShareTarget.PROFILE_PICTURE, ShareMedia.targetOf("com.eepiemi.materialbook.ShareToProfilePicture"))
+        assertEquals(ShareTarget.GROUP, ShareMedia.targetOf("com.eepiemi.materialbook.ShareToGroup"))
+        assertEquals(ShareTarget.REEL, ShareMedia.targetOf("com.eepiemi.materialbook.ShareToReel"))
         assertNull(ShareMedia.targetOf("com.eepiemi.materialbook.MainActivity"))
         assertNull(ShareMedia.targetOf(null))
+    }
+
+    @Test
+    fun eachTarget_hasAKeyForThePage() {
+        ShareTarget.entries.forEach { assertEquals(it, ShareTarget.ofKey(it.key)) }
+        assertNull(ShareTarget.ofKey("unknown"))
+    }
+
+    @Test
+    fun aProfilePicture_isOnePhoto_aReelOneVideo_aGroupPhotosLikeTheFeed() {
+        val shared = listOf(photo("1.jpg"), photo("2.jpg"), video("v.mp4"), video("w.mp4"))
+        assertEquals(listOf("1.jpg"), ShareMedia.select(ShareTarget.PROFILE_PICTURE, shared).accepted.map { it.name })
+        assertEquals(3, ShareMedia.select(ShareTarget.PROFILE_PICTURE, shared).skipped)
+        assertEquals(listOf("v.mp4"), ShareMedia.select(ShareTarget.REEL, shared).accepted.map { it.name })
+        assertEquals(listOf("1.jpg", "2.jpg"), ShareMedia.select(ShareTarget.GROUP, shared).accepted.map { it.name })
+        assertFalse(ShareMedia.fits(ShareTarget.REEL, "image/jpeg", 100))
+        assertFalse(ShareMedia.fits(ShareTarget.GROUP, "video/mp4", 100))
+    }
+
+    @Test
+    fun mobileShares_openTheirPage_storiesAndReelsTheLayer() {
+        assertEquals(FEED_COMPOSER_PAGE_URL, shareStartPageUrl(ShareTarget.FEED))
+        assertEquals(PROFILE_PAGE_URL, shareStartPageUrl(ShareTarget.PROFILE_PICTURE))
+        assertEquals(GROUPS_PAGE_URL, shareStartPageUrl(ShareTarget.GROUP))
+        assertNull(shareStartPageUrl(ShareTarget.STORY))
+        assertNull(shareStartPageUrl(ShareTarget.REEL))
+    }
+
+    @Test
+    fun theReelsPage_isRecognized() {
+        assertTrue(isReelCreatePage(REEL_CREATE_URL))
+        assertTrue(isReelCreatePage("https://www.facebook.com/reel/"))
+        assertTrue(isReelCreatePage("https://www.facebook.com/reel/123456"))
+        assertFalse(isReelCreatePage("https://m.facebook.com/reel/123456"))
+        assertFalse(isReelCreatePage("https://www.facebook.com/reelsomething"))
+        assertFalse(isReelCreatePage(null))
+    }
+
+    @Test
+    fun aShare_knowsHowOldItIs() {
+        ShareMediaQueue.start(ShareTarget.GROUP, listOf(SharedFile(File("a"), "a", "image/jpeg")), now = 1_000)
+        assertFalse(ShareMediaQueue.olderThan(ShareMediaQueue.GROUP_PICK_MS, now = 1_000 + ShareMediaQueue.GROUP_PICK_MS))
+        assertTrue(ShareMediaQueue.olderThan(ShareMediaQueue.GROUP_PICK_MS, now = 2_000 + ShareMediaQueue.GROUP_PICK_MS))
+        ShareMediaQueue.clear()
+        assertFalse(ShareMediaQueue.olderThan(0))
     }
 
     @Test

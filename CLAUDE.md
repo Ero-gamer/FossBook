@@ -134,11 +134,14 @@ user-visible change.
   (`Sec-Fetch-*` etc.) Facebook answers 400. A periodic job can't be forced early (WorkManager
   delays it); turning the setting off and on runs it at once. Logs `Facebook counts:` under
   `Astryxbook`.
-- Sharing photos/videos into Facebook (`utils/ShareMedia.kt`, `share_media.js`): the
-  `ShareToFeed`/`ShareToStory` activity-aliases; files are copied to the cache and handed to the page
-  through the `AstryxShare` listener. Feed: the mobile Photo button's click on its hidden file input
-  is answered with the files. Story: the desktop creator in the Messages layer (m.facebook.com sends
-  stories to the app), one file per story, laid out wide (`useWideViewPort` + a viewport rewrite).
+- Sharing photos/videos into Facebook (`utils/ShareMedia.kt`, `share_media.js`): the `ShareTo...`
+  activity-aliases (Your story, Feed, Set as profile picture, Your groups, Reels, in the Facebook app's
+  order); files are copied to the cache and handed to the page through the `AstryxShare` listener.
+  Feed, group and profile picture: a mobile button's click on its hidden file input is answered with
+  the files. Story and reel: the desktop creators in the Messages layer (m.facebook.com sends them to
+  the app), laid out wide (`useWideViewPort` + a viewport rewrite); the story frame is sized to its
+  column through a reported `innerHeight` (`fitStoryFrame`). A reel share keeps `/reel/` in the layer.
+  The emulator account is in no group, so group shares are only covered by `ShareMediaJsTest`.
   Nothing ever presses Post/Share: when testing, discard drafts. `am start --eu` can't grant a gallery
   item or pass several files; serve test files through the app's own FileProvider instead.
 - "Keep screen on" uses the host view's `keepScreenOn`, not the window flag the fullscreen

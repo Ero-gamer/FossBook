@@ -62,9 +62,14 @@
     <string name="facebook_notifications_denied">Android সেটিংসে Astryxbook-এর নোটিফিকেশন বন্ধ আছে</string>
     <string name="facebook_notifications_channel">ফেসবুক নোটিফিকেশন</string>
     <string name="share_target_feed">ফিড</string>
+    <string name="share_target_profile_picture">প্রোফাইল ছবি হিসেবে সেট করুন</string>
+    <string name="share_target_group">আপনার গ্রুপ</string>
+    <string name="share_target_reel">Reels</string>
     <string name="share_target_story">আপনার স্টোরি</string>
     <string name="share_media_nothing_feed">এখান থেকে ফিডে শুধু ছবি পোস্ট করা যায়। ভিডিও স্টোরিতে দেওয়া যায়।</string>
     <string name="share_media_nothing_story">শেয়ার করার কিছু নেই: স্টোরিতে ছবি ও ভিডিও দেওয়া যায়।</string>
+    <string name="share_media_nothing_photos">এখানে শুধু ছবি শেয়ার করা যায়। ভিডিও স্টোরি বা রিলে দেওয়া যায়।</string>
+    <string name="share_media_nothing_reel">শেয়ার করার কিছু নেই: রিলে একটি ভিডিও লাগে।</string>
     <plurals name="share_media_skipped">
         <item quantity="one">%1$dটি আইটেম বাদ পড়েছে (খুব বড়, খুব বেশি বা অসমর্থিত ধরন)</item>
         <item quantity="other">%1$dটি আইটেম বাদ পড়েছে (খুব বড়, খুব বেশি বা অসমর্থিত ধরন)</item>
