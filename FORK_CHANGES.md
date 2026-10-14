@@ -32,7 +32,7 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   Picture-in-Picture, and Settings, taken on the emulator with public NASA content.
 - README banner (the store feature graphic) now shows what sets this fork
   apart: Picture-in-Picture, lock-screen audio, in-app Messages and notifications chips, and a
-  second row for app lock, Messenger calls, share & shortcuts, text wrap and page zoom (with a small
+  second row for app lock, Messenger calls, share to Facebook, text wrap and page zoom (with a small
   drop shadow), under the original tagline. The README also gained a License section (GPL-3.0, as
   upstream) with the fork's copyright line.
 - `NOTICE.md` adds GPL-3.0 section 7 terms for this fork's own material: no
