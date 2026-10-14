@@ -32,6 +32,7 @@ import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
 import com.eepiemi.materialbook.utils.jsBridge.installShareMediaBridge
 import com.eepiemi.materialbook.utils.ShareMediaQueue
 import com.eepiemi.materialbook.utils.ShareTarget
+import com.eepiemi.materialbook.utils.isReelCreatePage
 import com.eepiemi.materialbook.utils.isStoryCreatePage
 import com.eepiemi.materialbook.utils.jsBridge.installPageBridges
 import com.eepiemi.materialbook.utils.jsBridge.PageBridges
@@ -107,13 +108,16 @@ fun MessagesLayer(
     val state = rememberWebViewState(url).also {
         it.webSettings.customUserAgentString = DESKTOP_USER_AGENT
     }
+    // Opened for a reel share: the desktop reels page (where the reel creator opens) stays in
+    // the layer instead of leaving for the main view's Reels tab.
+    val reelShare = isReelCreatePage(url)
     val navigator = rememberWebViewNavigator(
         requestInterceptor = object : RequestInterceptor {
             override fun onInterceptUrlRequest(
                 request: WebRequest,
                 navigator: WebViewNavigator
             ): WebRequestInterceptResult =
-                when (val route = messagesLayerRoute(request.url, request.isForMainFrame)) {
+                when (val route = layerRoute(request.url, request.isForMainFrame, reelShare)) {
                     MessagesLayerRoute.Allow -> WebRequestInterceptResult.Allow
                     is MessagesLayerRoute.Remap -> {
                         navigator.loadUrl(route.url)
@@ -140,9 +144,9 @@ fun MessagesLayer(
         if (canGoBack) navigator.navigateBack() else onClose()
     }
 
-    // Text size (Settings), when it changes while the layer is open. Not on the story creator: its
-    // desktop layout is fitted to the screen, and larger text overflows its fixed-width sidebar.
-    val layerTextZoom = if (isStoryCreatePage(url)) 100 else textZoom
+    // Text size (Settings), when it changes while the layer is open. Not on the story or reel
+    // creator: its desktop layout is fitted to the screen, and larger text overflows it.
+    val layerTextZoom = if (isStoryCreatePage(url) || isReelCreatePage(url)) 100 else textZoom
     LaunchedEffect(layerTextZoom) {
         runCatching { state.nativeWebView }.getOrNull()?.settings?.textZoom = layerTextZoom
     }
@@ -156,12 +160,16 @@ fun MessagesLayer(
     }
 
     // A story share (ShareMedia): the desktop story creator takes the shared files one at a time.
+    // A reel share: the reels page's Create reel takes the shared video.
     LaunchedEffect(loadingState) {
-        if (loadingState is LoadingState.Finished && isStoryCreatePage(state.lastLoadedUrl) &&
-            ShareMediaQueue.pending(ShareTarget.STORY)
-        ) {
-            navigator.evaluateJavaScript(shareMediaScript(resources, ShareTarget.STORY)) {}
+        if (loadingState !is LoadingState.Finished) return@LaunchedEffect
+        val page = state.lastLoadedUrl
+        val target = when {
+            isStoryCreatePage(page) && ShareMediaQueue.pending(ShareTarget.STORY) -> ShareTarget.STORY
+            reelShare && isReelCreatePage(page) && ShareMediaQueue.pending(ShareTarget.REEL) -> ShareTarget.REEL
+            else -> null
         }
+        target?.let { navigator.evaluateJavaScript(shareMediaScript(resources, it)) {} }
     }
 
     // The desktop site's in-page navigation, for leaving to a section (see messagesLayerExit).
@@ -222,9 +230,9 @@ fun MessagesLayer(
             onCreated = { webView ->
                 hardenWebView(state, webView)
                 state.webSettings.androidWebSettings.textZoom = layerTextZoom
-                // The story creator (a story share) is laid out for a desktop window: at phone width its
-                // preview is off screen. Lay it out wide and fit it to the screen instead.
-                if (isStoryCreatePage(url)) {
+                // The story and reel creators (a story or reel share) are laid out for a desktop window:
+                // at phone width their preview is off screen. Lay them out wide and fit them to the screen.
+                if (isStoryCreatePage(url) || isReelCreatePage(url)) {
                     state.webSettings.androidWebSettings.useWideViewPort = true
                     webView.settings.loadWithOverviewMode = true
                 }
@@ -255,7 +263,7 @@ fun MessagesLayer(
                             ),
                             screen = ScreenBridge { currentOnScreenVideoPlayingChanged(it) },
                             layer = LayerBridge { pageUrl ->
-                                messagesLayerExit(pageUrl)?.let { exit ->
+                                messagesLayerExit(pageUrl)?.takeUnless { reelShare && isReelCreatePage(pageUrl) }?.let { exit ->
                                     ContextCompat.getMainExecutor(context).execute { currentOnLeave(exit.mainUrl) }
                                 }
                             },
@@ -276,4 +284,10 @@ fun MessagesLayer(
             )
         }
     }
+}
+
+// The layer's route for [url]; during a reel share the desktop reels page stays in the layer.
+private fun layerRoute(url: String, isMainFrame: Boolean, reelShare: Boolean): MessagesLayerRoute {
+    val route = messagesLayerRoute(url, isMainFrame)
+    return if (reelShare && route is MessagesLayerRoute.Leave && isReelCreatePage(url)) MessagesLayerRoute.Allow else route
 }

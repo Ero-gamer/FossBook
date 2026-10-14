@@ -79,10 +79,11 @@
         </activity>
 
         <!-- Share photos and videos into Facebook from another app's share sheet, named and
-             ordered like the Facebook app's own entries: "Your story" (the story creator) and
-             "Feed" (the post composer). Two entries for MainActivity, told apart by the alias the
-             share arrives through (see ShareMedia). The feed's composer on the mobile site takes
-             photos only, so only stories take videos. -->
+             ordered like the Facebook app's own entries: Your story (the story creator), Feed (the
+             post composer), Set as profile picture, Your groups (a group's composer) and Reels
+             (the reel creator). Entries for MainActivity, told apart by the alias the share
+             arrives through (see ShareMedia). The mobile site's composers take photos only, so
+             only stories and reels take videos; a profile picture and a reel take one item. -->
         <activity-alias
             android:name=".ShareToStory"
             android:targetActivity=".MainActivity"
@@ -113,6 +114,52 @@
                 <category android:name="android.intent.category.DEFAULT" />
 
                 <data android:mimeType="image/*" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ShareToProfilePicture"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/share_target_profile_picture">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="image/*" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ShareToGroup"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/share_target_group">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="image/*" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ShareToReel"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/share_target_reel">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="video/*" />
             </intent-filter>
         </activity-alias>
 

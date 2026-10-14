@@ -687,9 +687,25 @@ From a hands-on pass through the app in light and dark mode on an emulator.
   open Facebook's story creator with the first one in it; photos shared to the second open
   Facebook's **Create post** with them attached, several at once. (They were *Facebook story* and
   *Post to Facebook* in v1.27.0.) The user writes the caption, adds music or text, and posts or shares: the app
-  never posts anything itself. Two `activity-alias` entries for `MainActivity` tell the targets
+  never posts anything itself. `activity-alias` entries for `MainActivity` tell the targets
   apart. Off-type items (a video for the feed) and items over the limits (30 photos or 10 story
   items; 40 MB a photo, 250 MB a video) are left out, with a message.
+- **Set as profile picture**, **Your groups** and **Reels** complete the Facebook app's menu:
+  - Set as profile picture (one photo): the app opens the user's mobile profile, presses the
+    profile picture (the large square button) and the menu's **Upload photo** (found by its icon),
+    and answers that item's file-input click with the photo. Facebook shows its **Preview profile
+    picture** (frames, caption) and the user presses **Update**.
+  - Your groups (photos, several at once): the app opens the user's groups; once they open one,
+    its composer's Photo button gets the photos like the feed's. A group share waits up to 10
+    minutes for the group to be picked, on the groups list and any page after it (a group can open
+    as a new load), and never on another page with a Photo button (Home).
+  - Reels (one video): m.facebook.com sends reel creation to the Facebook app, so the layer opens
+    the desktop site's reels page (`www.facebook.com/reels/create`, which redirects to `/reel/`),
+    laid out wide like the story creator; for a reel share the layer keeps that page instead of
+    handing the Reels tab to the main view. The script presses **Create reel** (found by its
+    clapperboard icon's path) and gives the video to the creator, which has several video inputs
+    and reads one: it tries them in turn until one is cleared (the one Facebook read). Then
+    Facebook's own steps: trim, captions, music, settings, Publish.
 - Feed: m.facebook.com's composer takes photos only. Its Photo button (found by its icon glyph,
   the same in every language) sets up a hidden file input and clicks it, which would open
   Android's picker; `share_media.js` answers that click with the shared photos instead.

@@ -31,8 +31,8 @@ private val reader = Executors.newSingleThreadExecutor()
  * name, type) followed by its bytes, as an ArrayBuffer where WebView supports one, else as base64.
  * Without WebView's message listener (WebView older than 83) there's no way to share.
  *
- * Page messages (JSON): {call: "next", target: "story"} (one file), {call: "all", target:
- * "feed"} (every file left), {call: "finished"}, {call: "failed", reason}.
+ * Page messages (JSON), each with the share's target (ShareTarget.key): {call: "next"} (one
+ * file), {call: "all"} (every file left), {call: "finished"}, {call: "failed", reason}.
  */
 fun installShareMediaBridge(webView: WebView, context: Context) {
     if (!WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) return
@@ -41,11 +41,7 @@ fun installShareMediaBridge(webView: WebView, context: Context) {
     WebViewCompat.addWebMessageListener(webView, SHARE_LISTENER_NAME, FACEBOOK_PAGE_ORIGINS) { _, message, origin, isMainFrame, reply ->
         if (!isMainFrame || !isFacebookWebUrl(origin.toString())) return@addWebMessageListener
         val msg = message.data?.let { runCatching { JSONObject(it) }.getOrNull() } ?: return@addWebMessageListener
-        val target = when (msg.optString("target")) {
-            "feed" -> ShareTarget.FEED
-            "story" -> ShareTarget.STORY
-            else -> null
-        }
+        val target = ShareTarget.ofKey(msg.optString("target"))
         when (msg.optString("call")) {
             "next" -> {
                 val file = target?.let { ShareMediaQueue.take(it) }

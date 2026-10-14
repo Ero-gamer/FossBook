@@ -63,9 +63,14 @@
     <string name="facebook_notifications_denied">Las notificaciones de Astryxbook están desactivadas en los ajustes de Android</string>
     <string name="facebook_notifications_channel">Notificaciones de Facebook</string>
     <string name="share_target_feed">Feed</string>
+    <string name="share_target_profile_picture">Establecer como foto del perfil</string>
+    <string name="share_target_group">Tus grupos</string>
+    <string name="share_target_reel">Reels</string>
     <string name="share_target_story">Tu historia</string>
     <string name="share_media_nothing_feed">Desde aquí solo se pueden publicar fotos en el feed. Los vídeos pueden ir a una historia.</string>
     <string name="share_media_nothing_story">No hay nada que compartir: las historias admiten fotos y vídeos.</string>
+    <string name="share_media_nothing_photos">Aquí solo se pueden compartir fotos. Los vídeos pueden ir a una historia o a un reel.</string>
+    <string name="share_media_nothing_reel">No hay nada que compartir: los reels admiten un vídeo.</string>
     <plurals name="share_media_skipped">
         <item quantity="one">Se omitió %1$d elemento (demasiado grande, demasiados o de un tipo no compatible)</item>
         <item quantity="many">Se omitieron %1$d elementos (demasiado grandes, demasiados o de un tipo no compatible)</item>

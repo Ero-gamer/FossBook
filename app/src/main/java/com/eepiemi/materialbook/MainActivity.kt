@@ -58,8 +58,8 @@ import com.eepiemi.materialbook.utils.canUseAppLock
 import com.eepiemi.materialbook.utils.isAppLockEnabled
 import com.eepiemi.materialbook.utils.locksOnScreenOff
 import com.eepiemi.materialbook.utils.startPageUrl
-import com.eepiemi.materialbook.utils.FEED_COMPOSER_PAGE_URL
 import com.eepiemi.materialbook.utils.ShareMedia
+import com.eepiemi.materialbook.utils.shareStartPageUrl
 import com.eepiemi.materialbook.utils.ShareMediaQueue
 import com.eepiemi.materialbook.utils.ShareTarget
 import com.eepiemi.materialbook.utils.copySharedMedia
@@ -442,13 +442,11 @@ class MainActivity : FragmentActivity() {
         lockIfEnabled()
 
         // Read once: the page the app starts on (a link it was opened with, or Home/Feeds).
-        // Photos shared to the feed start on Home, where the composer's Photo button is.
+        // A share that opens a mobile page starts there (Home's composer, the profile, the groups);
+        // stories and reels open in the layer over the usual start page.
         val mediaTarget = mediaShareTarget(intent)
-        val startUrl = when (mediaTarget) {
-            ShareTarget.FEED -> FEED_COMPOSER_PAGE_URL
-            ShareTarget.STORY -> startPageUrl(null, settingsVM.startOnFeeds.value)
-            null -> startPageUrl(linkUrl(intent), settingsVM.startOnFeeds.value)
-        }
+        val startUrl = mediaTarget?.let { shareStartPageUrl(it) }
+            ?: startPageUrl(if (mediaTarget == null) linkUrl(intent) else null, settingsVM.startOnFeeds.value)
         mediaTarget?.let { receiveSharedMedia(intent, it) }
 
         setContent {
@@ -540,8 +538,12 @@ class MainActivity : FragmentActivity() {
                 copySharedMedia(this@MainActivity, target, uris, type)
             }
             if (files.isEmpty()) {
-                val nothing = if (target == ShareTarget.FEED) R.string.share_media_nothing_feed
-                else R.string.share_media_nothing_story
+                val nothing = when (target) {
+                    ShareTarget.FEED -> R.string.share_media_nothing_feed
+                    ShareTarget.STORY -> R.string.share_media_nothing_story
+                    ShareTarget.PROFILE_PICTURE, ShareTarget.GROUP -> R.string.share_media_nothing_photos
+                    ShareTarget.REEL -> R.string.share_media_nothing_reel
+                }
                 Toast.makeText(this@MainActivity, nothing, Toast.LENGTH_LONG).show()
                 return@launch
             }
