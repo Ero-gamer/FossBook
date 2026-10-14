@@ -105,4 +105,7 @@
         <item quantity="two">%1$s בקשות חברות חדשות</item>
         <item quantity="other">%1$s בקשות חברות חדשות</item>
     </plurals>
+    <!-- Fork strings that upstream's strings.xml has no copy of here -->
+    <string name="messages_desktop_title">הודעות במצב מחשב</string>
+    <string name="messages_desktop_desc">פתיחת ההודעות בתוך האפליקציה באמצעות אתר המחשב (רק בחלק הזה)</string>
 </resources>

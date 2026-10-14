@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- See values/extra_strings.xml. -->
+<resources>
+    <string name="text_size_title">Seitenzoom</string>
+    <string name="text_size_percent">%1$d%%</string>
+    <string name="text_size_default">%1$d%% (Standard)</string>
+    <string name="share_page">Diese Seite teilen</string>
+    <string name="share_only_links">Nur Links können auf Facebook geteilt werden</string>
+    <string name="shortcut_messages">Nachrichten</string>
+    <string name="shortcut_notifications">Benachrichtigungen</string>
+    <string name="shortcut_marketplace">Marketplace</string>
+    <string name="app_version">%1$s %2$s</string>
+    <string name="developer_options_enabled">Entwickleroptionen sind aktiviert</string>
+    <string name="webview_debugging_title">WebView-Debugging</string>
+    <string name="webview_debugging_summary">Ein Computer mit USB-Debugging kann die Seite untersuchen und steuern (chrome://inspect). Schalte es aus, wenn du fertig bist.</string>
+    <string name="external_link_title">In einer anderen App öffnen?</string>
+    <string name="external_link_open">Öffnen</string>
+    <string name="open_links_title">Facebook-Links hier öffnen</string>
+    <string name="open_links_summary">Wähle, welche Facebook-Links in dieser App statt im Browser geöffnet werden</string>
+    <string name="open_web_links_in_app_title">Weblinks in der App öffnen</string>
+    <string name="open_web_links_in_app_summary">Zeigt sie in einem Browser-Tab über der App, statt die App zu wechseln. Der Tab nutzt hier nicht deine Facebook-Anmeldung.</string>
+    <string name="export_settings_title">Einstellungen exportieren</string>
+    <string name="export_settings_summary">Deine Einstellungen in einer Datei speichern</string>
+    <string name="import_settings_title">Einstellungen importieren</string>
+    <string name="import_settings_summary">Einstellungen aus einer exportierten Datei wiederherstellen</string>
+    <string name="settings_exported">Einstellungen exportiert</string>
+    <string name="settings_export_failed">Die Einstellungen konnten nicht exportiert werden</string>
+    <string name="settings_import_failed">Das ist keine Astryxbook-Einstellungsdatei</string>
+    <plurals name="settings_imported">
+        <item quantity="one">%1$d Einstellung importiert</item>
+        <item quantity="other">%1$d Einstellungen importiert</item>
+    </plurals>
+    <string name="settings_section_feed">Feed</string>
+    <string name="settings_section_appearance">Darstellung</string>
+    <string name="settings_section_video">Video</string>
+    <string name="settings_section_messages_links">Nachrichten und Links</string>
+    <string name="settings_section_privacy">Datenschutz und Sicherheit</string>
+    <string name="settings_section_backup">Sicherung</string>
+    <string name="reload_to_apply">Neu laden zum Übernehmen</string>
+    <string name="hide_from_feed_title">In deinem Feed ausblenden</string>
+    <string name="amoled_black_summary">Reinschwarzer Hintergrund im dunklen Modus von Facebook (Facebook-Menü › Dunkelmodus)</string>
+    <string name="text_size_layout_note">Macht die Seiten von Facebook größer oder kleiner: Text, Bilder und Schaltflächen gemeinsam, damit nichts überlappt.</string>
+    <string name="app_lock_open_security_settings">Richte auf diesem Gerät eine Displaysperre ein, um die App-Sperre zu nutzen. Tippe, um die Sicherheitseinstellungen zu öffnen.</string>
+    <string name="open_links_hint_text">Tippe auf dem nächsten Bildschirm auf „Link hinzufügen“ und wähle alle Facebook-Links aus.</string>
+    <string name="open_links_hint_continue">Weiter</string>
+    <string name="external_link_text">Dieser Link öffnet eine andere App auf deinem Telefon (%1$s).</string>
+    <string name="no_app_for_link">Keine App auf diesem Telefon kann diesen Link öffnen</string>
+    <string name="messenger_link_title">Deine Nachrichten hier lesen?</string>
+    <string name="messenger_link_text">Facebook möchte die Messenger-App öffnen. Mit „Nachrichten im Desktop-Modus“ kannst du Nachrichten stattdessen in dieser App lesen und senden.</string>
+    <string name="messenger_link_use_desktop">Desktop-Modus verwenden</string>
+    <string name="messenger_link_open_app">Messenger öffnen</string>
+    <string name="share_via">Teilen über…</string>
+    <string name="download_open">Öffnen</string>
+    <string name="download_already_saved">Bereits in Downloads</string>
+    <string name="text_wrap_on_zoom_title">Text beim Zoomen umbrechen</string>
+    <string name="text_wrap_on_zoom_summary">Passt den gezoomten Text an den Bildschirm an, damit du nicht seitwärts scrollen musst</string>
+    <string name="start_on_feeds_title">Mit Feeds starten</string>
+    <string name="start_on_feeds_summary">Öffnet die App auf den Feeds von Facebook, neueste Beiträge zuerst, statt auf der Startseite</string>
+    <string name="settings_section_notifications">Benachrichtigungen</string>
+    <string name="facebook_notifications_title">Facebook-Benachrichtigungen</string>
+    <string name="facebook_notifications_summary">Prüft bei geschlossener App alle 15 Minuten auf neue Benachrichtigungen, Nachrichten und Freundschaftsanfragen, mit deiner Facebook-Anmeldung in der App</string>
+    <string name="facebook_notifications_denied">Benachrichtigungen für Astryxbook sind in den Android-Einstellungen deaktiviert</string>
+    <string name="facebook_notifications_channel">Facebook-Benachrichtigungen</string>
+    <string name="share_target_feed">Auf Facebook posten</string>
+    <string name="share_target_story">Facebook-Story</string>
+    <string name="share_media_nothing_feed">Von hier können nur Fotos im Feed gepostet werden. Videos können in eine Story.</string>
+    <string name="share_media_nothing_story">Nichts zu teilen: Storys nehmen Fotos und Videos.</string>
+    <plurals name="share_media_skipped">
+        <item quantity="one">%1$d Element wurde ausgelassen (zu groß, zu viele oder nicht unterstützter Typ)</item>
+        <item quantity="other">%1$d Elemente wurden ausgelassen (zu groß, zu viele oder nicht unterstützter Typ)</item>
+    </plurals>
+    <string name="share_media_no_composer">Der Beitragseditor von Facebook ließ sich nicht öffnen. Bist du angemeldet?</string>
+    <string name="share_media_failed">Die Facebook-Seite hat die Dateien nicht übernommen. Versuche ihre eigene Foto-Schaltfläche.</string>
+    <string name="facebook_notification_text_title">Inhalt anzeigen</string>
+    <string name="facebook_notification_text_summary">Fügt den Text neuer Facebook-Benachrichtigungen hinzu (nicht von Chats). Auf dem Sperrbildschirm ausgeblendet</string>
+    <plurals name="facebook_new_notifications">
+        <item quantity="one">%1$s neue Benachrichtigung auf Facebook</item>
+        <item quantity="other">%1$s neue Benachrichtigungen auf Facebook</item>
+    </plurals>
+    <plurals name="facebook_new_messages">
+        <item quantity="one">%1$s ungelesener Chat</item>
+        <item quantity="other">%1$s ungelesene Chats</item>
+    </plurals>
+    <plurals name="facebook_new_friend_requests">
+        <item quantity="one">%1$s neue Freundschaftsanfrage</item>
+        <item quantity="other">%1$s neue Freundschaftsanfragen</item>
+    </plurals>
+    <!-- Fork strings that upstream's strings.xml has no copy of here -->
+    <string name="pip_title">Bild-im-Bild</string>
+    <string name="shrink_into_a_floating_window_when_leaving_while_a_video_plays">Beim Verlassen der App während eines Videos in ein schwebendes Fenster verkleinern</string>
+    <string name="messages_desktop_title">Nachrichten im Desktop-Modus</string>
+    <string name="messages_desktop_desc">Nachrichten in der App mit der Desktop-Website öffnen (nur für diesen Bereich)</string>
+    <string name="video_download_unavailable">Dieses Video kann nicht heruntergeladen werden</string>
+</resources>

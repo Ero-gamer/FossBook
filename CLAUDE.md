@@ -158,7 +158,8 @@ user-visible change.
   origins only, after the Android permission. Don't fall back to the library's grant-all.
 - `MainActivity` is a `FragmentActivity` because app lock uses `BiometricPrompt`.
 - New fork strings go in `brand_strings.xml`, `extra_strings.xml` or `privacy_strings.xml`
-  (with the Hebrew copy in `values-iw`), not upstream's `strings.xml`.
+  (with a copy in every translated locale: `values-iw`, `-ar`, `-bn`, `-de`, `-es`, `-fr`,
+  `-it`, `-pt`, `-zh-rTW`), not upstream's `strings.xml`.
 
 ## Facebook behaviour, not ours
 

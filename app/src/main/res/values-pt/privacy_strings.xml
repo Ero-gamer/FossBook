@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- See values/privacy_strings.xml. -->
+<resources>
+    <string name="app_lock_title">Bloqueio do app</string>
+    <string name="app_lock_off">Desativado</string>
+    <string name="app_lock_immediately">Bloquear assim que eu sair</string>
+    <string name="app_lock_after_1_min">Bloquear após 1 minuto fora</string>
+    <string name="app_lock_after_5_min">Bloquear após 5 minutos fora</string>
+    <string name="app_lock_after_15_min">Bloquear após 15 minutos fora</string>
+    <string name="app_lock_locked">%1$s está bloqueado</string>
+    <string name="app_lock_unlock">Desbloquear</string>
+    <string name="app_lock_prompt_title">Desbloquear %1$s</string>
+    <string name="app_lock_on_screen_off_title">Bloquear quando a tela desligar</string>
+    <string name="app_lock_on_screen_off_summary">Desligar a tela bloqueia o app na hora, seja qual for o tempo acima</string>
+    <string name="block_screenshots_title">Bloquear capturas de tela</string>
+    <string name="block_screenshots_summary">Capturas de tela, gravação de tela, transmissão e a prévia de Recentes mostram o app em preto</string>
+    <string name="clear_cache_on_leave_title">Limpar o cache ao sair</string>
+    <string name="clear_cache_on_leave_summary">Apaga as fotos, vídeos e páginas que o app guarda em cache sempre que você sai. Você continua conectado; as páginas carregam mais devagar e usam mais dados</string>
+    <string name="log_out_title">Sair e limpar dados</string>
+    <string name="log_out_summary">Remove deste app o login do Facebook, os cookies, o cache e os dados de sites</string>
+    <string name="log_out_confirm_title">Sair e limpar dados?</string>
+    <string name="log_out_confirm_text">Você sairá do Facebook neste app, e os cookies, o cache e os dados de sites dele serão apagados. Suas configurações são mantidas.</string>
+    <string name="log_out_confirm">Sair</string>
+    <string name="cancel">Cancelar</string>
+</resources>

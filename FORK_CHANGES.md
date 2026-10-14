@@ -51,6 +51,10 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   title and options.
 - Pulled the upstream Traditional Chinese (`zh-rTW`) update: clipboard copy and
   Material You strings, without upstream's Materialbook-branded strings.
+- Translated all of the fork's own strings (settings, app lock and privacy, notifications,
+  links, downloads, sharing into Facebook…) into Arabic, Bengali, German, Spanish, French,
+  Italian, Portuguese and Traditional Chinese, with each language's plural forms. They
+  showed in English in those languages until now.
 
 ## Android compatibility
 

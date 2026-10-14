@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- See values/extra_strings.xml. -->
+<resources>
+    <string name="text_size_title">Zoom de la page</string>
+    <string name="text_size_percent">%1$d%%</string>
+    <string name="text_size_default">%1$d %% (par défaut)</string>
+    <string name="share_page">Partager cette page</string>
+    <string name="share_only_links">Seuls les liens peuvent être partagés sur Facebook</string>
+    <string name="shortcut_messages">Messages</string>
+    <string name="shortcut_notifications">Notifications</string>
+    <string name="shortcut_marketplace">Marketplace</string>
+    <string name="app_version">%1$s %2$s</string>
+    <string name="developer_options_enabled">Les options pour les développeurs sont activées</string>
+    <string name="webview_debugging_title">Débogage WebView</string>
+    <string name="webview_debugging_summary">Permet à un ordinateur avec le débogage USB d\'inspecter et de contrôler la page (chrome://inspect). Désactivez-le quand vous avez terminé.</string>
+    <string name="external_link_title">Ouvrir dans une autre application ?</string>
+    <string name="external_link_open">Ouvrir</string>
+    <string name="open_links_title">Ouvrir les liens Facebook ici</string>
+    <string name="open_links_summary">Choisissez quels liens Facebook s\'ouvrent dans cette application plutôt que dans le navigateur</string>
+    <string name="open_web_links_in_app_title">Ouvrir les liens web dans l\'application</string>
+    <string name="open_web_links_in_app_summary">Les affiche dans un onglet de navigateur au-dessus de l\'application au lieu de changer d\'application. L\'onglet n\'utilise pas votre connexion Facebook d\'ici.</string>
+    <string name="export_settings_title">Exporter les paramètres</string>
+    <string name="export_settings_summary">Enregistrer vos paramètres dans un fichier</string>
+    <string name="import_settings_title">Importer les paramètres</string>
+    <string name="import_settings_summary">Restaurer les paramètres depuis un fichier exporté</string>
+    <string name="settings_exported">Paramètres exportés</string>
+    <string name="settings_export_failed">Impossible d\'exporter les paramètres</string>
+    <string name="settings_import_failed">Ce n\'est pas un fichier de paramètres Astryxbook</string>
+    <plurals name="settings_imported">
+        <item quantity="one">%1$d paramètre importé</item>
+        <item quantity="many">%1$d paramètres importés</item>
+        <item quantity="other">%1$d paramètres importés</item>
+    </plurals>
+    <string name="settings_section_feed">Fil</string>
+    <string name="settings_section_appearance">Apparence</string>
+    <string name="settings_section_video">Vidéo</string>
+    <string name="settings_section_messages_links">Messages et liens</string>
+    <string name="settings_section_privacy">Confidentialité et sécurité</string>
+    <string name="settings_section_backup">Sauvegarde</string>
+    <string name="reload_to_apply">Recharger pour appliquer</string>
+    <string name="hide_from_feed_title">Masquer de votre fil</string>
+    <string name="amoled_black_summary">Arrière-plans noirs purs dans le mode sombre de Facebook (menu Facebook › Mode sombre)</string>
+    <string name="text_size_layout_note">Agrandit ou réduit les pages de Facebook : texte, images et boutons ensemble, pour que rien ne se chevauche.</string>
+    <string name="app_lock_open_security_settings">Configurez un verrouillage de l\'écran sur cet appareil pour utiliser le verrouillage de l\'application. Appuyez pour ouvrir les paramètres de sécurité.</string>
+    <string name="open_links_hint_text">Sur l\'écran suivant, appuyez sur Ajouter un lien et sélectionnez tous les liens Facebook.</string>
+    <string name="open_links_hint_continue">Continuer</string>
+    <string name="external_link_text">Ce lien ouvre une autre application de votre téléphone (%1$s).</string>
+    <string name="no_app_for_link">Aucune application de ce téléphone ne peut ouvrir ce lien</string>
+    <string name="messenger_link_title">Lire vos messages ici ?</string>
+    <string name="messenger_link_text">Facebook veut ouvrir l\'application Messenger. Avec Messages en mode ordinateur, vous pouvez lire et envoyer des messages dans cette application.</string>
+    <string name="messenger_link_use_desktop">Utiliser le mode ordinateur</string>
+    <string name="messenger_link_open_app">Ouvrir Messenger</string>
+    <string name="share_via">Partager via…</string>
+    <string name="download_open">Ouvrir</string>
+    <string name="download_already_saved">Déjà dans Téléchargements</string>
+    <string name="text_wrap_on_zoom_title">Ajuster le texte au zoom</string>
+    <string name="text_wrap_on_zoom_summary">Adapte à l\'écran le texte que vous agrandissez, pour ne pas avoir à faire défiler sur le côté</string>
+    <string name="start_on_feeds_title">Démarrer sur les Fils</string>
+    <string name="start_on_feeds_summary">Ouvre l\'application sur les Fils de Facebook, les publications les plus récentes d\'abord, au lieu de l\'Accueil</string>
+    <string name="settings_section_notifications">Notifications</string>
+    <string name="facebook_notifications_title">Notifications Facebook</string>
+    <string name="facebook_notifications_summary">Quand l\'application est fermée, vérifie toutes les 15 minutes les nouvelles notifications, les messages et les invitations, avec votre connexion Facebook dans l\'application</string>
+    <string name="facebook_notifications_denied">Les notifications d\'Astryxbook sont désactivées dans les paramètres Android</string>
+    <string name="facebook_notifications_channel">Notifications Facebook</string>
+    <string name="share_target_feed">Publier sur Facebook</string>
+    <string name="share_target_story">Story Facebook</string>
+    <string name="share_media_nothing_feed">Seules les photos peuvent être publiées dans le fil d\'ici. Les vidéos peuvent aller dans une story.</string>
+    <string name="share_media_nothing_story">Rien à partager : les stories acceptent les photos et les vidéos.</string>
+    <plurals name="share_media_skipped">
+        <item quantity="one">%1$d élément a été ignoré (trop grand, trop nombreux ou type non pris en charge)</item>
+        <item quantity="many">%1$d éléments ont été ignorés (trop grands, trop nombreux ou type non pris en charge)</item>
+        <item quantity="other">%1$d éléments ont été ignorés (trop grands, trop nombreux ou type non pris en charge)</item>
+    </plurals>
+    <string name="share_media_no_composer">Impossible d\'ouvrir l\'éditeur de publication de Facebook. Êtes-vous connecté ?</string>
+    <string name="share_media_failed">La page Facebook n\'a pas accepté les fichiers. Essayez son propre bouton Photo.</string>
+    <string name="facebook_notification_text_title">Afficher leur contenu</string>
+    <string name="facebook_notification_text_summary">Ajoute le texte des nouvelles notifications Facebook (pas des discussions). Masqué sur l\'écran de verrouillage</string>
+    <plurals name="facebook_new_notifications">
+        <item quantity="one">%1$s nouvelle notification sur Facebook</item>
+        <item quantity="many">%1$s nouvelles notifications sur Facebook</item>
+        <item quantity="other">%1$s nouvelles notifications sur Facebook</item>
+    </plurals>
+    <plurals name="facebook_new_messages">
+        <item quantity="one">%1$s discussion non lue</item>
+        <item quantity="many">%1$s discussions non lues</item>
+        <item quantity="other">%1$s discussions non lues</item>
+    </plurals>
+    <plurals name="facebook_new_friend_requests">
+        <item quantity="one">%1$s nouvelle invitation</item>
+        <item quantity="many">%1$s nouvelles invitations</item>
+        <item quantity="other">%1$s nouvelles invitations</item>
+    </plurals>
+    <!-- Fork strings that upstream's strings.xml has no copy of here -->
+    <string name="pip_title">Picture-in-picture</string>
+    <string name="shrink_into_a_floating_window_when_leaving_while_a_video_plays">Réduire en fenêtre flottante en quittant l\'application pendant la lecture d\'une vidéo</string>
+    <string name="messages_desktop_title">Messages en mode ordinateur</string>
+    <string name="messages_desktop_desc">Ouvre Messages dans l\'application avec le site pour ordinateur (pour cette section seulement)</string>
+    <string name="video_download_unavailable">Cette vidéo ne peut pas être téléchargée</string>
+</resources>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- See values/extra_strings.xml. -->
+<resources>
+    <string name="text_size_title">頁面縮放</string>
+    <string name="text_size_percent">%1$d%%</string>
+    <string name="text_size_default">%1$d%%（預設）</string>
+    <string name="share_page">分享這個頁面</string>
+    <string name="share_only_links">Facebook 上只能分享連結</string>
+    <string name="shortcut_messages">訊息</string>
+    <string name="shortcut_notifications">通知</string>
+    <string name="shortcut_marketplace">Marketplace</string>
+    <string name="app_version">%1$s %2$s</string>
+    <string name="developer_options_enabled">已啟用開發人員選項</string>
+    <string name="webview_debugging_title">WebView 偵錯</string>
+    <string name="webview_debugging_summary">允許已啟用 USB 偵錯的電腦檢查並控制頁面（chrome://inspect）。完成後請關閉。</string>
+    <string name="external_link_title">要在其他應用程式中開啟嗎？</string>
+    <string name="external_link_open">開啟</string>
+    <string name="open_links_title">在這裡開啟 Facebook 連結</string>
+    <string name="open_links_summary">選擇要在這個應用程式（而不是瀏覽器）中開啟的 Facebook 連結</string>
+    <string name="open_web_links_in_app_title">在應用程式中開啟網頁連結</string>
+    <string name="open_web_links_in_app_summary">在應用程式上方的瀏覽器分頁中顯示，不必切換應用程式。該分頁不會使用你在這裡的 Facebook 登入。</string>
+    <string name="export_settings_title">匯出設定</string>
+    <string name="export_settings_summary">將設定儲存到檔案</string>
+    <string name="import_settings_title">匯入設定</string>
+    <string name="import_settings_summary">從匯出的檔案還原設定</string>
+    <string name="settings_exported">已匯出設定</string>
+    <string name="settings_export_failed">無法匯出設定</string>
+    <string name="settings_import_failed">這不是 Astryxbook 設定檔</string>
+    <plurals name="settings_imported">
+        <item quantity="other">已匯入 %1$d 項設定</item>
+    </plurals>
+    <string name="settings_section_feed">動態消息</string>
+    <string name="settings_section_appearance">外觀</string>
+    <string name="settings_section_video">影片</string>
+    <string name="settings_section_messages_links">訊息與連結</string>
+    <string name="settings_section_privacy">隱私與安全</string>
+    <string name="settings_section_backup">備份</string>
+    <string name="reload_to_apply">重新載入以套用</string>
+    <string name="hide_from_feed_title">從動態消息中隱藏</string>
+    <string name="amoled_black_summary">在 Facebook 的深色模式中使用純黑背景（Facebook 選單 › 深色模式）</string>
+    <string name="text_size_layout_note">放大或縮小 Facebook 的頁面：文字、圖片和按鈕一起縮放，不會互相重疊。</string>
+    <string name="app_lock_open_security_settings">請在這部裝置上設定螢幕鎖定，才能使用應用程式鎖定。輕觸即可開啟安全性設定。</string>
+    <string name="open_links_hint_text">在下一個畫面中，輕觸「新增連結」並選取所有 Facebook 連結。</string>
+    <string name="open_links_hint_continue">繼續</string>
+    <string name="external_link_text">這個連結會開啟手機上的其他應用程式（%1$s）。</string>
+    <string name="no_app_for_link">這支手機上沒有可開啟這個連結的應用程式</string>
+    <string name="messenger_link_title">要在這裡閱讀訊息嗎？</string>
+    <string name="messenger_link_text">Facebook 想開啟 Messenger 應用程式。啟用「桌面模式的訊息」後，你可以直接在這個應用程式中閱讀和傳送訊息。</string>
+    <string name="messenger_link_use_desktop">使用桌面模式</string>
+    <string name="messenger_link_open_app">開啟 Messenger</string>
+    <string name="share_via">分享方式…</string>
+    <string name="download_open">開啟</string>
+    <string name="download_already_saved">已在「下載」中</string>
+    <string name="text_wrap_on_zoom_title">縮放時自動換行</string>
+    <string name="text_wrap_on_zoom_summary">讓放大的文字配合螢幕寬度，不必左右捲動</string>
+    <string name="start_on_feeds_title">從動態饋送開始</string>
+    <string name="start_on_feeds_summary">開啟應用程式時顯示 Facebook 的動態饋送（最新貼文在前），而不是首頁</string>
+    <string name="settings_section_notifications">通知</string>
+    <string name="facebook_notifications_title">Facebook 通知</string>
+    <string name="facebook_notifications_summary">應用程式關閉時，每 15 分鐘使用你在應用程式中的 Facebook 登入檢查新通知、訊息和交友邀請</string>
+    <string name="facebook_notifications_denied">Android 設定中已關閉 Astryxbook 的通知</string>
+    <string name="facebook_notifications_channel">Facebook 通知</string>
+    <string name="share_target_feed">發佈到 Facebook</string>
+    <string name="share_target_story">Facebook 限時動態</string>
+    <string name="share_media_nothing_feed">從這裡只能將相片發佈到動態消息。影片可以發佈到限時動態。</string>
+    <string name="share_media_nothing_story">沒有可分享的內容：限時動態接受相片和影片。</string>
+    <plurals name="share_media_skipped">
+        <item quantity="other">已略過 %1$d 個項目（太大、太多或不支援的類型）</item>
+    </plurals>
+    <string name="share_media_no_composer">無法開啟 Facebook 的貼文編輯器。你登入了嗎？</string>
+    <string name="share_media_failed">Facebook 頁面沒有接受這些檔案。請試試頁面本身的相片按鈕。</string>
+    <string name="facebook_notification_text_title">顯示內容</string>
+    <string name="facebook_notification_text_summary">加入新 Facebook 通知的文字（不包括聊天）。在螢幕鎖定畫面上隱藏</string>
+    <plurals name="facebook_new_notifications">
+        <item quantity="other">Facebook 上有 %1$s 則新通知</item>
+    </plurals>
+    <plurals name="facebook_new_messages">
+        <item quantity="other">%1$s 個未讀聊天</item>
+    </plurals>
+    <plurals name="facebook_new_friend_requests">
+        <item quantity="other">%1$s 個新交友邀請</item>
+    </plurals>
+    <!-- Fork strings that upstream's strings.xml has no copy of here -->
+    <string name="pip_title">子母畫面</string>
+    <string name="shrink_into_a_floating_window_when_leaving_while_a_video_plays">在影片播放時離開應用程式，會縮小成浮動視窗</string>
+    <string name="messages_desktop_title">桌面模式的訊息</string>
+    <string name="messages_desktop_desc">在應用程式中使用桌面版網站開啟訊息（僅限該區段）</string>
+    <string name="video_download_unavailable">無法下載這部影片</string>
+</resources>

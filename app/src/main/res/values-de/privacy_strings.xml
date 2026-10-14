@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- See values/privacy_strings.xml. -->
+<resources>
+    <string name="app_lock_title">App-Sperre</string>
+    <string name="app_lock_off">Aus</string>
+    <string name="app_lock_immediately">Sperren, sobald ich die App verlasse</string>
+    <string name="app_lock_after_1_min">Nach 1 Minute Abwesenheit sperren</string>
+    <string name="app_lock_after_5_min">Nach 5 Minuten Abwesenheit sperren</string>
+    <string name="app_lock_after_15_min">Nach 15 Minuten Abwesenheit sperren</string>
+    <string name="app_lock_locked">%1$s ist gesperrt</string>
+    <string name="app_lock_unlock">Entsperren</string>
+    <string name="app_lock_prompt_title">%1$s entsperren</string>
+    <string name="app_lock_on_screen_off_title">Sperren, wenn der Bildschirm ausgeht</string>
+    <string name="app_lock_on_screen_off_summary">Das Ausschalten des Bildschirms sperrt die App sofort, unabhängig von der Zeit oben</string>
+    <string name="block_screenshots_title">Screenshots blockieren</string>
+    <string name="block_screenshots_summary">Screenshots, Bildschirmaufnahmen, Streaming und die Vorschau der letzten Apps zeigen die App schwarz</string>
+    <string name="clear_cache_on_leave_title">Cache beim Verlassen leeren</string>
+    <string name="clear_cache_on_leave_summary">Löscht die zwischengespeicherten Fotos, Videos und Seiten der App jedes Mal, wenn du sie verlässt. Du bleibst angemeldet; Seiten laden langsamer und verbrauchen mehr Daten</string>
+    <string name="log_out_title">Abmelden und Daten löschen</string>
+    <string name="log_out_summary">Facebook-Anmeldung, Cookies, Cache und Websitedaten aus dieser App entfernen</string>
+    <string name="log_out_confirm_title">Abmelden und Daten löschen?</string>
+    <string name="log_out_confirm_text">Du wirst in dieser App von Facebook abgemeldet, und ihre Cookies, ihr Cache und ihre Websitedaten werden gelöscht. Deine Einstellungen bleiben erhalten.</string>
+    <string name="log_out_confirm">Abmelden</string>
+    <string name="cancel">Abbrechen</string>
+</resources>
