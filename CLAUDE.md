@@ -17,12 +17,23 @@ user-visible change.
   a local release APK won't install over it. `connectedDebugAndroidTest`
   uninstalls that app when it finishes (losing its Facebook login), so run
   instrumented tests before or after a device session, not in the middle.
+  To keep the app (and its login), install with `installDebug installDebugAndroidTest` and run
+  `adb shell am instrument -w [-e class <fqcn>] com.astryx.book.test.test/androidx.test.runner.AndroidJUnitRunner`.
+- `installDebug` installs on every connected device: with the phone plugged in too, set
+  `ANDROID_SERIAL` (or use `adb -e`) so the debug app doesn't land on the user's phone.
 - `.\gradlew.bat testDebugUnitTest` (use the variant task; `--tests` filtering
   doesn't work on plain `test`), `.\gradlew.bat connectedDebugAndroidTest`
   (needs a device), `.\gradlew.bat lintDebug`. CI (`ci.yml`) gates on
   `test`, `:app:lintDebug` and `connectedAndroidTest`. Run CI by hand on a branch with
   `gh workflow run ci.yml --ref <branch>`. The coverage report (`coverage.yml`) runs next
   to the release job and doesn't gate it.
+- Release builds are minified (R8 full mode); debug builds and the tests aren't. A class or
+  constructor something creates by reflection needs a keep rule in `proguard-rules.pro` (v1.25.1
+  and v1.25.2 crashed at launch: WorkManager's Room database). The instrumented-tests job also
+  launches the release APK (`.github/scripts/release-smoke-test.sh`); locally, check a release
+  build with `assembleRelease` and the same script, passing the APK path.
+- Kotlin sources: write bidirectional marks and icon-font glyphs as `\u` escapes, never as the
+  characters themselves (lint `BidiSpoofing` fails the build on literal bidi marks).
 - Pushing to `main` runs `create-release.yml` (which calls `ci.yml`); it
   auto-versions from conventional commits (`feat:` = minor bump) and
   publishes a release. A push touching only docs or repo tooling (`*.md`,
@@ -93,6 +104,10 @@ user-visible change.
   the PiP video's player as fully visible while PiP is engaged. To see why Facebook
   pauses/plays, hook `require('CoreVideoPlayerAutoplayClientUtils').log` in DevTools: it
   names the deciding autoplay rule.
+- Remove ads (`adblock.js`): a reel is an ad when one of its spans *is* the label, e.g.
+  `<span class="f19">Ad</span>` at the reel's bottom left (English "Ad" even with Facebook in
+  Hebrew, read on a phone). Feed ads are found by their label's colour instead. To read a real
+  reel ad, turn *Remove ads* off (otherwise the reel is emptied first).
 - Facebook plays most videos through Media Source Extensions, so a `<video>`'s
   `currentSrc` is `blob:`. The mobile site's player (`data-mcomponent="MVideo"`) carries
   the whole MP4 in `data-video-url`; downloads (`download_content.js`) and the lock-screen
