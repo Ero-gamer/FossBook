@@ -732,6 +732,13 @@ From a hands-on pass through the app in light and dark mode on an emulator.
   after Discard) keeps Facebook's own page, fitted to the screen. The story page ignores *Page
   zoom*. v1.28.0 showed the whole story, but in the desktop layout: tiny text, and a music sticker
   that couldn't be moved. Covered by `StoryLayoutJsTest`.
+- The music sticker's panel was hard to use: its four round buttons (the sticker's style) had no
+  labels, the song clip bar was wider than the phone so its ✓ was off the screen, and the panel
+  closed only on a tap somewhere else on the story, which nothing said (its only button,
+  *Remove*, removes the song). Facebook's icon-only buttons in such panels now show their names
+  under them (Facebook's own, in the user's language: "Large lyrics style", "Pause", "Done"...),
+  rows wider than the screen shrink to fit, and the panel gets a **Done** button that closes it and
+  keeps the song. The song list's play and save icons stay as they are.
 - The files are copied into the app's cache when shared (the sharing app's permission ends with
   the activity) and reach only Facebook's own page: `share_media.js` asks for them through the
   `AstryxShare` message listener (main frame of Facebook pages only), which sends them as binary

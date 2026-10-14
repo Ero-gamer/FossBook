@@ -71,6 +71,7 @@
     <string name="share_media_nothing_story">No hay nada que compartir: las historias admiten fotos y vídeos.</string>
     <string name="share_media_nothing_photos">Aquí solo se pueden compartir fotos. Los vídeos pueden ir a una historia o a un reel.</string>
     <string name="share_media_nothing_reel">No hay nada que compartir: los reels admiten un vídeo.</string>
+    <string name="story_panel_done">Listo</string>
     <plurals name="share_media_skipped">
         <item quantity="one">Se omitió %1$d elemento (demasiado grande, demasiados o de un tipo no compatible)</item>
         <item quantity="many">Se omitieron %1$d elementos (demasiado grandes, demasiados o de un tipo no compatible)</item>

@@ -121,7 +121,8 @@
     window.dispatchEvent(new Event('resize'));
   }
 
-  var ATTRIBUTES = ['data-astryx-story', 'data-astryx-story-hide', 'data-astryx-story-path', 'data-astryx-story-popup'];
+  var ATTRIBUTES = ['data-astryx-story', 'data-astryx-story-hide', 'data-astryx-story-path', 'data-astryx-story-popup',
+    'data-astryx-story-caption', 'data-astryx-story-captioned'];
   function untag() {
     var tagged = document.querySelectorAll('[' + ATTRIBUTES.join('], [') + ']');
     for (var n = 0; n < tagged.length; n++) {
@@ -143,6 +144,79 @@
     }
   }
 
+  // Facebook's small floating panels (a music sticker's styles, the song clip bar with Pause,
+  // Undo and Done) are rows of round icon buttons, named only for screen readers. Each gets its
+  // name (Facebook's own, in the user's language) written under it. A row wider than the screen
+  // (the clip bar: its 300 px waveform pushed Done off the edge) shrinks to fit. Panels with many
+  // icon buttons (the song list's play and save buttons) are left alone.
+  function labelControls(layer) {
+    var buttons = layer.querySelectorAll('[role="button"][aria-label]');
+    var icons = [];
+    for (var i = 0; i < buttons.length; i++) {
+      var b = buttons[i];
+      var box = b.getBoundingClientRect();
+      if (/\S/.test(b.innerText || '') || !b.querySelector('svg, i, img')) continue;
+      if (box.width < 24 || box.width > 64 || box.height < 24 || box.height > 64) continue;
+      icons.push(b);
+    }
+    if (icons.length < 3 || icons.length > 5) return;
+    var row = icons[0].parentElement;
+    for (var r = 1; r < icons.length; r++) {
+      while (row && !row.contains(icons[r])) row = row.parentElement;
+    }
+    if (!row || row === layer.parentElement) return;
+    for (var c = 0; c < icons.length; c++) {
+      if (!icons[c].hasAttribute('data-astryx-story-caption')) icons[c].setAttribute('data-astryx-story-caption', '');
+      // Inline: some of Facebook's button styles outrank the style sheet's.
+      if (icons[c].style.overflow !== 'visible') icons[c].style.setProperty('overflow', 'visible', 'important');
+    }
+    if (!row.hasAttribute('data-astryx-story-captioned')) row.setAttribute('data-astryx-story-captioned', '');
+    // A panel (one with text, like the music sticker's: song, Remove, styles) closes only on a tap
+    // elsewhere on the story, which nothing says: it gets a Done button that does that.
+    if (layer.hasAttribute('data-astryx-story-popup')) addDone(row);
+  }
+
+  var DONE_LABEL = window.__astryxStoryDone || 'Done';
+  function addDone(row) {
+    var next = row.nextElementSibling;
+    if (next && next.hasAttribute('data-astryx-story-done')) return;
+    var done = document.createElement('div');
+    done.setAttribute('role', 'button');
+    done.setAttribute('tabindex', '0');
+    done.setAttribute('data-astryx-story-done', '');
+    done.textContent = DONE_LABEL;
+    done.addEventListener('click', function (e) {
+      e.stopPropagation();
+      tapStoryBackground();
+    });
+    row.parentElement.insertBefore(done, next);
+  }
+
+  // A mouse tap on a corner of the story's photo: what closes Facebook's panels.
+  function tapStoryBackground() {
+    var frame = storyFrame();
+    if (!frame) return;
+    var box = frame.getBoundingClientRect();
+    var x = box.left + 12;
+    var y = box.top + 12;
+    var target = document.elementFromPoint(x, y);
+    if (!target || !frame.contains(target)) return;
+    var init = { bubbles: true, cancelable: true, composed: true, view: window, clientX: x, clientY: y, button: 0 };
+    function fire(Type, type, buttons, pointer) {
+      var o = {};
+      for (var k in init) o[k] = init[k];
+      o.buttons = buttons;
+      if (pointer) { o.pointerId = 1; o.pointerType = 'mouse'; o.isPrimary = true; }
+      if (Type === window.PointerEvent && !window.PointerEvent) return;
+      target.dispatchEvent(new Type(type, o));
+    }
+    fire(window.PointerEvent, 'pointerdown', 1, true);
+    fire(MouseEvent, 'mousedown', 1, false);
+    fire(window.PointerEvent, 'pointerup', 0, true);
+    fire(MouseEvent, 'mouseup', 0, false);
+    fire(MouseEvent, 'click', 0, false);
+  }
+
   function arrange() {
     viewport();
     // Facebook's popups (the music list, text style, a sticker's options): fixed layers placed
@@ -157,6 +231,7 @@
       var showing = shown && (/\S/.test(layers[l].innerText || '') || !!layers[l].querySelector('input, textarea, [contenteditable]'));
       if (showing) layers[l].setAttribute('data-astryx-story-popup', '');
       else layers[l].removeAttribute('data-astryx-story-popup');
+      if (shown) labelControls(layers[l]);
     }
 
     var frame = storyFrame();
@@ -246,18 +321,24 @@
       Math.max(0, frameBox.bottom - list.getBoundingClientRect().height - TOOLS_GAP) + 'px');
 
     // Facebook's narrow layout repeats privacy / Discard / Share in a row of its own (outside the
-    // sidebar): it gives way to the bottom bar. Never a dialog's buttons ("Discard story?").
+    // sidebar): it gives way to the bottom bar. Found by the bottom bar's own labels, so other
+    // text buttons (a panel's "See all") stay; never a dialog's buttons ("Discard story?").
     var privacyLabel = privacy && privacy.getAttribute('aria-label');
+    var actionLabels = [];
+    if (actions) {
+      var actionButtons = actions.querySelectorAll('[role="button"]');
+      for (var a = 0; a < actionButtons.length; a++) actionLabels.push((actionButtons[a].innerText || '').replace(/^\s+|\s+$/g, ''));
+    }
     var all = document.querySelectorAll('[role="button"]');
     for (var o = 0; o < all.length; o++) {
-      var own = all[o];
-      if (nav.contains(own) || own.closest('[role="dialog"]') || own.closest('[data-astryx-story-hide]')) continue;
-      if (privacyLabel && own.getAttribute('aria-label') === privacyLabel) {
-        own.setAttribute('data-astryx-story-hide', ''); // its privacy button, kept in the bottom bar
+      var other = all[o];
+      if (nav.contains(other) || other.closest('[role="dialog"]') || other.closest('[data-astryx-story-hide]')) continue;
+      if (privacyLabel && other.getAttribute('aria-label') === privacyLabel) {
+        other.setAttribute('data-astryx-story-hide', ''); // its privacy button, kept in the bottom bar
         continue;
       }
-      if (!/\S/.test(own.innerText || '') || own.querySelector('svg, i, img')) continue;
-      var row = own.parentElement;
+      if (actionLabels.indexOf((other.innerText || '').replace(/^\s+|\s+$/g, '')) === -1) continue;
+      var row = other.parentElement;
       while (row && row !== document.body && row.querySelectorAll('[role="button"]').length < 2) row = row.parentElement;
       if (row && row !== document.body && !row.contains(frame) && !row.contains(nav)) {
         row.setAttribute('data-astryx-story-hide', '');
@@ -294,6 +375,23 @@
       'html body #materialbook-clipboard-copier, html body #materialbook-global-downloader,' +
       ' html body #materialbook-clipboard-copier.visible, html body #materialbook-global-downloader.visible' +
       ' { display: none !important; }' +
+      'html body [data-astryx-story-done] { display: block !important; margin: 0 12px 12px !important;' +
+      ' padding: 8px 0 !important; border-radius: 8px !important; background: #0866ff !important;' +
+      ' color: #fff !important; font: 600 15px/20px system-ui, sans-serif !important;' +
+      ' text-align: center !important; cursor: pointer !important; }' +
+      // Labelled icon buttons in Facebook's panels (see labelControls).
+      // (html body: Facebook's own classes clip the buttons otherwise.) Long names keep two lines.
+      'html body [data-astryx-story-caption] { position: relative !important; overflow: visible !important; }' +
+      'html body [data-astryx-story-caption]::after { content: attr(aria-label); position: absolute;' +
+      ' top: calc(100% + 3px); left: 50%; transform: translateX(-50%); width: 68px;' +
+      ' font: 600 10px/12px system-ui, sans-serif; color: #fff; text-align: center;' +
+      ' text-shadow: 0 1px 2px rgba(0, 0, 0, .9); white-space: normal; pointer-events: none;' +
+      ' display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }' +
+      'html body [data-astryx-story-captioned] { margin-bottom: 28px !important;' +
+      ' max-width: calc(100vw - 16px) !important; height: auto !important; overflow: visible !important; }' +
+      'html body [data-astryx-story-captioned] > * { flex-shrink: 1 !important; min-width: 0 !important;' +
+      ' align-self: flex-start !important; }' +
+      'html body [data-astryx-story-captioned] > :not(:has([data-astryx-story-caption])) { overflow: hidden !important; }' +
       '[data-astryx-story-path] { overflow: visible !important; will-change: auto !important;' +
       ' transform: none !important; contain: none !important; filter: none !important;' +
       ' perspective: none !important; backdrop-filter: none !important; transform-style: flat !important; }' +
@@ -391,6 +489,8 @@
       }
       if (style) style.remove();
       untag();
+      var added = document.querySelectorAll('[data-astryx-story-done]');
+      for (var d = 0; d < added.length; d++) added[d].remove();
       try {
         if (ownInnerHeight) Object.defineProperty(window, 'innerHeight', ownInnerHeight);
         else delete window.innerHeight;

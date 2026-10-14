@@ -3,6 +3,7 @@ package com.eepiemi.materialbook.ui.screens
 import android.view.View
 import android.webkit.CookieManager
 import androidx.activity.compose.BackHandler
+import org.json.JSONObject
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -167,7 +168,8 @@ fun MessagesLayer(
         val page = state.lastLoadedUrl
         if (isStoryCreatePage(page)) {
             val layout = resources.openRawResource(R.raw.story_layout).bufferedReader().use { it.readText() }
-            navigator.evaluateJavaScript(layout) {}
+            val done = JSONObject.quote(resources.getString(R.string.story_panel_done))
+            navigator.evaluateJavaScript("window.__astryxStoryDone = $done;\n$layout") {}
         }
         val target = when {
             isStoryCreatePage(page) && ShareMediaQueue.pending(ShareTarget.STORY) -> ShareTarget.STORY

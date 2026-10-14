@@ -89,6 +89,7 @@
     <string name="share_media_nothing_story">Nothing to share: stories take photos and videos.</string>
     <string name="share_media_nothing_photos">Only photos can be shared here. Videos can go to a story or a reel.</string>
     <string name="share_media_nothing_reel">Nothing to share: reels take a video.</string>
+    <string name="story_panel_done">Done</string>
     <plurals name="share_media_skipped">
         <item quantity="one">%1$d item was left out (too big, too many or not a supported type)</item>
         <item quantity="other">%1$d items were left out (too big, too many or not a supported type)</item>

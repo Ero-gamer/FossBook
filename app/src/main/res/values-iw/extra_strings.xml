@@ -86,6 +86,7 @@
     <string name="share_media_nothing_story">אין מה לשתף: סטורי מקבל תמונות וסרטונים.</string>
     <string name="share_media_nothing_photos">אפשר לשתף כאן רק תמונות. סרטונים אפשר לשתף בסטורי או ב-Reel.</string>
     <string name="share_media_nothing_reel">אין מה לשתף: Reels מקבלים סרטון.</string>
+    <string name="story_panel_done">סיום</string>
     <plurals name="share_media_skipped">
         <item quantity="one">פריט אחד לא נכלל (גדול מדי, יותר מדי פריטים או סוג שלא נתמך)</item>
         <item quantity="two">%1$d פריטים לא נכללו (גדולים מדי, יותר מדי פריטים או סוג שלא נתמך)</item>
