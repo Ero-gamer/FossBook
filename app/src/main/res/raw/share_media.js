@@ -299,9 +299,28 @@
         input.__astryxShared = true;
         giveFiles(input, files.slice(0, 1));
         if (header.remaining > 0) shareToStory(false);
-        else send({ call: 'finished' });
+        else {
+          send({ call: 'finished' });
+          closeWhenDone();
+        }
       });
     });
+  }
+
+  // After the last shared item: once the creator is back to choosing a story (the user discarded
+  // it), the share is over, so the story screen closes, as the Facebook app does. Facebook's Home
+  // closes the layer (it's one of the sections that belong in the main view). Waits for the
+  // chooser's fresh file input to hold for a moment: after Share to story the page uploads and
+  // moves on by itself, and nothing here may interrupt that.
+  function closeWhenDone() {
+    var seen = 0;
+    var timer = setInterval(function () {
+      seen = readyStoryInput() ? seen + 1 : 0;
+      if (seen < 3) return;
+      clearInterval(timer);
+      if (window.__astryxShareClose) window.__astryxShareClose(); // tests
+      else window.location.assign('https://www.facebook.com/');
+    }, 500);
   }
 
   if (target === 'feed') shareToFeed();

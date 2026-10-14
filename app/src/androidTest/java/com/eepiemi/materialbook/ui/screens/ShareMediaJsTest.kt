@@ -139,6 +139,23 @@ class ShareMediaJsTest {
     }
 
     @Test
+    fun story_closesAfterTheLastItem_onceTheCreatorIsChoosingAgain() {
+        val h = Harness()
+        h.load("https://www.facebook.com/stories/create", STORY_PAGE)
+        h.eval("window.__closed = 0; window.__astryxShareClose = function () { window.__closed++; };")
+        h.files(Triple("0_a.jpg", "image/jpeg", 4))
+        h.run("story")
+
+        assertTrue(h.waitFor("window.__got.length === 1"))
+        // Still editing it: the screen stays.
+        Thread.sleep(2500)
+        assertEquals("0", h.eval("window.__closed"))
+        // Discarded: the creator is choosing a story again, and the share is over.
+        h.eval("window.__resetCreator()")
+        assertTrue(h.waitFor("window.__closed === 1", 5000))
+    }
+
+    @Test
     fun profilePicture_goesToUploadPhoto_throughTheProfilePictureMenu() {
         val h = Harness()
         h.load("https://m.facebook.com/profile.php", PROFILE_PAGE)

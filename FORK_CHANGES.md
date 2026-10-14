@@ -714,7 +714,10 @@ From a hands-on pass through the app in light and dark mode on an emulator.
   file input takes one photo or video, so several shared items become one story each: the next
   opens in the creator once the user shares (or discards) the one before, each with its own text,
   music and trimming. When Facebook moves on after a story, the layer reopens the creator for the
-  next item; closing the layer gives up the rest.
+  next item; closing the layer gives up the rest. After the last item, discarding it closes the
+  story screen (back to where you were, as in the Facebook app) instead of leaving Facebook's
+  "start a story" page open; the script waits until the page is choosing a story again, so a story
+  being uploaded after Share to story is never interrupted.
 - The story editor is laid out like the Facebook app's (`story_layout.js`): the story fills the
   screen at the phone's own width (normal-size text), the creator's tools (Add text, Add music,
   Alternative text...) are round buttons along the bottom of the story, and privacy, Discard and
