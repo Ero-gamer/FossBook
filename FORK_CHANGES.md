@@ -701,7 +701,10 @@ From a hands-on pass through the app in light and dark mode on an emulator.
     as a new load), and never on another page with a Photo button (Home). v1.29.0 to v1.30.1 found
     the composer's Photo button only as a button, and a group's page renders it as a bare action
     container (no button role), so picking the group just opened its page; it's found either way
-    now (checked with a real group).
+    now (checked with a real group). A group's composer then took only the first of several
+    photos: its file input is single-file, and the composer adds one photo per change. Now the
+    first opens the composer and the others go in one at a time through its own "Add or remove
+    photos" button (the feed's "Add more photos" works the same way).
   - Reels (one video): m.facebook.com sends reel creation to the Facebook app, so the layer opens
     the desktop site's reels page (`www.facebook.com/reels/create`, which redirects to `/reel/`),
     laid out wide like the story creator; for a reel share the layer keeps that page instead of

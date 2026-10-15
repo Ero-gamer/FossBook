@@ -194,6 +194,20 @@ class ShareMediaJsTest {
     }
 
     @Test
+    fun group_severalPhotos_singleFileInput_restAddedOneByOneThroughTheComposer() {
+        // A group's Photo button opens a single-file input; the composer that then shows takes
+        // one more photo per click on its "Add or remove photos" button.
+        val h = Harness()
+        h.load("https://m.facebook.com/groups/355723031242469/", GROUP_COMPOSER)
+        h.files(Triple("0_a.jpg", "image/jpeg", 3), Triple("1_b.jpg", "image/jpeg", 4), Triple("2_c.jpg", "image/jpeg", 5))
+        h.run("group")
+
+        assertTrue(h.eval("JSON.stringify(window.__got)"), h.waitFor("window.__got.length === 3", 15000))
+        assertEquals("0_a.jpg,1_b.jpg,2_c.jpg", h.eval("window.__got.join(',')").unquoted())
+        assertTrue(h.waitFor("window.__calls.indexOf('finished:group') >= 0", 5000))
+    }
+
+    @Test
     fun group_notOnTheGroupsListOrHome() {
         // The list where the user picks the group (and Home, if they go back there) has a Photo
         // button too: the photos wait for a group.
@@ -282,6 +296,21 @@ class ShareMediaJsTest {
                 "    var i = document.getElementById('in'); i.accept = 'image/*'; i.click(); }); });" +
                 "document.getElementById('in').addEventListener('change', function (e) {" +
                 "  window.__got = Array.prototype.map.call(e.target.files, function (f) { return f.name + ':' + f.type + ':' + f.size; }); });" +
+                "</script>"
+
+        // A group's composer: the Photo button (no button role) clicks a single-file input; the
+        // composer then shows an "Add or remove photos" button that clicks it again. Each change
+        // adds the one file given.
+        const val GROUP_COMPOSER =
+            "<div data-action-id='1' id='photo' aria-label='Photo'><span>Photo</span></div>" +
+                "<div id='composer'></div><input type='file' id='in' style='display:none'>" +
+                "<script>window.__got = [];" +
+                "document.getElementById('photo').addEventListener('click', function () {" +
+                "  var i = document.getElementById('in'); i.accept = 'image/*,video/*'; i.click(); });" +
+                "document.getElementById('in').addEventListener('change', function (e) {" +
+                "  window.__got.push(e.target.files[0].name);" +
+                "  document.getElementById('composer').innerHTML = \"<div role='button' id='add'><span>Add or remove photos</span></div>\";" +
+                "  document.getElementById('add').addEventListener('click', function () { document.getElementById('in').click(); }); });" +
                 "</script>"
 
         // The profile menu's Upload photo icon (U+F16E6), put in by script.
