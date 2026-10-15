@@ -564,6 +564,18 @@ observer.observe(document.body, { childList: true, subtree: true });
           const w = parseFloat(el.style.width);
           if (w > width) el.style.width = Math.max(0, w - size) + 'px';
         });
+        // The server cut the title to fit the full width and added its own "...", which the
+        // narrower box then cut off mid-word ("Comments" became "Comr"). The line ends with
+        // an ellipsis of its own now, in the title's font.
+        title.querySelectorAll('div').forEach(el => {
+          const text = el.querySelector(':scope > span');
+          if (!text || !getComputedStyle(el).whiteSpace.startsWith('pre')) return;
+          const font = getComputedStyle(text);
+          Object.assign(el.style, {
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'pre',
+            font: font.font, lineHeight: font.lineHeight,
+          });
+        });
       }
       const btn = document.createElement('button');
       btn.id = PAGE_BUTTON_ID;

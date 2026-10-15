@@ -203,6 +203,11 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   Before, a normal reel whose caption used a label word ("Ad", `במימון` "funded by") was hidden
   too. Icon glyphs, direction marks and separators around the label are ignored. Covered by
   `ReelAdsJsTest`.
+- A page's title was cut off mid-word next to the Settings gear (a post's comments read "Comr",
+  a Page "NASA - National Aeronautics and Sp"). m.facebook.com cuts the title to fit the full bar
+  on its server, adding its own "...", and the gear makes the title 44 px narrower. The title now
+  ends with an ellipsis of its own, in its own font, wherever it no longer fits. Covered by
+  `PageTitleJsTest`.
 - Right-to-left languages (Hebrew, Arabic…): the Settings gears sit where they belong in
   Facebook's mirrored bars. On the feed the gear covered the Facebook logo (it's now beside
   Search and Menu on the left), on Reels it covered Back (now at the bar's left end), and on
