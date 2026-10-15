@@ -188,6 +188,47 @@ class StoryLayoutJsTest {
     }
 
     @Test
+    fun aToolOutsideTheToolsList_isLaidOutAtTheRowsStart() {
+        // On the phone, Apps (taller: a submenu arrow under its label) sits in another branch of
+        // the sidebar than the other tools.
+        val h = Harness()
+        h.load(CREATOR)
+        h.eval(
+            "(function () { var apps = document.querySelector('#tools .t').cloneNode(true); apps.id = 'apps';" +
+                " apps.querySelector('span').textContent = 'Apps'; apps.style.height = '110px';" +
+                " var branch = document.createElement('div'); branch.id = 'apps-branch'; branch.appendChild(apps);" +
+                " document.getElementById('tools').parentElement.insertBefore(branch, document.getElementById('tools')); })()"
+        )
+        h.run()
+        h.eval("window.__showFrame()")
+        assertTrue(h.waitFor("document.getElementById('apps').getAttribute('data-astryx-story') === 'tool-extra'"))
+        assertEquals("false", h.hidden("#apps"))
+        val first = "(function () { var apps = document.getElementById('apps').getBoundingClientRect();" +
+            " var tools = document.querySelectorAll('[data-astryx-story=tool]');" +
+            " var f = document.getElementById('frame').getBoundingClientRect();" +
+            " return apps.width > 20 && apps.left >= f.left - 1 && apps.right <= tools[0].getBoundingClientRect().left + 1; })()"
+        assertTrue(h.waitFor(first))
+    }
+
+    @Test
+    fun aStickersRemoveButton_isMadeVisible() {
+        val h = Harness()
+        h.load(CREATOR)
+        h.run()
+        h.eval("window.__showFrame()")
+        h.eval(
+            "(function () { var layer = document.createElement('div'); layer.style.position = 'absolute';" +
+                " layer.innerHTML = \"<div role='button' id='remove' aria-label='Remove time sticker' style='width:24px;height:24px'>" +
+                "<svg width='12' height='12'></svg></div><div role='button' id='sticker' aria-label='Time sticker'" +
+                " style='width:120px;height:60px'>3:51 PM</div>\";" +
+                " document.getElementById('column').appendChild(layer); })()"
+        )
+        assertTrue(h.waitFor("document.getElementById('remove').hasAttribute('data-astryx-story-x')"))
+        assertEquals("false", h.eval("document.getElementById('sticker').hasAttribute('data-astryx-story-x')"))
+        assertEquals("\"rgba(0, 0, 0, 0.7)\"", h.eval("getComputedStyle(document.getElementById('remove')).backgroundColor"))
+    }
+
+    @Test
     fun aToolsEditor_opensAsAPanel_whoseDoneClosesItThroughTheTool() {
         // Alternative text opens its editor (choices and a text box) under its tool in the sidebar.
         val h = Harness()
@@ -273,7 +314,8 @@ class StoryLayoutJsTest {
                 "<div role='button' class='t'><svg width='20' height='20'></svg><span>Add text</span></div>" +
                 "<div role='button' class='t'><svg width='20' height='20'></svg><span>Add music</span></div>" +
                 "<div role='button' class='t'><svg width='20' height='20'></svg><span>Alternative text</span></div>" +
-                "<div role='button' id='ai' style='height:122px'><svg width='20' height='20'></svg><span>Add AI label</span></div>" +
+                "<div role='button' id='ai' style='height:122px'><svg width='20' height='20'></svg><span>Add AI label</span>" +
+                "<input type='checkbox'></div>" +
                 "</div>" +
                 "<div id='actions'><div role='button'>Discard</div><div role='button'>Share to story</div></div>" +
                 "</div>" +
