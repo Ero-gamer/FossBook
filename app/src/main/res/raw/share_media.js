@@ -29,6 +29,10 @@
 
   var PHOTO_ICON = String.fromCharCode(0xDB8C, 0xDE3C); // U+F323C, the Photo button's icon
   var UPLOAD_ICON = String.fromCharCode(0xDB85, 0xDEE6); // U+F16E6, the profile menu's Upload photo
+  // The composer's own "add a photo" buttons: "Add more photos" (U+F18BB, feed) and "Add or remove
+  // photos" (U+F20C5, a group).
+  var ADD_PHOTO_ICONS = [String.fromCharCode(0xDB86, 0xDCBB), String.fromCharCode(0xDB88, 0xDCC5)];
+  var ADD_STEP_MS = 1500;
   // The start of the path of the desktop Create reel button's icon (a clapperboard).
   var REEL_ICON_PATH = 'M5.79 1.016';
   var GROUP_PICK_MS = 10 * 60 * 1000; // the app gives up a group share after that too
@@ -124,20 +128,67 @@
 
   // Presses button, whose page then clicks a hidden file input (which would open Android's
   // picker): that click gets the files instead. Reports whether the page took them.
+  // A single-file input (a group's composer) gets the first file; the composer that opens then
+  // takes the others one at a time through its own add-photo button (it keeps one file per
+  // change, even once its input allows several).
   function answerFileClick(button, files) {
+    var rest = [];
+    var taken = whenFileClicked(function (input) {
+      if (input.multiple) {
+        giveFiles(input, files);
+      } else {
+        giveFiles(input, files.slice(0, 1));
+        rest = files.slice(1);
+      }
+    });
+    button.click();
+    setTimeout(function () {
+      if (!taken()) { send({ call: 'failed', reason: 'notTaken' }); return; }
+      addOneByOne(rest);
+    }, TAKE_MS);
+  }
+
+  // Answers the page's next click on a file input (which would open Android's picker) with
+  // answer(input); returns a function telling whether that happened. Gives up after TAKE_MS.
+  function whenFileClicked(answer) {
     var nativeClick = HTMLInputElement.prototype.click;
     var taken = false;
     HTMLInputElement.prototype.click = function () {
       if (this.type !== 'file') return nativeClick.apply(this, arguments);
       HTMLInputElement.prototype.click = nativeClick;
       taken = true;
-      giveFiles(this, this.multiple ? files : files.slice(0, 1));
+      answer(this);
     };
-    button.click();
     setTimeout(function () {
-      HTMLInputElement.prototype.click = nativeClick;
-      send(taken ? { call: 'finished' } : { call: 'failed', reason: 'notTaken' });
+      if (HTMLInputElement.prototype.click !== nativeClick && !taken) HTMLInputElement.prototype.click = nativeClick;
     }, TAKE_MS);
+    return function () { return taken; };
+  }
+
+  function addPhotoButton() {
+    var buttons = document.querySelectorAll('[role="button"], [data-action-id]');
+    var found = null;
+    for (var i = 0; i < buttons.length; i++) {
+      var text = (buttons[i].textContent || '').replace(/^\s+/, '');
+      var byIcon = ADD_PHOTO_ICONS[0] === text.slice(0, 2) || ADD_PHOTO_ICONS[1] === text.slice(0, 2);
+      if (byIcon || /^(Add more photos|Add or remove photos)$/.test((buttons[i].innerText || '').replace(/^\s+|\s+$/g, ''))) {
+        if (!found || found.contains(buttons[i])) found = buttons[i];
+      }
+    }
+    return found;
+  }
+
+  function addOneByOne(files) {
+    if (!files.length) { send({ call: 'finished' }); return; }
+    waitFor(addPhotoButton, TAKE_MS, function (button) {
+      if (!button) { send({ call: 'failed', reason: 'notTaken' }); return; }
+      var taken = whenFileClicked(function (input) { giveFiles(input, files.slice(0, 1)); });
+      button.click();
+      setTimeout(function () {
+        if (!taken()) { send({ call: 'failed', reason: 'notTaken' }); return; }
+        addOneByOne(files.slice(1));
+      }, ADD_STEP_MS);
+    });
   }
 
   function shareToFeed() {
