@@ -122,7 +122,7 @@
   }
 
   var ATTRIBUTES = ['data-astryx-story', 'data-astryx-story-hide', 'data-astryx-story-path', 'data-astryx-story-popup',
-    'data-astryx-story-caption', 'data-astryx-story-captioned'];
+    'data-astryx-story-caption', 'data-astryx-story-captioned', 'data-astryx-story-idle'];
   function untag() {
     var tagged = document.querySelectorAll('[' + ATTRIBUTES.join('], [') + ']');
     for (var n = 0; n < tagged.length; n++) {
@@ -192,46 +192,78 @@
     row.parentElement.insertBefore(done, next);
   }
 
-  // A mouse tap on a corner of the story's photo: what closes Facebook's panels.
+  // Done under a tool's editor: closes it the way Facebook does, by tapping its tool again.
+  function addSheetDone(sheet, tool) {
+    if (sheet.querySelector('[data-astryx-story-done]')) return;
+    var done = document.createElement('div');
+    done.setAttribute('role', 'button');
+    done.setAttribute('tabindex', '0');
+    done.setAttribute('data-astryx-story-done', '');
+    done.textContent = DONE_LABEL;
+    done.addEventListener('click', function (e) {
+      e.stopPropagation();
+      tool.click();
+    });
+    sheet.appendChild(done);
+  }
+
+  // A mouse event of `type` at (x, y) on target: a pointer event (pointerType mouse) for the
+  // pointer types, a mouse event for the others. Facebook's editor follows only the mouse.
+  function mouseEvent(target, type, x, y, buttons) {
+    var init = { bubbles: !/enter|leave/.test(type), cancelable: true, composed: true, view: window,
+      clientX: x, clientY: y, button: 0, buttons: buttons || 0 };
+    if (type.indexOf('pointer') === 0) {
+      if (!window.PointerEvent) return;
+      init.pointerId = 1;
+      init.pointerType = 'mouse';
+      init.isPrimary = true;
+      target.dispatchEvent(new PointerEvent(type, init));
+    } else {
+      target.dispatchEvent(new MouseEvent(type, init));
+    }
+  }
+
+  // A mouse click on the story's photo, at a corner (away from its stickers): what closes
+  // Facebook's panels. Aimed at the photo itself (its largest image), whatever covers that spot.
   function tapStoryBackground() {
     var frame = storyFrame();
     if (!frame) return;
+    var media = frame.querySelectorAll('img, video');
+    var photo = null;
+    var area = 0;
+    for (var m = 0; m < media.length; m++) {
+      var r = media[m].getBoundingClientRect();
+      if (r.width * r.height > area) { area = r.width * r.height; photo = media[m]; }
+    }
+    if (!photo) return;
     var box = frame.getBoundingClientRect();
     var x = box.left + 12;
     var y = box.top + 12;
-    var target = document.elementFromPoint(x, y);
-    if (!target || !frame.contains(target)) return;
-    var init = { bubbles: true, cancelable: true, composed: true, view: window, clientX: x, clientY: y, button: 0 };
-    function fire(Type, type, buttons, pointer) {
-      var o = {};
-      for (var k in init) o[k] = init[k];
-      o.buttons = buttons;
-      if (pointer) { o.pointerId = 1; o.pointerType = 'mouse'; o.isPrimary = true; }
-      if (Type === window.PointerEvent && !window.PointerEvent) return;
-      target.dispatchEvent(new Type(type, o));
-    }
-    fire(window.PointerEvent, 'pointerdown', 1, true);
-    fire(MouseEvent, 'mousedown', 1, false);
-    fire(window.PointerEvent, 'pointerup', 0, true);
-    fire(MouseEvent, 'mouseup', 0, false);
-    fire(MouseEvent, 'click', 0, false);
+    mouseEvent(photo, 'pointerdown', x, y, 1);
+    mouseEvent(photo, 'mousedown', x, y, 1);
+    mouseEvent(photo, 'pointerup', x, y, 0);
+    mouseEvent(photo, 'mouseup', x, y, 0);
+    mouseEvent(photo, 'click', x, y, 0);
   }
 
   function arrange() {
     viewport();
-    // Facebook's popups (the music list, text style, a sticker's options): fixed layers placed
-    // with an inline translate() beside the sidebar's tool, off the screen now. The ones showing
-    // something are centred under the header; empty ones (closed popups' hosts) stay where they
-    // are, so they don't sit over the story.
-    var layers = document.querySelectorAll('div[style*="position: fixed"][style*="translate("]');
+    // Facebook's popups (the music list, text style, alternative text, a sticker's options):
+    // fixed layers placed with an inline transform beside the sidebar's tool, off the screen now.
+    // The ones showing something are centred under the header. Closed popups' hosts stay where
+    // they are and let taps through (one sat over the story and took its taps).
+    var layers = document.querySelectorAll('div[style*="position: fixed"][style*="translate"]');
     for (var l = 0; l < layers.length; l++) {
-      if (layers[l].closest('[role="main"]')) continue;
+      var layer = layers[l];
+      if (layer.closest('[role="main"]') || layer.closest('[data-astryx-story]')) continue;
       // innerText skips hidden content; a closed popup keeps its (hidden) images.
-      var shown = layers[l].firstElementChild && getComputedStyle(layers[l].firstElementChild).visibility !== 'hidden';
-      var showing = shown && (/\S/.test(layers[l].innerText || '') || !!layers[l].querySelector('input, textarea, [contenteditable]'));
-      if (showing) layers[l].setAttribute('data-astryx-story-popup', '');
-      else layers[l].removeAttribute('data-astryx-story-popup');
-      if (shown) labelControls(layers[l]);
+      var shown = layer.firstElementChild && getComputedStyle(layer.firstElementChild).visibility !== 'hidden';
+      var showing = shown && (/\S/.test(layer.innerText || '') || !!layer.querySelector('input, textarea, [contenteditable]'));
+      if (showing) layer.setAttribute('data-astryx-story-popup', '');
+      else layer.removeAttribute('data-astryx-story-popup');
+      if (!shown) layer.setAttribute('data-astryx-story-idle', '');
+      else layer.removeAttribute('data-astryx-story-idle');
+      if (shown) labelControls(layer);
     }
 
     var frame = storyFrame();
@@ -265,7 +297,9 @@
       var box = b.getBoundingClientRect();
       var labelled = /\S/.test(b.innerText || '');
       var icon = b.querySelector('svg, i, img');
-      if (labelled && icon && box.height < 90 && (box.height > 0 || b.getAttribute('data-astryx-story') === 'tool')) {
+      // (Once laid out as a tool, at any height: two-line labels make it taller.)
+      var tool = b.getAttribute('data-astryx-story') === 'tool';
+      if (labelled && icon && (tool || (box.height > 0 && box.height < 90))) {
         tools.push(b);
       } else if (labelled && !icon && !actions) {
         actions = b.parentElement;
@@ -277,14 +311,19 @@
         privacy = b;
       }
     }
+    if (actions) mark(actions, 'actions');
+    if (privacy) mark(privacy, 'privacy');
+    // Facebook's narrow layout repeats privacy / Discard / Share in a row of its own (outside the
+    // sidebar): it gives way to the bottom bar. Found by the bottom bar's own labels, so other
+    // text buttons (a panel's "See all") stay; never a dialog's buttons ("Discard story?").
+    hideNarrowRow(nav, frame, actions, privacy);
+
     if (!tools.length) return;
     var list = tools[0].parentElement;
     for (var t = 0; t < tools.length; t++) {
       if (tools[t].parentElement === list) mark(tools[t], 'tool');
     }
     mark(list, 'tools');
-    if (actions) mark(actions, 'actions');
-    if (privacy) mark(privacy, 'privacy');
 
     // Everything else in the sidebar is hidden (and in the tools' list whatever isn't a tool).
     // The boxes on the way to what's kept lose their clipping: the sidebar's scroller (overflow
@@ -299,8 +338,16 @@
     (function hide(el) {
       for (var c = el.firstElementChild; c; c = c.nextElementSibling) {
         if (c === list) {
+          var lastTool = null;
           for (var item = list.firstElementChild; item; item = item.nextElementSibling) {
-            if (item.getAttribute('data-astryx-story') !== 'tool' && !item.querySelector('[data-astryx-story="tool"]')) {
+            if (item.getAttribute('data-astryx-story') === 'tool' || item.querySelector('[data-astryx-story="tool"]')) {
+              lastTool = item;
+            } else if (item.querySelector('textarea') || item.querySelectorAll('input').length >= 2) {
+              // A tool's editor, open under it in the sidebar (Alternative text): a panel of its own.
+              item.removeAttribute('data-astryx-story-hide');
+              mark(item, 'sheet');
+              if (lastTool) addSheetDone(item, lastTool);
+            } else if (!item.hasAttribute('data-astryx-story-hide')) {
               item.setAttribute('data-astryx-story-hide', '');
             }
           }
@@ -315,14 +362,28 @@
       }
     })(nav);
 
-    // The tools along the bottom of the story (measured once the rest of their list is hidden).
+    // A tool shows its first icon only (one that opens a submenu, like Apps, has an arrow too).
+    for (var ti = 0; ti < tools.length; ti++) {
+      var icons = tools[ti].querySelectorAll('svg, i, img');
+      for (var ii = 1; ii < icons.length; ii++) {
+        if (!icons[0].contains(icons[ii]) && !icons[ii].hasAttribute('data-astryx-story-hide')) {
+          icons[ii].setAttribute('data-astryx-story-hide', '');
+        }
+      }
+    }
+    // The tools along the bottom of the story, as wide as it (measured once the rest of their
+    // list is hidden); never scrolled sideways.
     var frameBox = frame.getBoundingClientRect();
-    document.documentElement.style.setProperty('--astryx-tools-top',
+    var rootStyle = document.documentElement.style;
+    rootStyle.setProperty('--astryx-tools-left', Math.round(frameBox.left + 4) + 'px');
+    rootStyle.setProperty('--astryx-tools-width', Math.max(0, Math.round(frameBox.width - 8)) + 'px');
+    rootStyle.setProperty('--astryx-tools-top',
       Math.max(0, frameBox.bottom - list.getBoundingClientRect().height - TOOLS_GAP) + 'px');
+    if (list.scrollLeft) list.scrollLeft = 0;
 
-    // Facebook's narrow layout repeats privacy / Discard / Share in a row of its own (outside the
-    // sidebar): it gives way to the bottom bar. Found by the bottom bar's own labels, so other
-    // text buttons (a panel's "See all") stay; never a dialog's buttons ("Discard story?").
+  }
+
+  function hideNarrowRow(nav, frame, actions, privacy) {
     var privacyLabel = privacy && privacy.getAttribute('aria-label');
     var actionLabels = [];
     if (actions) {
@@ -395,30 +456,67 @@
       '[data-astryx-story-path] { overflow: visible !important; will-change: auto !important;' +
       ' transform: none !important; contain: none !important; filter: none !important;' +
       ' perspective: none !important; backdrop-filter: none !important; transform-style: flat !important; }' +
-      '[data-astryx-story="tools"] { position: fixed !important; left: 0 !important; right: 0 !important;' +
+      '[data-astryx-story-idle] { pointer-events: none !important; }' +
+      '[data-astryx-story="sheet"] { position: fixed !important; left: 12px !important; right: 12px !important;' +
+      ' top: calc(var(--astryx-story-top, 56px) + 8px) !important; bottom: auto !important; width: auto !important;' +
+      ' max-height: calc(100vh - var(--astryx-story-top, 56px) - ' + (BAR_HEIGHT + 24) + 'px) !important;' +
+      ' overflow: auto !important; z-index: 4 !important; padding: 12px !important; margin: 0 !important;' +
+      ' border-radius: 12px !important; background: #242526 !important; color: #e4e6eb !important;' +
+      ' box-shadow: 0 4px 16px rgba(0, 0, 0, .5) !important; }' +
+      '[data-astryx-story="sheet"] [data-astryx-story-done] { margin: 12px 0 0 !important; }' +
+      '[data-astryx-story="tools"] { position: fixed !important; left: var(--astryx-tools-left, 0) !important;' +
+      ' right: auto !important; width: var(--astryx-tools-width, 100vw) !important;' +
       ' top: var(--astryx-tools-top, 50vh) !important; bottom: auto !important; display: flex !important;' +
-      ' justify-content: center !important; gap: 4px !important; padding: 0 !important; margin: 0 !important;' +
-      ' width: auto !important; height: auto !important; background: none !important; }' +
+      ' flex-direction: row !important; flex-wrap: nowrap !important; justify-content: center !important;' +
+      ' align-items: flex-start !important; gap: 2px !important;' +
+      ' padding: 0 !important; margin: 0 !important; height: auto !important; overflow: hidden !important;' +
+      ' background: none !important; }' +
       '[data-astryx-story="tool"] { display: flex !important; flex-direction: column !important;' +
-      ' align-items: center !important; justify-content: flex-start !important; width: 76px !important;' +
+      ' align-items: center !important; justify-content: flex-start !important; flex: 1 1 0 !important;' +
+      ' min-width: 0 !important; max-width: 80px !important; width: auto !important;' +
       ' height: auto !important; padding: 4px 0 !important; margin: 0 !important; background: none !important; }' +
-      '[data-astryx-story="tool"] > * { margin: 0 !important; padding: 0 !important; max-width: 76px !important; }' +
+      '[data-astryx-story="tool"] > * { margin: 0 !important; padding: 0 !important; max-width: 100% !important; }' +
       // Icon above label: Facebook's rows inside the button stack, and the boxes around the
       // label (sized for the sidebar) take the label's width.
       '[data-astryx-story="tool"] div { flex-direction: column !important; align-items: center !important;' +
       ' margin-left: 0 !important; margin-right: 0 !important; padding-left: 0 !important;' +
-      ' padding-right: 0 !important; max-width: 76px !important; }' +
+      ' padding-right: 0 !important; max-width: 100% !important; }' +
       '[data-astryx-story="tool"] div:not(:has(svg, i, img)) { width: auto !important; min-width: 0 !important;' +
       ' flex: none !important; height: auto !important; }' +
-      '[data-astryx-story="tool"] span { font-size: 12px !important; line-height: 15px !important;' +
-      ' text-align: center !important; white-space: normal !important; color: #fff !important;' +
-      ' text-shadow: 0 1px 3px rgba(0, 0, 0, .9) !important; }';
+      '[data-astryx-story="tool"] span { font-size: 11px !important; line-height: 13px !important;' +
+      ' text-align: center !important; white-space: normal !important; overflow-wrap: anywhere !important;' +
+      ' color: #fff !important; text-shadow: 0 1px 3px rgba(0, 0, 0, .9) !important; }';
     (document.head || document.documentElement).appendChild(style);
   }
 
   // Facebook's editor moves its stickers and text (and pans the photo) with the mouse only; a
   // finger did nothing. Once a finger has moved, its drag is replayed as a mouse drag (pointer and
-  // mouse events, aimed at where it started); taps stay the browser's own.
+  // mouse events, aimed at where it started); taps stay the browser's own. A sticker's controls
+  // (its × to remove it, its resize handles) show while the mouse is over it: after a tap, the
+  // mouse is put where the finger was (and taken away from where it was before).
+  var hovered = null;
+  function hoverAt(x, y) {
+    var target = document.elementFromPoint(x, y);
+    if (hovered && hovered.target !== target) {
+      mouseEvent(hovered.target, 'pointerout', hovered.x, hovered.y);
+      mouseEvent(hovered.target, 'pointerleave', hovered.x, hovered.y);
+      mouseEvent(hovered.target, 'mouseout', hovered.x, hovered.y);
+      mouseEvent(hovered.target, 'mouseleave', hovered.x, hovered.y);
+      hovered = null;
+    }
+    var main = document.querySelector('[data-astryx-story="main"]');
+    if (!target || !main || !main.contains(target)) return;
+    if (!hovered) {
+      mouseEvent(target, 'pointerover', x, y);
+      mouseEvent(target, 'pointerenter', x, y);
+      mouseEvent(target, 'mouseover', x, y);
+      mouseEvent(target, 'mouseenter', x, y);
+    }
+    mouseEvent(target, 'pointermove', x, y);
+    mouseEvent(target, 'mousemove', x, y);
+    hovered = { target: target, x: x, y: y };
+  }
+
   function dragByTouch() {
     var start = null;
     var dragging = false;
@@ -458,10 +556,15 @@
     }, { capture: true, passive: false });
     on(document, 'touchend', function (e) {
       if (!start) return;
+      var end = e.changedTouches[0];
       if (dragging) {
-        fire(e.changedTouches[0], 'mouseup', 'pointerup', 0);
+        fire(end, 'mouseup', 'pointerup', 0);
         e.preventDefault(); // no click at the end of a drag
       }
+      // After the page has handled the tap (a sticker can re-render), or at the end of a drag.
+      var x = end.clientX;
+      var y = end.clientY;
+      setTimeout(function () { hoverAt(x, y); }, 350);
       start = null;
       dragging = false;
     }, { capture: true, passive: false });

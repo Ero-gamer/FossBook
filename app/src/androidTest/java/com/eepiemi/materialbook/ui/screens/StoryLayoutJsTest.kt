@@ -155,6 +155,60 @@ class StoryLayoutJsTest {
         h.eval("window.__showFrame()")
         assertTrue(h.waitFor("document.getElementById('open-popup').hasAttribute('data-astryx-story-popup')"))
         assertEquals("false", h.eval("document.getElementById('closed-popup').hasAttribute('data-astryx-story-popup')"))
+        // A closed popup's host lets taps through to the story under it.
+        assertTrue(h.waitFor("getComputedStyle(document.getElementById('closed-popup')).pointerEvents === 'none'"))
+        assertEquals("\"auto\"", h.eval("getComputedStyle(document.getElementById('open-popup')).pointerEvents"))
+    }
+
+    @Test
+    fun fiveTools_fitTheStorysWidth_eachWithOneIcon() {
+        // An account with more tools (Apps, with a submenu arrow, and Add time) than the sidebar's
+        // three: the row stays within the story.
+        val h = Harness()
+        h.load(CREATOR)
+        h.eval(
+            "(function () { var tools = document.querySelectorAll('#tools .t');" +
+                " var apps = tools[0].cloneNode(true); apps.id = 'apps'; apps.querySelector('span').textContent = 'Apps';" +
+                " apps.appendChild(apps.querySelector('svg').cloneNode(true)); apps.lastChild.id = 'arrow';" +
+                " tools[0].parentElement.insertBefore(apps, tools[0]);" +
+                " var time = tools[1].cloneNode(true); time.querySelector('span').textContent = 'Add time';" +
+                " tools[2].parentElement.insertBefore(time, tools[2]); })()"
+        )
+        h.run()
+        h.eval("window.__showFrame()")
+        assertTrue(h.waitFor("document.querySelectorAll('[data-astryx-story=tool]').length === 5"))
+        val inside = "(function () { var f = document.getElementById('frame').getBoundingClientRect();" +
+            " var tools = document.querySelectorAll('[data-astryx-story=tool]'); var last = -1;" +
+            " for (var i = 0; i < tools.length; i++) { var r = tools[i].getBoundingClientRect();" +
+            "   if (r.width < 30 || r.left < f.left - 1 || r.right > f.right + 1 || r.left < last - 1) return false; last = r.right; }" +
+            " return true; })()"
+        assertTrue(h.eval("JSON.stringify([].map.call(document.querySelectorAll('[data-astryx-story=tool]'), function (t) {" +
+            " var r = t.getBoundingClientRect(); return [r.left, r.right]; }))"), h.waitFor(inside))
+        assertEquals("true", h.hidden("#arrow"))
+    }
+
+    @Test
+    fun aToolsEditor_opensAsAPanel_whoseDoneClosesItThroughTheTool() {
+        // Alternative text opens its editor (choices and a text box) under its tool in the sidebar.
+        val h = Harness()
+        h.load(CREATOR)
+        h.run()
+        h.eval("window.__showFrame()")
+        assertTrue(h.waitFor("!!document.querySelector('[data-astryx-story=tools]')"))
+        h.eval(
+            "(function () { var tools = document.querySelectorAll('#tools .t'); var alt = tools[2];" +
+                " window.__altClicks = 0; alt.addEventListener('click', function () { window.__altClicks++; });" +
+                " var editor = document.createElement('div'); editor.id = 'editor';" +
+                " editor.innerHTML = \"<input type='radio' name='a'><input type='radio' name='b'><textarea></textarea>\";" +
+                " alt.parentElement.insertBefore(editor, alt.nextSibling); })()"
+        )
+        assertTrue(h.waitFor("document.getElementById('editor').getAttribute('data-astryx-story') === 'sheet'"))
+        assertEquals("false", h.hidden("#editor"))
+        assertTrue(h.waitFor("!!document.querySelector('#editor [data-astryx-story-done]')"))
+        h.eval("document.querySelector('#editor [data-astryx-story-done]').click()")
+        assertEquals("1", h.eval("window.__altClicks"))
+        // The AI label row (one checkbox) stays hidden.
+        assertEquals("true", h.hidden("#ai"))
     }
 
     @Test
@@ -189,8 +243,12 @@ class StoryLayoutJsTest {
         assertTrue(h.waitFor("!!document.querySelector('[data-astryx-story=main]')"))
         h.eval(RECORD_MOUSE)
 
+        // A tap stays the browser's own; then the mouse is put where the finger was (a sticker's ×
+        // shows on mouse hover).
         h.eval(touch("touchstart", 100, 300) + touch("touchmove", 102, 301) + touch("touchend", 102, 301))
         assertEquals("tap", "", h.eval("window.__mouse.join(' ')").unquoted())
+        assertTrue(h.eval("window.__mouse.join(' ')"), h.waitFor("window.__mouse.join(' ') === 'pointermove@102,301 mousemove@102,301'"))
+        h.eval("window.__mouse = []")
 
         h.eval(touch("touchstart", 100, 300) + touch("touchmove", 100, 330) + touch("touchmove", 100, 360) +
             touch("touchend", 100, 360))
