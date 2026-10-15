@@ -145,7 +145,9 @@ user-visible change.
   (`useWideViewPort` + a viewport rewrite). A reel share keeps `/reel/` in the layer. To iterate on
   story_layout.js live, `window.__astryxStoryLayout.stop()` undoes it, then evaluate the new copy;
   after a few rounds Facebook's page keeps stale sizes, so check a fresh share before trusting it.
-  The emulator account is in no group, so group shares are only covered by `ShareMediaJsTest`.
+  The emulator account joined the public group "Android Developer With Android Studio" (2026-10-15)
+  for testing group shares; never post there, discard drafts. A group page's Photo button has no
+  `role="button"` (a `data-action-id` container), so composer buttons are looked up by both.
   Nothing ever presses Post/Share: when testing, discard drafts. `am start --eu` can't grant a gallery
   item or pass several files; serve test files through the app's own FileProvider instead.
 - "Keep screen on" uses the host view's `keepScreenOn`, not the window flag the fullscreen
