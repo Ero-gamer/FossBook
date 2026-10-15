@@ -122,7 +122,7 @@
   }
 
   var ATTRIBUTES = ['data-astryx-story', 'data-astryx-story-hide', 'data-astryx-story-path', 'data-astryx-story-popup',
-    'data-astryx-story-caption', 'data-astryx-story-captioned', 'data-astryx-story-idle'];
+    'data-astryx-story-caption', 'data-astryx-story-captioned', 'data-astryx-story-idle', 'data-astryx-story-x'];
   function untag() {
     var tagged = document.querySelectorAll('[' + ATTRIBUTES.join('], [') + ']');
     for (var n = 0; n < tagged.length; n++) {
@@ -268,6 +268,21 @@
 
     var frame = storyFrame();
     fitFrame(frame);
+    // A sticker's remove button (×, shown while it's selected): a thin grey cross on 24 px,
+    // barely visible on a photo. Found as a small icon button in the preview (the stickers' layer
+    // sits beside the photo's frame).
+    var preview = frame && frame.closest('[role="main"]');
+    if (preview) {
+      var small = preview.querySelectorAll('[role="button"]');
+      for (var sb = 0; sb < small.length; sb++) {
+        var sr = small[sb].getBoundingClientRect();
+        if (sr.width > 0 && sr.width <= 32 && sr.height <= 32 && small[sb].querySelector('svg') && !/\S/.test(small[sb].innerText || '')) {
+          if (!small[sb].hasAttribute('data-astryx-story-x')) small[sb].setAttribute('data-astryx-story-x', '');
+        } else if (small[sb].hasAttribute('data-astryx-story-x')) {
+          small[sb].removeAttribute('data-astryx-story-x');
+        }
+      }
+    }
     var main = frame && frame.closest('[role="main"]');
     if (!main) {
       untag(); // choosing a story: Facebook's own page
@@ -294,12 +309,12 @@
     var buttons = nav.querySelectorAll('[role="button"]');
     for (var i = 0; i < buttons.length; i++) {
       var b = buttons[i];
-      var box = b.getBoundingClientRect();
       var labelled = /\S/.test(b.innerText || '');
       var icon = b.querySelector('svg, i, img');
-      // (Once laid out as a tool, at any height: two-line labels make it taller.)
-      var tool = b.getAttribute('data-astryx-story') === 'tool';
-      if (labelled && icon && (tool || (box.height > 0 && box.height < 90))) {
+      // A tool: an icon and a short label, at any height (two-line labels, a submenu arrow).
+      // The AI label row has a checkbox and an explanation.
+      var text = (b.innerText || '').replace(/\s+/g, ' ');
+      if (labelled && icon && text.length <= 40 && !b.querySelector('input')) {
         tools.push(b);
       } else if (labelled && !icon && !actions) {
         actions = b.parentElement;
@@ -319,16 +334,25 @@
     hideNarrowRow(nav, frame, actions, privacy);
 
     if (!tools.length) return;
-    var list = tools[0].parentElement;
+    var list = null;
+    var best = 0;
     for (var t = 0; t < tools.length; t++) {
-      if (tools[t].parentElement === list) mark(tools[t], 'tool');
+      var parent = tools[t].parentElement;
+      var n = 0;
+      for (var u = 0; u < tools.length; u++) if (tools[u].parentElement === parent) n++;
+      if (n > best) { best = n; list = parent; }
+    }
+    var extras = [];
+    for (var t2 = 0; t2 < tools.length; t2++) {
+      if (tools[t2].parentElement === list) mark(tools[t2], 'tool');
+      else { mark(tools[t2], 'tool-extra'); extras.push(tools[t2]); }
     }
     mark(list, 'tools');
 
     // Everything else in the sidebar is hidden (and in the tools' list whatever isn't a tool).
     // The boxes on the way to what's kept lose their clipping: the sidebar's scroller (overflow
     // hidden, will-change: transform) would clip them and hold them as their fixed position's frame.
-    var keep = [list];
+    var keep = [list].concat(extras);
     if (actions) keep.push(actions);
     if (privacy) keep.push(privacy);
     function holdsKept(el) {
@@ -375,12 +399,49 @@
     // list is hidden); never scrolled sideways.
     var frameBox = frame.getBoundingClientRect();
     var rootStyle = document.documentElement.style;
-    rootStyle.setProperty('--astryx-tools-left', Math.round(frameBox.left + 4) + 'px');
-    rootStyle.setProperty('--astryx-tools-width', Math.max(0, Math.round(frameBox.width - 8)) + 'px');
-    rootStyle.setProperty('--astryx-tools-top',
-      Math.max(0, frameBox.bottom - list.getBoundingClientRect().height - TOOLS_GAP) + 'px');
+    var rowLeft = frameBox.left + 4;
+    var rowWidth = Math.max(0, frameBox.width - 8);
+    var slot = rowWidth / tools.length;
+    var listHeight = list.getBoundingClientRect().height;
+    var toolsTop = Math.max(0, frameBox.bottom - listHeight - TOOLS_GAP);
+    rootStyle.setProperty('--astryx-tools-left', Math.round(rowLeft + extras.length * slot) + 'px');
+    rootStyle.setProperty('--astryx-tools-width', Math.round(rowWidth - extras.length * slot) + 'px');
+    rootStyle.setProperty('--astryx-tools-top', toolsTop + 'px');
+    rootStyle.setProperty('--astryx-tool-slot', Math.floor(slot) + 'px');
+    // An extra (Apps) has no round background behind its icon, so its icon and label sat higher
+    // than the others': its icon is lined up with theirs, and its label too.
+    var ref = list.querySelector('[data-astryx-story="tool"]');
+    var refIcon = ref && ref.querySelector('svg, i, img');
+    var refLabel = ref && toolLabel(ref);
+    for (var e = 0; e < extras.length; e++) {
+      var extra = extras[e];
+      extra.style.setProperty('left', Math.round(rowLeft + e * slot) + 'px', 'important');
+      var top = toolsTop;
+      var icon = extra.querySelector('svg, i, img');
+      var label = toolLabel(extra);
+      if (refIcon && icon) {
+        var iconOffset = refIcon.getBoundingClientRect().top - ref.getBoundingClientRect().top;
+        top = toolsTop + iconOffset - (icon.getBoundingClientRect().top - extra.getBoundingClientRect().top);
+      }
+      extra.style.setProperty('top', Math.round(top) + 'px', 'important');
+      if (refIcon && icon && refLabel && label) {
+        var shift = (refLabel.getBoundingClientRect().top - refIcon.getBoundingClientRect().top) -
+          (label.getBoundingClientRect().top - icon.getBoundingClientRect().top);
+        var current = parseFloat(label.style.marginTop) || 0;
+        if (Math.abs(shift) >= 1) label.style.setProperty('margin-top', Math.round(current + shift) + 'px', 'important');
+      }
+    }
     if (list.scrollLeft) list.scrollLeft = 0;
 
+  }
+
+  // A tool's label: its last span with text.
+  function toolLabel(tool) {
+    var spans = tool.querySelectorAll('span');
+    for (var i = spans.length - 1; i >= 0; i--) {
+      if (/\S/.test(spans[i].innerText || '')) return spans[i];
+    }
+    return null;
   }
 
   function hideNarrowRow(nav, frame, actions, privacy) {
@@ -457,6 +518,11 @@
       ' transform: none !important; contain: none !important; filter: none !important;' +
       ' perspective: none !important; backdrop-filter: none !important; transform-style: flat !important; }' +
       '[data-astryx-story-idle] { pointer-events: none !important; }' +
+      'html body [data-astryx-story-x] { background: rgba(0, 0, 0, .7) !important; border-radius: 50% !important;' +
+      ' box-shadow: 0 0 0 2px #fff !important; color: #fff !important; opacity: 1 !important; }' +
+      'html body [data-astryx-story-x] svg, html body [data-astryx-story-x] path { fill: #fff !important;' +
+      ' stroke: #fff !important; color: #fff !important; }' +
+      'html body [data-astryx-story-x]::before { content: ""; position: absolute; inset: -12px; }' +
       '[data-astryx-story="sheet"] { position: fixed !important; left: 12px !important; right: 12px !important;' +
       ' top: calc(var(--astryx-story-top, 56px) + 8px) !important; bottom: auto !important; width: auto !important;' +
       ' max-height: calc(100vh - var(--astryx-story-top, 56px) - ' + (BAR_HEIGHT + 24) + 'px) !important;' +
@@ -468,23 +534,38 @@
       ' right: auto !important; width: var(--astryx-tools-width, 100vw) !important;' +
       ' top: var(--astryx-tools-top, 50vh) !important; bottom: auto !important; display: flex !important;' +
       ' flex-direction: row !important; flex-wrap: nowrap !important; justify-content: center !important;' +
-      ' align-items: flex-start !important; gap: 2px !important;' +
-      ' padding: 0 !important; margin: 0 !important; height: auto !important; overflow: hidden !important;' +
+      ' align-items: flex-start !important; gap: 2px !important; overflow: visible !important;' +
+      ' padding: 0 !important; margin: 0 !important; height: auto !important;' +
       ' background: none !important; }' +
       '[data-astryx-story="tool"] { display: flex !important; flex-direction: column !important;' +
       ' align-items: center !important; justify-content: flex-start !important; flex: 1 1 0 !important;' +
       ' min-width: 0 !important; max-width: 80px !important; width: auto !important;' +
       ' height: auto !important; padding: 4px 0 !important; margin: 0 !important; background: none !important; }' +
       '[data-astryx-story="tool"] > * { margin: 0 !important; padding: 0 !important; max-width: 100% !important; }' +
+      '[data-astryx-story="tool-extra"] { position: fixed !important; z-index: 3 !important;' +
+      ' width: var(--astryx-tool-slot, 64px) !important; display: flex !important; flex-direction: column !important;' +
+      ' align-items: center !important; justify-content: flex-start !important; height: auto !important;' +
+      ' padding: 4px 0 !important; margin: 0 !important; background: none !important; }' +
+      '[data-astryx-story="tool-extra"] > * { margin: 0 !important; padding: 0 !important; max-width: 100% !important; }' +
+      '[data-astryx-story="tool-extra"] div { flex-direction: column !important; align-items: center !important;' +
+      ' margin-left: 0 !important; margin-right: 0 !important; padding-left: 0 !important;' +
+      ' padding-right: 0 !important; max-width: 100% !important; }' +
+      '[data-astryx-story="tool-extra"] span { font-size: 11px !important; line-height: 13px !important;' +
+      ' text-align: center !important; white-space: normal !important; color: #fff !important;' +
+      ' text-shadow: 0 1px 3px rgba(0, 0, 0, .9) !important; }' +
       // Icon above label: Facebook's rows inside the button stack, and the boxes around the
       // label (sized for the sidebar) take the label's width.
       '[data-astryx-story="tool"] div { flex-direction: column !important; align-items: center !important;' +
+      ' justify-content: flex-start !important;' +
       ' margin-left: 0 !important; margin-right: 0 !important; padding-left: 0 !important;' +
       ' padding-right: 0 !important; max-width: 100% !important; }' +
       '[data-astryx-story="tool"] div:not(:has(svg, i, img)) { width: auto !important; min-width: 0 !important;' +
       ' flex: none !important; height: auto !important; }' +
       '[data-astryx-story="tool"] span { font-size: 11px !important; line-height: 13px !important;' +
-      ' text-align: center !important; white-space: normal !important; overflow-wrap: anywhere !important;' +
+      ' text-align: center !important; white-space: normal !important; overflow-wrap: normal !important;' +
+      ' word-break: normal !important; hyphens: manual !important; display: block !important;' +
+      ' width: auto !important; max-width: none !important; height: auto !important; max-height: none !important;' +
+      ' overflow: visible !important; -webkit-line-clamp: unset !important;' +
       ' color: #fff !important; text-shadow: 0 1px 3px rgba(0, 0, 0, .9) !important; }';
     (document.head || document.documentElement).appendChild(style);
   }

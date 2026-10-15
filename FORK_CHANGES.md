@@ -757,6 +757,14 @@ From a hands-on pass through the app in light and dark mode on an emulator.
   removed: after a finger tap the mouse is put where the finger was. Facebook's own Discard /
   Share row is hidden before anything that depends on the tools, so it no longer reappears while a
   panel is open.
+- Checked live on a phone with a time sticker: a tool found in another branch of Facebook's sidebar
+  (*Apps*, taller because of its submenu arrow) was hidden by the layout; tools are now any button
+  with an icon and a short label (the AI label row, with its checkbox, isn't one), and one outside
+  the tools' list takes the first slot of the row, its icon and label lined up with the others'.
+  Labels keep whole words and all start on the same line. A sticker's × (shown once a tap leaves
+  the mouse over it) was a thin grey cross on 24 px: it's now a dark round button with a white rim
+  and a larger touch area. Tapping a time sticker still changes its style (Facebook's behaviour);
+  its × removes it.
 - The files are copied into the app's cache when shared (the sharing app's permission ends with
   the activity) and reach only Facebook's own page: `share_media.js` asks for them through the
   `AstryxShare` message listener (main frame of Facebook pages only), which sends them as binary
