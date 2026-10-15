@@ -698,7 +698,10 @@ From a hands-on pass through the app in light and dark mode on an emulator.
   - Your groups (photos, several at once): the app opens the user's groups; once they open one,
     its composer's Photo button gets the photos like the feed's. A group share waits up to 10
     minutes for the group to be picked, on the groups list and any page after it (a group can open
-    as a new load), and never on another page with a Photo button (Home).
+    as a new load), and never on another page with a Photo button (Home). v1.29.0 to v1.30.1 found
+    the composer's Photo button only as a button, and a group's page renders it as a bare action
+    container (no button role), so picking the group just opened its page; it's found either way
+    now (checked with a real group).
   - Reels (one video): m.facebook.com sends reel creation to the Facebook app, so the layer opens
     the desktop site's reels page (`www.facebook.com/reels/create`, which redirects to `/reel/`),
     laid out wide like the story creator; for a reel share the layer keeps that page instead of

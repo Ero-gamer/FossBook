@@ -107,13 +107,19 @@
     })();
   }
 
+  // The composer's Photo button: a button (Home) or a bare action container (a group's page, no
+  // button role), whose text starts with the Photo icon. The innermost one: a container holding
+  // the whole composer starts with that icon only when the button is its first content.
   function photoButton() {
-    var buttons = document.querySelectorAll('[role="button"]');
+    var buttons = document.querySelectorAll('[role="button"], [data-action-id]');
+    var found = null;
     for (var i = 0; i < buttons.length; i++) {
-      var text = buttons[i].textContent || '';
-      if (text.indexOf(PHOTO_ICON) === 0 || buttons[i].getAttribute('aria-label') === 'Photo') return buttons[i];
+      var text = (buttons[i].textContent || '').replace(/^\s+/, '');
+      if (text.indexOf(PHOTO_ICON) === 0 || buttons[i].getAttribute('aria-label') === 'Photo') {
+        if (!found || found.contains(buttons[i])) found = buttons[i];
+      }
     }
-    return null;
+    return found;
   }
 
   // Presses button, whose page then clicks a hidden file input (which would open Android's

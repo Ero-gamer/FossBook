@@ -180,6 +180,20 @@ class ShareMediaJsTest {
     }
 
     @Test
+    fun group_photoButtonWithoutAButtonRole_isFoundToo() {
+        // A group's page renders its composer's Photo button as a bare action container
+        // (data-action-id, no role), unlike Home.
+        val h = Harness()
+        h.load("https://m.facebook.com/groups/355723031242469/", feedPage(label = "Photo").replace("role='button' ", "data-action-id='32671' "))
+        h.eval(PHOTO_ICON)
+        h.files(Triple("0_a.jpg", "image/jpeg", 3))
+        h.run("group")
+
+        assertTrue(h.waitFor("!!window.__got"))
+        assertEquals("0_a.jpg:image/jpeg:3", h.eval("window.__got.join(',')").unquoted())
+    }
+
+    @Test
     fun group_notOnTheGroupsListOrHome() {
         // The list where the user picks the group (and Home, if they go back there) has a Photo
         // button too: the photos wait for a group.
