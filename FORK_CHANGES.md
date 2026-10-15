@@ -745,6 +745,18 @@ From a hands-on pass through the app in light and dark mode on an emulator.
   under them (Facebook's own, in the user's language: "Large lyrics style", "Pause", "Done"...),
   rows wider than the screen shrink to fit, and the panel gets a **Done** button that closes it and
   keeps the song. The song list's play and save icons stay as they are.
+- Story editor fixes from a phone whose account has more tools (*Apps*, *Add time*): the tools are
+  laid out within the story's width (they spilled past it, shifted sideways and cut their labels),
+  each with its first icon only (*Apps* has a submenu arrow too), and stay recognised however tall
+  two-line labels make them. A tool's editor that opens under it in the sidebar (*Alternative
+  text*: generated or custom alt text) shows as a panel with a Done that closes it through its tool.
+  Popups opened with other transforms are centred too, and closed popups' hosts let taps through
+  (one sat over the story and swallowed the music panel's Done). Done now clicks the story's photo
+  itself. A sticker's × (and resize handles) show only while the mouse is over it in Facebook's
+  editor, so a sticker added by accident (a time sticker, whose tap changes its style) couldn't be
+  removed: after a finger tap the mouse is put where the finger was. Facebook's own Discard /
+  Share row is hidden before anything that depends on the tools, so it no longer reappears while a
+  panel is open.
 - The files are copied into the app's cache when shared (the sharing app's permission ends with
   the activity) and reach only Facebook's own page: `share_media.js` asks for them through the
   `AstryxShare` message listener (main frame of Facebook pages only), which sends them as binary
