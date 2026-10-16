@@ -103,6 +103,8 @@
     // A viewer's own URL, not a Page's Videos or Photos tab (/NASA/videos/), where the
     // button used to float over the page header.
     const path = window.location.pathname;
+    // Reels are videos: nothing to copy. (A Like there added the button.)
+    if (/^\/reels?(\/|$)/.test(path)) return false;
     if (
       /\/(stories|highlights)\//.test(path) ||
       (/\/watch\/?$/.test(path) && window.location.search.length > 1) ||

@@ -203,6 +203,10 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   Before, a normal reel whose caption used a label word ("Ad", `במימון` "funded by") was hidden
   too. Icon glyphs, direction marks and separators around the label are ignored. Covered by
   `ReelAdsJsTest`.
+- Reels: Facebook's blue "Open app" button showed in the top bar when *Download* was off (only
+  `download_content.js` hid it). `scripts.js`, which always runs, now hides "Open app" buttons,
+  found by their icon in any language. The copy button no longer shows on Reels pages: a Like
+  there brought it up, and a reel (a video) has nothing to copy. Covered by `ReelsBarJsTest`.
 - A page's title was cut off mid-word next to the Settings gear (a post's comments read "Comr",
   a Page "NASA - National Aeronautics and Sp"). m.facebook.com cuts the title to fit the full bar
   on its server, adding its own "...", and the gear makes the title 44 px narrower. The title now
