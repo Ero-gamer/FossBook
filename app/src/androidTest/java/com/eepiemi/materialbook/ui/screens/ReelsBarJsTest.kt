@@ -15,7 +15,8 @@ import java.util.concurrent.TimeUnit
 /**
  * The Reels bar: Facebook's blue "Open app" button (hidden by scripts.js, which always runs; it
  * used to be hidden by download_content.js only, with Download on) and the copy button
- * (copy_to_clipboard.js), which a Like on a reel brought up although a reel has nothing to copy.
+ * (copy_to_clipboard.js), which a Like on a reel brought up although a reel has nothing to copy
+ * (in the Reels tab, /reel/<id>/, and on a reel opened from the feed, /<page>/videos/<id>/).
  */
 @RunWith(AndroidJUnit4::class)
 class ReelsBarJsTest {
@@ -92,6 +93,19 @@ class ReelsBarJsTest {
         // A large Facebook image on screen, the way a Like's animation or a reel's poster puts one.
         val h = Harness()
         h.load("https://m.facebook.com/reel/123", "<div class='story_viewer'>" + BIG_IMAGE + "</div>")
+        h.run(R.raw.copy_to_clipboard)
+        Thread.sleep(800)
+        assertEquals("false", h.eval("document.getElementById('materialbook-clipboard-copier').classList.contains('visible')"))
+    }
+
+    @Test
+    fun theCopyButton_staysHiddenOnAReelOpenedFromTheFeed() {
+        // A reel from the feed opens at /<page>/videos/<id>/; its poster is the large image.
+        val h = Harness()
+        h.load(
+            "https://m.facebook.com/somepage/videos/some-title/1089723017184273/",
+            "<div data-mcomponent='MVideo'>" + BIG_IMAGE + "<video></video></div>"
+        )
         h.run(R.raw.copy_to_clipboard)
         Thread.sleep(800)
         assertEquals("false", h.eval("document.getElementById('materialbook-clipboard-copier').classList.contains('visible')"))
