@@ -126,6 +126,13 @@ user-visible change.
   rewrites the viewport `<meta>`s and Facebook's `vpd` cookie (the viewport its server lays pages
   out for). Page scripts that read `visualViewport.scale` must count from
   `__astryxPageZoomScale()`, not 1. Zooming out needs `useWideViewPort`.
+- A feed memory ("5 years ago") opens each photo alone (`photo.php?fbid=…`, "1 of 1"; even with
+  `set=`, a full load is always 1 of 1). `memory_photos.js` (main view) catches a photo opened from
+  a card with several photo tiles, asks the app (`AstryxPage` call `photoPost`, answered through the
+  listener's reply) and opens the post (`m.facebook.com/<owner>/posts/<id>/`, shown at the top of the
+  feed as "From your link"), then taps the same tile. `PhotoPost.kt` reads the post from the desktop
+  photo page's tracking data (`top_level_post_id`, `photo_attachments_list`). Memories show only now
+  and then (often after an app update) and only in the app's feed, not the sites'.
 - m.facebook.com has no URL for Feeds (`?sk=h_chr` redirects to Home). *Start on Feeds* opens the
   menu at `/bookmarks/#astryx-feeds` and `open_feeds.js` presses its Feeds entry, found by its icon.
 - *Facebook notifications* (`notifications/FacebookCountsWorker.kt`, WorkManager, 15 min) fetches

@@ -211,6 +211,14 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   `/<page>/videos/<id>/` rather than `/reel/<id>/`: the copy button counted video pages as viewers
   and offered the video's poster. Video pages (`/videos/<id>`, `/watch`) no longer get the copy
   button.
+- Memories in the feed ("5 years ago") opened each photo of a multi-photo post on its own (Facebook
+  sends that viewer as "1 of 1"), so the post's other photos couldn't be reached. The mobile site
+  gives no trace of the post there; Facebook's desktop page for the photo names it. When a
+  memory's photo opens alone, the app now looks the post up (`PhotoPost.kt`, the desktop page
+  fetched with the app's Facebook login, nothing kept) and opens it in the photo's place at that
+  photo: the post's photos one under another, as tapping a photo of the post itself does
+  (`memory_photos.js`). Back returns to the memory. Covered by `PhotoPostTest` and
+  `MemoryPhotosJsTest`.
 - A page's title was cut off mid-word next to the Settings gear (a post's comments read "Comr",
   a Page "NASA - National Aeronautics and Sp"). m.facebook.com cuts the title to fit the full bar
   on its server, adding its own "...", and the gear makes the title 44 px narrower. The title now
