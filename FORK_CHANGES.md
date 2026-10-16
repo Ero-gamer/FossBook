@@ -207,6 +207,10 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   `download_content.js` hid it). `scripts.js`, which always runs, now hides "Open app" buttons,
   found by their icon in any language. The copy button no longer shows on Reels pages: a Like
   there brought it up, and a reel (a video) has nothing to copy. Covered by `ReelsBarJsTest`.
+- The copy button still showed on a reel opened from the feed, which opens at
+  `/<page>/videos/<id>/` rather than `/reel/<id>/`: the copy button counted video pages as viewers
+  and offered the video's poster. Video pages (`/videos/<id>`, `/watch`) no longer get the copy
+  button.
 - A page's title was cut off mid-word next to the Settings gear (a post's comments read "Comr",
   a Page "NASA - National Aeronautics and Sp"). m.facebook.com cuts the title to fit the full bar
   on its server, adding its own "...", and the gear makes the title 44 px narrower. The title now

@@ -103,14 +103,20 @@
     // A viewer's own URL, not a Page's Videos or Photos tab (/NASA/videos/), where the
     // button used to float over the page header.
     const path = window.location.pathname;
-    // Reels are videos: nothing to copy. (A Like there added the button.)
-    if (/^\/reels?(\/|$)/.test(path)) return false;
+    // Reels and videos have nothing to copy: the only image there is the video's poster. A reel
+    // from the feed opens at /<page>/videos/<id>/, the Reels tab at /reel/<id>/. (A Like there
+    // brought the button up.)
+    if (
+      /^\/reels?(\/|$)/.test(path) ||
+      /^\/watch\/?$/.test(path) ||
+      /\/videos\/(?:[^/]+\/)?\d+/.test(path)
+    ) {
+      return false;
+    }
     if (
       /\/(stories|highlights)\//.test(path) ||
-      (/\/watch\/?$/.test(path) && window.location.search.length > 1) ||
       /^\/photo(\.php)?\/?$/.test(path) ||
-      /\/photos\/(?:[^/]+\/)?\d+/.test(path) ||
-      /\/videos\/(?:[^/]+\/)?\d+/.test(path)
+      /\/photos\/(?:[^/]+\/)?\d+/.test(path)
     ) {
       return true;
     }
