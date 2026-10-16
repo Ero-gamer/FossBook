@@ -219,6 +219,9 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   photo: the post's photos one under another, as tapping a photo of the post itself does
   (`memory_photos.js`). Back returns to the memory. Covered by `PhotoPostTest` and
   `MemoryPhotosJsTest`.
+- v1.30.9's memory photos sometimes still opened alone: soon after the feed loads, Facebook may open
+  the tapped photo as a new page, and the post the app found was answered to the feed's page, by
+  then gone. The tap is now kept for the page (for 8 s), so the photo's own page asks for its post.
 - A page's title was cut off mid-word next to the Settings gear (a post's comments read "Comr",
   a Page "NASA - National Aeronautics and Sp"). m.facebook.com cuts the title to fit the full bar
   on its server, adding its own "...", and the gear makes the title 44 px narrower. The title now

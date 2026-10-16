@@ -128,7 +128,8 @@ user-visible change.
   `__astryxPageZoomScale()`, not 1. Zooming out needs `useWideViewPort`.
 - A feed memory ("5 years ago") opens each photo alone (`photo.php?fbid=…`, "1 of 1"; even with
   `set=`, a full load is always 1 of 1). `memory_photos.js` (main view) catches a photo opened from
-  a card with several photo tiles, asks the app (`AstryxPage` call `photoPost`, answered through the
+  a card with several photo tiles (the tap is kept in `sessionStorage`: soon after the feed loads,
+  Facebook may open the photo as a new page, which then asks), asks the app (`AstryxPage` call `photoPost`, answered through the
   listener's reply) and opens the post (`m.facebook.com/<owner>/posts/<id>/`, shown at the top of the
   feed as "From your link"), then taps the same tile. `PhotoPost.kt` reads the post from the desktop
   photo page's tracking data (`top_level_post_id`, `photo_attachments_list`). Memories show only now
