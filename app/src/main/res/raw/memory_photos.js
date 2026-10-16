@@ -12,7 +12,8 @@
   window.__astryxMemoryPhotos = true;
 
   var KEY = 'astryxPhotoPost';
-  var TAP_MS = 4000; // from the tap to the photo's address
+  var TAP_KEY = 'astryxMemoryTap';
+  var TAP_MS = 8000; // from the tap to the photo's address (a new page takes longer)
   var OPEN_MS = 30000; // from the lookup to the post's page
   var FIND_MS = window.__astryxMemoryFindMs || 15000; // tests shorten it
   var MIN_TILE = 60;
@@ -45,21 +46,36 @@
     return el && el.closest ? el.closest('[data-tracking-duration-id]') : null;
   }
 
+  // The tap is also kept for the page: soon after the feed loads, Facebook may open the photo as
+  // a new page (a full load) rather than in this one, and the photo's page then asks.
   var tappedAt = 0;
   var asked = null;
+
+  function store(key, value) {
+    try {
+      if (value === null) sessionStorage.removeItem(key);
+      else sessionStorage.setItem(key, value);
+    } catch (e) { /* no storage: the tap only counts in this page */ }
+  }
 
   document.addEventListener('click', function (event) {
     var action = event.target && event.target.closest ? event.target.closest('[data-action-id]') : null;
     var card = cardOf(action);
     tappedAt = card && tiles(card).length >= 2 ? Date.now() : 0;
+    store(TAP_KEY, tappedAt ? String(tappedAt) : null);
   }, true);
 
   function check() {
-    if (!tappedAt || Date.now() - tappedAt > TAP_MS) return;
+    var at = tappedAt;
+    if (!at) {
+      try { at = Number(sessionStorage.getItem(TAP_KEY)) || 0; } catch (e) { at = 0; }
+    }
+    if (!at || Date.now() - at > TAP_MS) return;
     if (location.pathname !== '/photo.php' || /[?&]set=/.test(location.search)) return;
     var m = /[?&]fbid=(\d+)/.exec(location.search);
     if (!m) return;
     tappedAt = 0;
+    store(TAP_KEY, null);
     asked = { fbid: m[1], at: Date.now() };
     page.postMessage(JSON.stringify({ call: 'photoPost', fbid: m[1] }));
   }
@@ -87,6 +103,7 @@
     };
   });
   window.addEventListener('popstate', check);
+  check(); // a photo opened as a new page
 
   // The post's page (m.facebook.com shows it at the top of the feed, "From your link"): tap the
   // photo the memory opened.

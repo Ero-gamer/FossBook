@@ -93,6 +93,32 @@ class MemoryPhotosJsTest {
     }
 
     @Test
+    fun aMemoryPhotoOpenedAsANewPage_asksFromThatPage() {
+        // Soon after the feed loads, Facebook may open the tapped photo with a full load: the
+        // feed's page (and the answer to it) is gone, so the photo's own page asks.
+        val h = Harness()
+        h.load(
+            card("x", 1),
+            "sessionStorage.setItem('astryxMemoryTap', String(Date.now() - 1500));" +
+                " history.replaceState(null, '', '/photo.php?fbid=77');"
+        )
+        assertEquals("1", h.eval("window.__sent.length"))
+        assertEquals("\"77\"", h.eval("JSON.parse(window.__sent[0]).fbid"))
+        assertEquals("null", h.eval("sessionStorage.getItem('astryxMemoryTap')"))
+    }
+
+    @Test
+    fun anOldTap_doesntMakeALaterPhotoPageAsk() {
+        val h = Harness()
+        h.load(
+            card("x", 1),
+            "sessionStorage.setItem('astryxMemoryTap', String(Date.now() - 60000));" +
+                " history.replaceState(null, '', '/photo.php?fbid=77');"
+        )
+        assertEquals("0", h.eval("window.__sent.length"))
+    }
+
+    @Test
     fun aSinglePhotoPost_orAPhotoWithItsAlbum_isLeftAlone() {
         val h = Harness()
         h.load(card("s", 1) + card("m", 3))
