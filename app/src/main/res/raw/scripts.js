@@ -301,7 +301,19 @@ const isOpenAppBar = (element) => {
     && button.querySelectorAll('[data-mcomponent]').length === 1;
 };
 
+// Facebook's "Open app" buttons (the Reels bar's blue one, a story's): found by their icon (the same
+// in every language). download_content.js hid them too, but only with Download on.
+const OPEN_APP_ICON = String.fromCodePoint(0xF196C);
+const hideOpenAppButtons = () => {
+  document.querySelectorAll('div[role="button"]').forEach(button => {
+    if (button.style.display === 'none') return;
+    const icon = button.querySelector('div.fl.ac span');
+    if (icon && icon.textContent.includes(OPEN_APP_ICON)) button.style.display = 'none';
+  });
+};
+
 const observer = new MutationObserver(() => {
+  hideOpenAppButtons();
 
   const element = document.querySelector('.bottom.fixed-container');
   if (location.pathname === '/'
