@@ -66,6 +66,7 @@ import com.eepiemi.materialbook.ui.components.settings.SettingsDialog
 import com.eepiemi.materialbook.ui.viewmodel.MainViewModel
 import com.eepiemi.materialbook.ui.viewmodel.SettingsViewModel
 import com.eepiemi.materialbook.utils.DESKTOP_USER_AGENT
+import com.eepiemi.materialbook.utils.lookUpPhotoPost
 import com.eepiemi.materialbook.utils.ExternalLinkAction
 import com.eepiemi.materialbook.utils.ExternalRequestInterceptor
 import com.eepiemi.materialbook.utils.externalLinkAction
@@ -1720,6 +1721,7 @@ fun MaterialbookWebView(
                                     context.startActivity(Intent.createChooser(send, resources.getString(R.string.share_via)))
                                 }
                             },
+                            photoPost = { fbid, reply -> lookUpPhotoPost(context, fbid, reply) },
                         )
                     )
                     installDownloadBridge(this, context)

@@ -20,6 +20,8 @@ class PageBridges(
     val layer: LayerBridge? = null,
     // "Share via…" in Facebook's share sheet: a Facebook link to hand to the Android share sheet.
     val share: ((String) -> Unit)? = null,
+    // memory_photos.js: a photo's post (PhotoPost), looked up and answered to the page as JSON.
+    val photoPost: ((fbid: String, reply: (String) -> Unit) -> Unit)? = null,
 )
 
 /**
@@ -38,9 +40,17 @@ fun installPageBridges(webView: WebView, bridges: PageBridges) {
         bridges.layer?.let { webView.addJavascriptInterface(it, "LayerBridge") }
         return
     }
-    WebViewCompat.addWebMessageListener(webView, PAGE_LISTENER_NAME, FACEBOOK_PAGE_ORIGINS) { _, message, sourceOrigin, isMainFrame, _ ->
+    WebViewCompat.addWebMessageListener(webView, PAGE_LISTENER_NAME, FACEBOOK_PAGE_ORIGINS) { _, message, sourceOrigin, isMainFrame, reply ->
         if (!isMainFrame || !isFacebookWebUrl(sourceOrigin.toString())) return@addWebMessageListener
-        message.data?.let { dispatchPageMessage(it, bridges) }
+        val data = message.data ?: return@addWebMessageListener
+        // The one call the page waits an answer for.
+        val photoPost = bridges.photoPost
+        val msg = runCatching { JSONObject(data) }.getOrNull()
+        if (photoPost != null && msg?.optString("call") == "photoPost") {
+            photoPost(msg.optString("fbid")) { reply.postMessage(it) }
+            return@addWebMessageListener
+        }
+        dispatchPageMessage(data, bridges)
     }
 }
 
