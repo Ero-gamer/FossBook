@@ -312,8 +312,55 @@ const hideOpenAppButtons = () => {
   });
 };
 
+// Facebook's "Facebook is better on the app" sheet (Get app / Not now), put over the feed when the
+// app opens: pressed away with its dismiss button, as the user would. Its shape: a dialog screen
+// whose bottom sheet holds a picture, one title and exactly two buttons, and nothing to type in.
+// - Where its words are known, per language: that sheet for sure, even right after a tap. English
+//   was read from a real sheet (title and button). For Hebrew only the button is known: Facebook's
+//   usual Hebrew "Not now". A confirmation the user opened has no such button.
+// - In other languages, the shape alone, and only a sheet that came up by itself, not just after a
+//   tap: one the user opened (a confirmation such as "Delete post?") is left to them. Its second
+//   button is the dismiss one.
+// Add a language's exact title and dismiss label once they're read from a real sheet (a language
+// without a title is matched by its dismiss label alone).
+const APP_PROMPT_TEXTS = {
+  en: { title: 'Facebook is better on the app', dismiss: 'Not now' },
+  he: { dismiss: '\u05DC\u05D0 \u05E2\u05DB\u05E9\u05D9\u05D5' },
+};
+const APP_PROMPT_TAP_MS = 2000;
+let lastTapAt = 0;
+document.addEventListener('pointerdown', () => { lastTapAt = Date.now(); }, true);
+const seenPromptSheets = new WeakSet();
+const promptText = (element) => (element ? element.textContent : '').replace(/\s+/g, ' ').trim();
+const knownPromptDismiss = (sheet, buttons) => {
+  const title = promptText(sheet.querySelector('h1'));
+  for (const texts of Object.values(APP_PROMPT_TEXTS)) {
+    if (texts.title && title !== texts.title) continue;
+    const dismiss = Array.from(buttons).find(button =>
+      button.getAttribute('aria-label') === texts.dismiss || promptText(button) === texts.dismiss);
+    if (dismiss) return dismiss;
+  }
+  return null;
+};
+const dismissAppPrompt = () => {
+  const sheet = document.querySelector('.dialog-screen .bottom.fixed-container');
+  if (!sheet || seenPromptSheets.has(sheet)) return;
+  const buttons = sheet.querySelectorAll('[role="button"]');
+  if (buttons.length !== 2 || sheet.querySelectorAll('h1').length !== 1 || !sheet.querySelector('img')
+    || sheet.querySelector('input, textarea, [contenteditable]')) return;
+  seenPromptSheets.add(sheet);
+  const known = knownPromptDismiss(sheet, buttons);
+  if (known) {
+    known.click();
+    return;
+  }
+  if (Date.now() - lastTapAt < APP_PROMPT_TAP_MS) return;
+  buttons[1].click();
+};
+
 const observer = new MutationObserver(() => {
   hideOpenAppButtons();
+  dismissAppPrompt();
 
   const element = document.querySelector('.bottom.fixed-container');
   if (location.pathname === '/'
