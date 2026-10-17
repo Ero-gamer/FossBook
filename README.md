@@ -11,7 +11,7 @@
 </p>
 
 <p align="middle">
-    <a href='https://grev.shehryar.ae/?owner=ofirc73&repo=AstryxBook'><img alt='Downloads count' height='40' src='https://img.shields.io/github/downloads/ofirc73/AstryxBook/total?style=for-the-badge&logo=github&label=Downloads&color=1877F2&labelColor=24292F'/></a>
+    <a href='https://grev.shehryar.ae/?owner=ofirc73&repo=AstryxBook'><img alt='Downloads count' height='40' src='https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fofirc73%2FAstryxBook%2Frefs%2Fheads%2Fstats%2Fbadge.json&style=for-the-badge&logo=github&labelColor=24292F'/></a>
 </p>
 
 <h2 align="middle">
