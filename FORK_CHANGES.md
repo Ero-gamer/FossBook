@@ -41,6 +41,10 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
 - Weekly download history: `download-stats.yml` appends each release's
   GitHub download count to `downloads.csv` on the data-only `stats` branch
   (Mondays, or on demand from the Actions tab). No tracking in the app.
+- The README's downloads badge shows the total of all releases: `download-badge.yml` adds them up
+  every 3 hours into `badge.json` on the `stats` branch, read by a shields.io endpoint badge.
+  shields.io's own GitHub downloads badge counted only the newest 100 releases (115 of 121 at
+  110 releases) and now and then showed "invalid".
 
 ## Localization
 

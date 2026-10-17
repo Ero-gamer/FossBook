@@ -11,6 +11,9 @@ on:
 permissions:
   contents: write
 
+# download-badge.yml pushes to the same branch.
+concurrency: stats-branch
+
 jobs:
   snapshot:
     runs-on: ubuntu-latest
