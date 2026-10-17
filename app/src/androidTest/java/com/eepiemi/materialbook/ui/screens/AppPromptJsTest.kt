@@ -74,9 +74,9 @@ class AppPromptJsTest {
         }
 
         // Facebook adds the sheet's screen to the page; its buttons record a press.
-        fun addSheet(extra: String = "") {
+        fun addSheet(extra: String = "", sheet: String = SHEET) {
             eval(
-                "window.__pressed = null; var d = document.createElement('div'); d.innerHTML = \"$SHEET\".replace('EXTRA', \"$extra\");" +
+                "window.__pressed = null; var d = document.createElement('div'); d.innerHTML = \"$sheet\".replace('EXTRA', \"$extra\");" +
                     " document.body.appendChild(d.firstChild);" +
                     " document.querySelectorAll('[role=button]').forEach(function (b) {" +
                     " b.addEventListener('click', function () { window.__pressed = b.getAttribute('aria-label'); }); }); 1"
@@ -93,11 +93,40 @@ class AppPromptJsTest {
     }
 
     @Test
-    fun aSheetRightAfterATap_isLeftToTheUser() {
+    fun theEnglishSheet_isPressedAway_evenRightAfterATap() {
+        // Its words name it for sure.
         val h = Harness()
         h.load()
         h.eval("document.getElementById('feed').dispatchEvent(new PointerEvent('pointerdown', {bubbles: true})); 1")
         h.addSheet()
+        assertTrue(h.waitFor("window.__pressed === 'Not now'"))
+    }
+
+    @Test
+    fun theHebrewSheet_isPressedAway_evenRightAfterATap() {
+        // Known by its "Not now" button; its title isn't (a stand-in here).
+        val h = Harness()
+        h.load()
+        h.eval("document.getElementById('feed').dispatchEvent(new PointerEvent('pointerdown', {bubbles: true})); 1")
+        h.addSheet(sheet = sheet("\u05E4\u05D9\u05D9\u05E1\u05D1\u05D5\u05E7 \u05D8\u05D5\u05D1 \u05D9\u05D5\u05EA\u05E8 \u05D1\u05D0\u05E4\u05DC\u05D9\u05E7\u05E6\u05D9\u05D4", "\u05E7\u05D1\u05DC \u05D0\u05EA \u05D4\u05D0\u05E4\u05DC\u05D9\u05E7\u05E6\u05D9\u05D4", HE_NOT_NOW))
+        assertTrue(h.waitFor("window.__pressed === '$HE_NOT_NOW'"))
+    }
+
+    @Test
+    fun aSheetInAnotherLanguage_isPressedAwayWithItsSecondButton() {
+        val h = Harness()
+        h.load()
+        h.addSheet(sheet = sheet("Facebook ist in der App besser", "App holen", "Jetzt nicht"))
+        assertTrue(h.waitFor("window.__pressed === 'Jetzt nicht'"))
+    }
+
+    @Test
+    fun anUnknownSheetRightAfterATap_isLeftToTheUser() {
+        // A confirmation the user opened, shaped like the app sheet.
+        val h = Harness()
+        h.load()
+        h.eval("document.getElementById('feed').dispatchEvent(new PointerEvent('pointerdown', {bubbles: true})); 1")
+        h.addSheet(sheet = sheet("Delete post?", "Delete", "Cancel"))
         Thread.sleep(800)
         assertEquals("null", h.eval("window.__pressed"))
     }
@@ -112,14 +141,19 @@ class AppPromptJsTest {
     }
 
     private companion object {
-        const val SHEET =
+        fun sheet(title: String, first: String, second: String) =
             "<div class='m bg-s1 dark-mode dialog-screen' data-mcomponent='MScreen' style='position:fixed;top:0;left:0;right:0;bottom:0'>" +
                 "<div class='m fixed-container bottom' data-mcomponent='MContainer' data-actual-height='339' style='position:fixed;bottom:0;left:0;right:0'>" +
                 "<div data-mcomponent='ServerImageArea'><img style='width:54px;height:54px'></div>" +
-                "<h1><span>Facebook is better on the app</span></h1>" +
+                "<h1><span>$title</span></h1>" +
                 "<div><span>Get the latest updates, newest features and the fastest experience.</span></div>EXTRA" +
-                "<div role='button' aria-label='Get app' data-action-id='32755'><span>Get app</span></div>" +
-                "<div role='button' aria-label='Not now' data-action-id='32753'><span>Not now</span></div>" +
+                "<div role='button' aria-label='$first' data-action-id='32755'><span>$first</span></div>" +
+                "<div role='button' aria-label='$second' data-action-id='32753'><span>$second</span></div>" +
                 "</div></div>"
+
+        const val HE_NOT_NOW = "\u05DC\u05D0 \u05E2\u05DB\u05E9\u05D9\u05D5"
+
+        // Facebook breaks the title over two lines ("...better on the" / "app").
+        val SHEET = sheet("Facebook is better on the</span> <span>app", "Get app", "Not now")
     }
 }

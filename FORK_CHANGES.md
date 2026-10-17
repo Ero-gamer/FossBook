@@ -225,9 +225,12 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   `MemoryPhotosJsTest`.
 - Facebook's "Facebook is better on the app" sheet (Get app / Not now), which it puts over the
   feed when the app opens, is pressed away with Not now (`scripts.js`). It's recognized by its
-  shape, in any language (a dialog screen whose bottom sheet holds a picture, one title and two
-  buttons, nothing to type in), and only when it came up by itself: a sheet that opens right after
-  a tap (a confirmation the user asked for) is left alone. Covered by `AppPromptJsTest`.
+  shape (a dialog screen whose bottom sheet holds a picture, one title and two buttons, nothing to
+  type in) and, where known, by its words: in English its title and "Not now", in Hebrew Facebook's
+  "Not now" (its Hebrew title hasn't been seen yet). Known words make it certain; in other
+  languages the shape alone counts, and only for a sheet that came up by itself: one that opens
+  right after a tap (a confirmation the user asked for) is left alone. Covered by
+  `AppPromptJsTest`.
 - v1.30.9's memory photos sometimes still opened alone: soon after the feed loads, Facebook may open
   the tapped photo as a new page, and the post the app found was answered to the feed's page, by
   then gone. The tap is now kept for the page (for 8 s), so the photo's own page asks for its post.
