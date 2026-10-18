@@ -137,6 +137,31 @@
     if (el && el.getAttribute('data-astryx-story') !== value) el.setAttribute('data-astryx-story', value);
   }
 
+  // During posting, Facebook can move the AI-label explanation out of the sidebar row. Hide the
+  // explanation by its copy anywhere in the active creator, so a narrow leftover container cannot
+  // wrap it into a vertical column over the photo.
+  function hideAIDisclosure() {
+    function isDisclosure(el) {
+      var text = (el.innerText || '').replace(/\s+/g, ' ').toLowerCase();
+      return text.indexOf('we require you to label') !== -1 &&
+        (text.indexOf('made with ai') !== -1 || text.indexOf('ai-generated') !== -1 ||
+          text.indexOf('significantly altered') !== -1);
+    }
+    var candidates = document.querySelectorAll('body div, body span, body p');
+    for (var i = 0; i < candidates.length; i++) {
+      var candidate = candidates[i];
+      if (!isDisclosure(candidate)) continue;
+      var descendants = candidate.querySelectorAll('div, span, p');
+      var nested = false;
+      for (var d = 0; d < descendants.length; d++) {
+        if (isDisclosure(descendants[d])) { nested = true; break; }
+      }
+      if (!nested && !candidate.hasAttribute('data-astryx-story-hide')) {
+        candidate.setAttribute('data-astryx-story-hide', '');
+      }
+    }
+  }
+
   // Tags the preview, the sidebar and its tools for the style sheet, and hides the rest of the
   // sidebar (its header, the AI label, its own Discard / Share).
   function layout() {
@@ -319,6 +344,7 @@
       untag(); // choosing a story: Facebook's own page
       return;
     }
+    hideAIDisclosure();
     var nav = null; // the sidebar beside the preview (the page header is a navigation too)
     for (var sib = main.parentElement.firstElementChild; sib; sib = sib.nextElementSibling) {
       if (sib !== main && sib.getAttribute('role') === 'navigation') nav = sib;
