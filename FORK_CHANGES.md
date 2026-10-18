@@ -261,6 +261,12 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   address stays Home's. On that address it now also hides a bar holding a single full-width
   button with only a label (any language); the comment box and other bars with icons or a text
   field stay.
+- The Story creator is arranged for a phone-sized preview, with its tools above the bottom
+  actions. From an existing Story, **Add story** opens Facebook's in-app creator instead of its
+  prompt to open the Facebook app. When music is added, the music sticker is hidden by default
+  while its track remains selected; the sticker's options provide a **Show music sticker / Hide
+  music sticker** toggle. The tool row leaves extra space at the right so the **Alternative text**
+  label does not touch the photo's edge. Covered by `AppPromptJsTest` and `StoryLayoutJsTest`.
 
 ## CI/CD
 
