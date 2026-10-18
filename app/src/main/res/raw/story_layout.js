@@ -137,15 +137,22 @@
     if (el && el.getAttribute('data-astryx-story') !== value) el.setAttribute('data-astryx-story', value);
   }
 
-  // During posting, Facebook can move the AI-label explanation out of the sidebar row. Hide the
-  // explanation by its copy anywhere in the active creator, so a narrow leftover container cannot
-  // wrap it into a vertical column over the photo.
+  // During posting, Facebook can move the AI-label control and explanation out of the sidebar.
+  // Hide them by their text so they cannot wrap into a vertical column over the photo.
   function hideAIDisclosure() {
     function isDisclosure(el) {
-      var text = (el.innerText || '').replace(/\s+/g, ' ').toLowerCase();
-      return text.indexOf('we require you to label') !== -1 &&
-        (text.indexOf('made with ai') !== -1 || text.indexOf('ai-generated') !== -1 ||
-          text.indexOf('significantly altered') !== -1);
+      var content = (el.innerText || '').replace(/\s+/g, ' ').toLowerCase();
+      return content.indexOf('we require you to label') !== -1 &&
+        (content.indexOf('made with ai') !== -1 || content.indexOf('ai-generated') !== -1 ||
+          content.indexOf('significantly altered') !== -1);
+    }
+    // Facebook can move the AI-label control itself alongside the disclosure while posting.
+    // Hide only the control (and its label), never their shared posting overlay.
+    var labels = document.querySelectorAll('body [role="button"], body label, body span');
+    for (var l = 0; l < labels.length; l++) {
+      var labelText = (labels[l].innerText || labels[l].textContent || '').replace(/\s+/g, ' ').toLowerCase();
+      if (labelText.indexOf('add ai label') !== 0 || labelText.length > 40) continue;
+      if (!labels[l].hasAttribute('data-astryx-story-hide')) labels[l].setAttribute('data-astryx-story-hide', '');
     }
     var candidates = document.querySelectorAll('body div, body span, body p');
     for (var i = 0; i < candidates.length; i++) {
