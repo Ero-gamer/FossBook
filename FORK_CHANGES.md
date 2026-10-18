@@ -266,7 +266,9 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   prompt to open the Facebook app. When music is added, the music sticker is hidden by default
   while its track remains selected; the sticker's options provide a **Show music sticker / Hide
   music sticker** toggle. The tool row leaves extra space at the right so the **Alternative text**
-  label does not touch the photo's edge. Covered by `AppPromptJsTest` and `StoryLayoutJsTest`.
+  label does not touch the photo's edge. Facebook's long AI-label disclosure is hidden with its
+  unused row details so it cannot spill into a vertical letter column while posting. Covered by
+  `AppPromptJsTest` and `StoryLayoutJsTest`.
 
 ## CI/CD
 

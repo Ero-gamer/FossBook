@@ -456,13 +456,30 @@
       for (var k = 0; k < keep.length; k++) if (el.contains(keep[k])) return true;
       return false;
     }
+    function hideToolRowDetails(row) {
+      function containsTool(el) {
+        return el.matches('[data-astryx-story="tool"], [data-astryx-story="tool-extra"]') ||
+          !!el.querySelector('[data-astryx-story="tool"], [data-astryx-story="tool-extra"]');
+      }
+      (function hideSiblings(el) {
+        for (var child = el.firstElementChild; child; child = child.nextElementSibling) {
+          if (child.matches('[data-astryx-story="tool"], [data-astryx-story="tool-extra"]')) continue;
+          if (containsTool(child)) hideSiblings(child);
+          else if (!child.hasAttribute('data-astryx-story-hide')) child.setAttribute('data-astryx-story-hide', '');
+        }
+      })(row);
+    }
     (function hide(el) {
       for (var c = el.firstElementChild; c; c = c.nextElementSibling) {
         if (c === list) {
           var lastTool = null;
           for (var item = list.firstElementChild; item; item = item.nextElementSibling) {
-            if (item.getAttribute('data-astryx-story') === 'tool' || item.querySelector('[data-astryx-story="tool"]')) {
+            if (item.matches('[data-astryx-story="tool"], [data-astryx-story="tool-extra"]') ||
+                item.querySelector('[data-astryx-story="tool"], [data-astryx-story="tool-extra"]')) {
               lastTool = item;
+              if (!item.matches('[data-astryx-story="tool"], [data-astryx-story="tool-extra"]')) {
+                hideToolRowDetails(item);
+              }
             } else if (item.querySelector('textarea') || item.querySelectorAll('input').length >= 2) {
               // A tool's editor, open under it in the sidebar (Alternative text): a panel of its own.
               item.removeAttribute('data-astryx-story-hide');

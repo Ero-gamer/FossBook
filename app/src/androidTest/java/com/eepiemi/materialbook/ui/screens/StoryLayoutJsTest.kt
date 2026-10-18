@@ -154,6 +154,25 @@ class StoryLayoutJsTest {
     }
 
     @Test
+    fun aDisclosureBesideAKeptTool_isHiddenWithoutHidingTheTool() {
+        val h = Harness()
+        h.load(CREATOR)
+        h.eval(
+            "(function () { var row = document.createElement('div'); row.id = 'ai-row';" +
+                " row.innerHTML = \"<div role='button' id='ai-tool'><svg width='20' height='20'></svg><span>Add AI label</span></div>\" +" +
+                " \"<div id='ai-disclosure'>We require you to label content that is AI-generated or significantly altered with AI before posting.</div>\";" +
+                " document.getElementById('tools').appendChild(row); })()"
+        )
+        h.run()
+        h.eval("window.__showFrame()")
+
+        assertTrue(h.waitFor("document.getElementById('ai-tool').getAttribute('data-astryx-story') === 'tool-extra'"))
+        assertEquals("false", h.hidden("#ai-tool"))
+        assertTrue(h.waitFor("!!document.getElementById('ai-disclosure').closest('[data-astryx-story-hide]')"))
+        assertEquals("true", h.hidden("#ai-disclosure"))
+    }
+
+    @Test
     fun facebooksOpenPopups_areCentred_closedOnesLeftAlone() {
         val h = Harness()
         h.load(CREATOR + POPUPS)
