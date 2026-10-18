@@ -71,6 +71,8 @@
     <string name="share_media_nothing_photos">Hier können nur Fotos geteilt werden. Videos können in eine Story oder ein Reel.</string>
     <string name="share_media_nothing_reel">Nichts zu teilen: Reels nehmen ein Video.</string>
     <string name="story_panel_done">Fertig</string>
+    <string name="story_music_sticker_hide">Musik-Sticker ausblenden</string>
+    <string name="story_music_sticker_show">Musik-Sticker anzeigen</string>
     <plurals name="share_media_skipped">
         <item quantity="one">%1$d Element wurde ausgelassen (zu groß, zu viele oder nicht unterstützter Typ)</item>
         <item quantity="other">%1$d Elemente wurden ausgelassen (zu groß, zu viele oder nicht unterstützter Typ)</item>

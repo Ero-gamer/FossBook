@@ -7,4 +7,5 @@
 -->
 <resources>
     <string name="app_name">Astryxbook Debug</string>
+    <string name="share_target_story">Astryxbook Test · Your story</string>
 </resources>

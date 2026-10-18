@@ -312,6 +312,29 @@ const hideOpenAppButtons = () => {
   });
 };
 
+// The mobile Story viewer's "Add story" button only opens Facebook's app upsell sheet. Open the
+// desktop creator in Astryxbook's Story layer instead. The plus/photo glyph is shared across
+// languages; the path guard ensures we only intercept the add button inside a Story viewer.
+const ADD_STORY_ICON = String.fromCodePoint(0xF31CC);
+document.addEventListener('click', event => {
+  if (!/^\/stories\/[^/]+(?:\/|$)/.test(location.pathname) || /^\/stories\/create\/?$/.test(location.pathname)) return;
+  const target = event.target instanceof Element ? event.target.closest('[role="button"]') : null;
+  if (!target || !target.hasAttribute('data-action-id')) return;
+  const hasAddStoryIcon = Array.from(target.querySelectorAll('span'))
+    .some(span => span.textContent.includes(ADD_STORY_ICON));
+  if (!hasAddStoryIcon) return;
+  if (!window.AstryxPage && !window.LayerBridge) return;
+
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  const url = 'https://www.facebook.com/stories/create';
+  if (window.AstryxPage) {
+    window.AstryxPage.postMessage(JSON.stringify({ call: 'layerUrl', url }));
+  } else {
+    window.LayerBridge.onUrlChanged(url);
+  }
+}, true);
+
 // Facebook's "Facebook is better on the app" sheet (Get app / Not now), put over the feed when the
 // app opens: pressed away with its dismiss button, as the user would. Its shape: a dialog screen
 // whose bottom sheet holds a picture, one title and exactly two buttons, and nothing to type in.

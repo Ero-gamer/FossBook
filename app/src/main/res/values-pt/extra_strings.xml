@@ -72,6 +72,8 @@
     <string name="share_media_nothing_photos">Aqui só é possível compartilhar fotos. Vídeos podem ir para um story ou um reel.</string>
     <string name="share_media_nothing_reel">Nada para compartilhar: reels aceitam um vídeo.</string>
     <string name="story_panel_done">Concluir</string>
+    <string name="story_music_sticker_hide">Ocultar figurinha de música</string>
+    <string name="story_music_sticker_show">Mostrar figurinha de música</string>
     <plurals name="share_media_skipped">
         <item quantity="one">%1$d item ficou de fora (grande demais, itens demais ou tipo sem suporte)</item>
         <item quantity="many">%1$d itens ficaram de fora (grandes demais, itens demais ou tipo sem suporte)</item>

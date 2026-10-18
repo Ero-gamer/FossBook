@@ -169,7 +169,13 @@ fun MessagesLayer(
         if (isStoryCreatePage(page)) {
             val layout = resources.openRawResource(R.raw.story_layout).bufferedReader().use { it.readText() }
             val done = JSONObject.quote(resources.getString(R.string.story_panel_done))
-            navigator.evaluateJavaScript("window.__astryxStoryDone = $done;\n$layout") {}
+            val hideMusic = JSONObject.quote(resources.getString(R.string.story_music_sticker_hide))
+            val showMusic = JSONObject.quote(resources.getString(R.string.story_music_sticker_show))
+            navigator.evaluateJavaScript(
+                "window.__astryxStoryDone = $done;" +
+                    "window.__astryxStoryHideMusic = $hideMusic;" +
+                    "window.__astryxStoryShowMusic = $showMusic;\n$layout"
+            ) {}
         }
         val target = when {
             isStoryCreatePage(page) && ShareMediaQueue.pending(ShareTarget.STORY) -> ShareTarget.STORY

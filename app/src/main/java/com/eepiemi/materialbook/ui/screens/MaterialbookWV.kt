@@ -89,6 +89,7 @@ import com.eepiemi.materialbook.utils.jsBridge.installDownloadBridge
 import com.eepiemi.materialbook.utils.jsBridge.installShareMediaBridge
 import com.eepiemi.materialbook.utils.jsBridge.installPageBridges
 import com.eepiemi.materialbook.utils.jsBridge.PageBridges
+import com.eepiemi.materialbook.utils.jsBridge.LayerBridge
 import com.eepiemi.materialbook.utils.jsBridge.MaterialbookSettings
 import com.eepiemi.materialbook.utils.jsBridge.ThemeChange
 import com.eepiemi.materialbook.utils.jsBridge.DownloadEvents
@@ -103,6 +104,7 @@ import com.eepiemi.materialbook.utils.intentFallbackUrl
 import com.eepiemi.materialbook.utils.KeepScreenOn
 import com.eepiemi.materialbook.utils.TextZoom
 import com.eepiemi.materialbook.utils.isMessagesLink
+import com.eepiemi.materialbook.utils.isStoryCreatePage
 import com.eepiemi.materialbook.utils.isWebUrl
 import com.eepiemi.materialbook.utils.openInCustomTab
 import com.eepiemi.materialbook.utils.messagesDesktopUrl
@@ -1713,6 +1715,9 @@ fun MaterialbookWebView(
                             theme = ThemeChange { if (!settingsToggle) viewModel.setThemeColor(Color(it)) },
                             pip = PipBridge(onVideoPlayingChanged, onPipPageVisible),
                             screen = ScreenBridge { mainVideoPlaying = it },
+                            layer = LayerBridge { pageUrl ->
+                                if (isStoryCreatePage(pageUrl)) messagesLayerUrl = pageUrl
+                            },
                             share = { link ->
                                 val send = Intent(Intent.ACTION_SEND)
                                     .setType("text/plain")

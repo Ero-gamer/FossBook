@@ -101,6 +101,19 @@ class MessagesDesktopTest {
     }
 
     @Test
+    fun storyViewerAfterPostingStaysInTheLayer() {
+        // Facebook lands on the posted story after sharing. That page stays above the app's
+        // existing main page; only an explicit navigation to Home closes the sharing layer.
+        val postedStory = "https://www.facebook.com/stories/123456789012345/"
+        assertEquals(MessagesLayerRoute.Allow, messagesLayerRoute(postedStory, true))
+        assertNull(messagesLayerExit(postedStory))
+        assertEquals(
+            MessagesLayerRoute.Leave(null),
+            messagesLayerRoute("https://www.facebook.com/", true)
+        )
+    }
+
+    @Test
     fun deepLinksKeepTheirConversation() {
         val inbox = "https://www.facebook.com/messages/"
         assertEquals("https://www.facebook.com/messages/t/12345", messagesDesktopUrl("https://www.facebook.com/messages/t/12345"))

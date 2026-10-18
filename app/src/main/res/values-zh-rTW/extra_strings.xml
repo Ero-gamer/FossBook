@@ -70,6 +70,8 @@
     <string name="share_media_nothing_photos">這裡只能分享相片。影片可以分享到限時動態或 Reels。</string>
     <string name="share_media_nothing_reel">沒有可分享的內容：Reels 需要一部影片。</string>
     <string name="story_panel_done">完成</string>
+    <string name="story_music_sticker_hide">隱藏音樂貼圖</string>
+    <string name="story_music_sticker_show">顯示音樂貼圖</string>
     <plurals name="share_media_skipped">
         <item quantity="other">已略過 %1$d 個項目（太大、太多或不支援的類型）</item>
     </plurals>

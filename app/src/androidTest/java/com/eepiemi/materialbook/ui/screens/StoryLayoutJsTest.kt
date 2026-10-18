@@ -142,6 +142,12 @@ class StoryLayoutJsTest {
         assertTrue(h.waitFor(
             "document.getElementById('tools').getBoundingClientRect().bottom <= document.getElementById('frame').getBoundingClientRect().bottom"
         ))
+        assertTrue(h.waitFor(
+            "document.getElementById('tools').getBoundingClientRect().left - document.getElementById('frame').getBoundingClientRect().left >= 3"
+        ))
+        assertTrue(h.waitFor(
+            "document.getElementById('frame').getBoundingClientRect().right - document.getElementById('tools').getBoundingClientRect().right >= 13"
+        ))
         // Choosing a story again: Facebook's own page.
         h.eval("window.__hideFrame()")
         assertTrue(h.waitFor("!document.querySelector('[data-astryx-story]')"))
@@ -226,6 +232,46 @@ class StoryLayoutJsTest {
         assertTrue(h.waitFor("document.getElementById('remove').hasAttribute('data-astryx-story-x')"))
         assertEquals("false", h.eval("document.getElementById('sticker').hasAttribute('data-astryx-story-x')"))
         assertEquals("\"rgba(0, 0, 0, 0.7)\"", h.eval("getComputedStyle(document.getElementById('remove')).backgroundColor"))
+    }
+
+    @Test
+    fun musicStickerCanBeHiddenWithoutRemovingItsTrack() {
+        val h = Harness()
+        h.load(CREATOR + STICKER_PANEL.replace("Hotel California", "Autumn Instrumental The Lyrical Lanterns"))
+        h.eval("window.__astryxStoryHideMusic = 'Hide music sticker'; window.__astryxStoryShowMusic = 'Show music sticker';")
+        h.run()
+        h.eval("window.__showFrame()")
+        h.eval(
+            "(function () { var sticker = document.createElement('div'); sticker.id = 'music-sticker';" +
+                " sticker.setAttribute('role', 'button'); sticker.innerHTML = \"<img><span>Autumn Instrumental</span><span> The Lyrical Lanterns</span>\";" +
+                " sticker.style.cssText = 'position:absolute;left:20px;top:40px;width:150px;height:100px';" +
+                // Facebook puts the music sticker beside the photo frame in the live editor.
+                " document.getElementById('box').appendChild(sticker); })()"
+        )
+
+        assertTrue(h.waitFor("!!document.querySelector('#sticker-layer [data-astryx-story-music-toggle]')"))
+        assertTrue(h.waitFor("document.getElementById('music-sticker').hasAttribute('data-astryx-story-music-hidden')"))
+        assertEquals(
+            "Show music sticker",
+            h.eval("document.querySelector('[data-astryx-story-music-toggle]').textContent").unquoted()
+        )
+        h.eval("document.querySelector('[data-astryx-story-music-toggle]').click()")
+        assertTrue(h.waitFor("!document.getElementById('music-sticker').hasAttribute('data-astryx-story-music-hidden')"))
+        assertEquals("visible", h.eval("getComputedStyle(document.getElementById('music-sticker')).visibility").unquoted())
+        assertTrue(h.eval("document.getElementById('music-sticker').textContent.indexOf('Autumn Instrumental') >= 0") == "true")
+        assertEquals(
+            "Hide music sticker",
+            h.eval("document.querySelector('[data-astryx-story-music-toggle]').textContent").unquoted()
+        )
+
+        h.eval("document.querySelector('[data-astryx-story-music-toggle]').click()")
+        assertTrue(h.waitFor("document.getElementById('music-sticker').hasAttribute('data-astryx-story-music-hidden')"))
+        assertEquals("hidden", h.eval("getComputedStyle(document.getElementById('music-sticker')).visibility").unquoted())
+        assertTrue(h.eval("document.getElementById('music-sticker').textContent.indexOf('The Lyrical Lanterns') >= 0") == "true")
+        assertEquals(
+            "Show music sticker",
+            h.eval("document.querySelector('[data-astryx-story-music-toggle]').textContent").unquoted()
+        )
     }
 
     @Test

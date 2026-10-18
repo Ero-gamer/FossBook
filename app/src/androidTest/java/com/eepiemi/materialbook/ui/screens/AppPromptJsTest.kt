@@ -140,6 +140,47 @@ class AppPromptJsTest {
         assertEquals("null", h.eval("window.__pressed"))
     }
 
+    @Test
+    fun addStoryInStoryViewer_opensTheInAppCreatorAndDoesNotOpenFacebooksAppGate() {
+        val h = Harness()
+        h.load()
+        h.eval(
+            "window.__pageCalls = []; window.__facebookClicks = 0;" +
+                "window.AstryxPage = { postMessage: function (message) { window.__pageCalls.push(JSON.parse(message)); } };" +
+                "history.replaceState({}, '', '/stories/123/story-id');" +
+                "var button = document.createElement('div'); button.id = 'add-story';" +
+                "button.setAttribute('role', 'button'); button.setAttribute('data-action-id', '32732');" +
+                "button.innerHTML = '<div class=\"fl ac\"><span>' + String.fromCodePoint(0xF31CC) + '</span></div>' +" +
+                "'<span>Add story</span>';" +
+                "button.addEventListener('click', function () { window.__facebookClicks++; });" +
+                "document.body.appendChild(button); button.querySelector('span').click(); 1"
+        )
+
+        assertEquals(
+            "layerUrl",
+            h.eval("window.__pageCalls[0].call").removeSurrounding("\"")
+        )
+        assertEquals(
+            "https://www.facebook.com/stories/create",
+            h.eval("window.__pageCalls[0].url").removeSurrounding("\"")
+        )
+        assertEquals("0", h.eval("window.__facebookClicks"))
+    }
+
+    @Test
+    fun addStoryGlyphOutsideAStoryViewer_isLeftToFacebook() {
+        val h = Harness()
+        h.load()
+        h.eval(
+            "window.__pageCalls = []; window.AstryxPage = { postMessage: function (message) { window.__pageCalls.push(message); } };" +
+                "var button = document.createElement('div'); button.setAttribute('role', 'button');" +
+                "button.setAttribute('data-action-id', '32732');" +
+                "button.innerHTML = '<div class=\"fl ac\"><span>' + String.fromCodePoint(0xF31CC) + '</span></div>' +" +
+                "'<span>Add story</span>'; document.body.appendChild(button); button.click(); 1"
+        )
+        assertEquals("0", h.eval("window.__pageCalls.length"))
+    }
+
     private companion object {
         fun sheet(title: String, first: String, second: String) =
             "<div class='m bg-s1 dark-mode dialog-screen' data-mcomponent='MScreen' style='position:fixed;top:0;left:0;right:0;bottom:0'>" +

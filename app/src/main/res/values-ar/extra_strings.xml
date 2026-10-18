@@ -75,6 +75,8 @@
     <string name="share_media_nothing_photos">يمكن مشاركة الصور فقط هنا. يمكن مشاركة الفيديوهات في قصة أو Reel.</string>
     <string name="share_media_nothing_reel">لا شيء للمشاركة: مقاطع Reels تقبل فيديو.</string>
     <string name="story_panel_done">تم</string>
+    <string name="story_music_sticker_hide">إخفاء ملصق الموسيقى</string>
+    <string name="story_music_sticker_show">إظهار ملصق الموسيقى</string>
     <plurals name="share_media_skipped">
         <item quantity="zero">لم يُستبعد أي عنصر</item>
         <item quantity="one">تم استبعاد عنصر واحد (كبير جدًا، أو كثير جدًا، أو نوع غير مدعوم)</item>

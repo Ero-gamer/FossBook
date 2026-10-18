@@ -23,11 +23,16 @@
   }
   var BAR_HEIGHT = 64; // the bottom bar: privacy, Discard, Share to story
   var TOOLS_GAP = 40; // between the tools (their labels hang below them) and the bottom of the story
+  var TOOLS_LEFT_INSET = 4;
+  var TOOLS_RIGHT_INSET = 14; // keep the last tool's label clear of the story's right edge
 
   var timers = [];
   var observers = [];
   var listeners = [];
   var style = null;
+  var musicStickerHidden = false;
+  var musicStickerPresent = false;
+  var musicStickerMetadata = '';
 
   function on(target, type, handler, options) {
     target.addEventListener(type, handler, options);
@@ -122,6 +127,7 @@
   }
 
   var ATTRIBUTES = ['data-astryx-story', 'data-astryx-story-hide', 'data-astryx-story-path', 'data-astryx-story-popup',
+    'data-astryx-story-music-hidden',
     'data-astryx-story-caption', 'data-astryx-story-captioned', 'data-astryx-story-idle', 'data-astryx-story-x'];
   function untag() {
     var tagged = document.querySelectorAll('[' + ATTRIBUTES.join('], [') + ']');
@@ -246,8 +252,97 @@
     mouseEvent(photo, 'click', x, y, 0);
   }
 
+  // A music sticker is a button over the photo with its track title, artist and usually album art.
+  // Keep the track in Facebook's composer and hide only this visual button.
+  function musicSticker(frame) {
+    if (!frame) return null;
+    function find(root, mustOverlapFrame) {
+      var buttons = root.querySelectorAll('[role="button"]');
+      var frameRect = mustOverlapFrame ? frame.getBoundingClientRect() : null;
+      for (var i = 0; i < buttons.length; i++) {
+        var button = buttons[i];
+        var text = (button.textContent || '').replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
+        if (text.length < 8 || !button.querySelector('img')) continue;
+        // Facebook places the music sticker as a sibling of its photo frame on some layouts.
+        // Restrict the wider search to buttons that visibly overlap the story photo.
+        if (mustOverlapFrame) {
+          var rect = button.getBoundingClientRect();
+          if (rect.right <= frameRect.left || rect.left >= frameRect.right ||
+              rect.bottom <= frameRect.top || rect.top >= frameRect.bottom) continue;
+        }
+        return button;
+      }
+      return null;
+    }
+    return find(frame, false) || find(frame.closest('[role="main"]') || frame, true);
+  }
+
+  function updateMusicStickerControl(layer, sticker) {
+    if (!sticker || !layer.firstElementChild) return;
+    var labels = layer.querySelectorAll('[role="button"][aria-label]');
+    if (labels.length < 3 || labels.length > 5) return; // the music sticker's style panel
+    var panelText = (layer.innerText || layer.textContent || '').toLowerCase();
+    var words = musicStickerMetadata.toLowerCase().split(/\s+/);
+    if (!words.length || !words[0]) return;
+    for (var w = 0; w < words.length; w++) {
+      if (words[w].length > 2 && panelText.indexOf(words[w]) < 0) return;
+    }
+
+    var toggle = layer.querySelector('[data-astryx-story-music-toggle]');
+    if (!toggle) {
+      toggle = document.createElement('div');
+      toggle.setAttribute('role', 'button');
+      toggle.setAttribute('tabindex', '0');
+      toggle.setAttribute('data-astryx-story-music-toggle', '');
+      toggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        musicStickerHidden = !musicStickerHidden;
+        var current = musicSticker(storyFrame());
+        if (current) {
+          if (musicStickerHidden) current.setAttribute('data-astryx-story-music-hidden', '');
+          else current.removeAttribute('data-astryx-story-music-hidden');
+        }
+        updateMusicStickerLabel(toggle);
+      });
+      toggle.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggle.click();
+        }
+      });
+      layer.firstElementChild.appendChild(toggle);
+    }
+    updateMusicStickerLabel(toggle);
+  }
+
+  function updateMusicStickerLabel(toggle) {
+    var label = musicStickerHidden
+      ? (window.__astryxStoryShowMusic || 'Show music sticker')
+      : (window.__astryxStoryHideMusic || 'Hide music sticker');
+    if (toggle.textContent !== label) toggle.textContent = label;
+    toggle.setAttribute('aria-pressed', musicStickerHidden ? 'true' : 'false');
+  }
+
   function arrange() {
     viewport();
+    var frame = storyFrame();
+    var sticker = musicSticker(frame);
+    if (!sticker) {
+      musicStickerHidden = false;
+      musicStickerPresent = false;
+      musicStickerMetadata = '';
+    } else {
+      if (!musicStickerPresent) {
+        musicStickerPresent = true;
+        musicStickerHidden = true;
+      }
+      var visibleMetadata = (sticker.innerText || '').replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
+      if (visibleMetadata) musicStickerMetadata = visibleMetadata;
+      if (musicStickerHidden) sticker.setAttribute('data-astryx-story-music-hidden', '');
+      else sticker.removeAttribute('data-astryx-story-music-hidden');
+    }
+
     // Facebook's popups (the music list, text style, alternative text, a sticker's options):
     // fixed layers placed with an inline transform beside the sidebar's tool, off the screen now.
     // The ones showing something are centred under the header. Closed popups' hosts stay where
@@ -263,10 +358,12 @@
       else layer.removeAttribute('data-astryx-story-popup');
       if (!shown) layer.setAttribute('data-astryx-story-idle', '');
       else layer.removeAttribute('data-astryx-story-idle');
-      if (shown) labelControls(layer);
+      if (shown) {
+        labelControls(layer);
+        updateMusicStickerControl(layer, sticker);
+      }
     }
 
-    var frame = storyFrame();
     fitFrame(frame);
     // A sticker's remove button (×, shown while it's selected): a thin grey cross on 24 px,
     // barely visible on a photo. Found as a small icon button in the preview (the stickers' layer
@@ -399,8 +496,8 @@
     // list is hidden); never scrolled sideways.
     var frameBox = frame.getBoundingClientRect();
     var rootStyle = document.documentElement.style;
-    var rowLeft = frameBox.left + 4;
-    var rowWidth = Math.max(0, frameBox.width - 8);
+    var rowLeft = frameBox.left + TOOLS_LEFT_INSET;
+    var rowWidth = Math.max(0, frameBox.width - TOOLS_LEFT_INSET - TOOLS_RIGHT_INSET);
     var slot = rowWidth / tools.length;
     var listHeight = list.getBoundingClientRect().height;
     var toolsTop = Math.max(0, frameBox.bottom - listHeight - TOOLS_GAP);
@@ -523,6 +620,12 @@
       'html body [data-astryx-story-x] svg, html body [data-astryx-story-x] path { fill: #fff !important;' +
       ' stroke: #fff !important; color: #fff !important; }' +
       'html body [data-astryx-story-x]::before { content: ""; position: absolute; inset: -12px; }' +
+      '[data-astryx-story-music-hidden], [data-astryx-story-music-hidden] * {' +
+      ' visibility: hidden !important; pointer-events: none !important; }' +
+      'html body [data-astryx-story-music-toggle] { display: block !important; margin: 12px !important;' +
+      ' padding: 10px 12px !important; border-radius: 8px !important; background: #3a3b3c !important;' +
+      ' color: #fff !important; font: 600 14px/18px system-ui, sans-serif !important;' +
+      ' text-align: center !important; cursor: pointer !important; }' +
       '[data-astryx-story="sheet"] { position: fixed !important; left: 12px !important; right: 12px !important;' +
       ' top: calc(var(--astryx-story-top, 56px) + 8px) !important; bottom: auto !important; width: auto !important;' +
       ' max-height: calc(100vh - var(--astryx-story-top, 56px) - ' + (BAR_HEIGHT + 24) + 'px) !important;' +
@@ -675,6 +778,11 @@
       untag();
       var added = document.querySelectorAll('[data-astryx-story-done]');
       for (var d = 0; d < added.length; d++) added[d].remove();
+      var musicToggles = document.querySelectorAll('[data-astryx-story-music-toggle]');
+      for (var mt = 0; mt < musicToggles.length; mt++) musicToggles[mt].remove();
+      musicStickerHidden = false;
+      musicStickerPresent = false;
+      musicStickerMetadata = '';
       try {
         if (ownInnerHeight) Object.defineProperty(window, 'innerHeight', ownInnerHeight);
         else delete window.innerHeight;
