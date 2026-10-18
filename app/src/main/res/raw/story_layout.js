@@ -30,9 +30,6 @@
   var observers = [];
   var listeners = [];
   var style = null;
-  var musicStickerHidden = false;
-  var musicStickerPresent = false;
-  var musicStickerMetadata = '';
 
   function on(target, type, handler, options) {
     target.addEventListener(type, handler, options);
@@ -277,71 +274,11 @@
     return find(frame, false) || find(frame.closest('[role="main"]') || frame, true);
   }
 
-  function updateMusicStickerControl(layer, sticker) {
-    if (!sticker || !layer.firstElementChild) return;
-    var labels = layer.querySelectorAll('[role="button"][aria-label]');
-    if (labels.length < 3 || labels.length > 5) return; // the music sticker's style panel
-    var panelText = (layer.innerText || layer.textContent || '').toLowerCase();
-    var words = musicStickerMetadata.toLowerCase().split(/\s+/);
-    if (!words.length || !words[0]) return;
-    for (var w = 0; w < words.length; w++) {
-      if (words[w].length > 2 && panelText.indexOf(words[w]) < 0) return;
-    }
-
-    var toggle = layer.querySelector('[data-astryx-story-music-toggle]');
-    if (!toggle) {
-      toggle = document.createElement('div');
-      toggle.setAttribute('role', 'button');
-      toggle.setAttribute('tabindex', '0');
-      toggle.setAttribute('data-astryx-story-music-toggle', '');
-      toggle.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        musicStickerHidden = !musicStickerHidden;
-        var current = musicSticker(storyFrame());
-        if (current) {
-          if (musicStickerHidden) current.setAttribute('data-astryx-story-music-hidden', '');
-          else current.removeAttribute('data-astryx-story-music-hidden');
-        }
-        updateMusicStickerLabel(toggle);
-      });
-      toggle.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          toggle.click();
-        }
-      });
-      layer.firstElementChild.appendChild(toggle);
-    }
-    updateMusicStickerLabel(toggle);
-  }
-
-  function updateMusicStickerLabel(toggle) {
-    var label = musicStickerHidden
-      ? (window.__astryxStoryShowMusic || 'Show music sticker')
-      : (window.__astryxStoryHideMusic || 'Hide music sticker');
-    if (toggle.textContent !== label) toggle.textContent = label;
-    toggle.setAttribute('aria-pressed', musicStickerHidden ? 'true' : 'false');
-  }
-
   function arrange() {
     viewport();
     var frame = storyFrame();
     var sticker = musicSticker(frame);
-    if (!sticker) {
-      musicStickerHidden = false;
-      musicStickerPresent = false;
-      musicStickerMetadata = '';
-    } else {
-      if (!musicStickerPresent) {
-        musicStickerPresent = true;
-        musicStickerHidden = true;
-      }
-      var visibleMetadata = (sticker.innerText || '').replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
-      if (visibleMetadata) musicStickerMetadata = visibleMetadata;
-      if (musicStickerHidden) sticker.setAttribute('data-astryx-story-music-hidden', '');
-      else sticker.removeAttribute('data-astryx-story-music-hidden');
-    }
+    if (sticker) sticker.setAttribute('data-astryx-story-music-hidden', '');
 
     // Facebook's popups (the music list, text style, alternative text, a sticker's options):
     // fixed layers placed with an inline transform beside the sidebar's tool, off the screen now.
@@ -358,10 +295,7 @@
       else layer.removeAttribute('data-astryx-story-popup');
       if (!shown) layer.setAttribute('data-astryx-story-idle', '');
       else layer.removeAttribute('data-astryx-story-idle');
-      if (shown) {
-        labelControls(layer);
-        updateMusicStickerControl(layer, sticker);
-      }
+      if (shown) labelControls(layer);
     }
 
     fitFrame(frame);
@@ -639,10 +573,6 @@
       'html body [data-astryx-story-x]::before { content: ""; position: absolute; inset: -12px; }' +
       '[data-astryx-story-music-hidden], [data-astryx-story-music-hidden] * {' +
       ' visibility: hidden !important; pointer-events: none !important; }' +
-      'html body [data-astryx-story-music-toggle] { display: block !important; margin: 12px !important;' +
-      ' padding: 10px 12px !important; border-radius: 8px !important; background: #3a3b3c !important;' +
-      ' color: #fff !important; font: 600 14px/18px system-ui, sans-serif !important;' +
-      ' text-align: center !important; cursor: pointer !important; }' +
       '[data-astryx-story="sheet"] { position: fixed !important; left: 12px !important; right: 12px !important;' +
       ' top: calc(var(--astryx-story-top, 56px) + 8px) !important; bottom: auto !important; width: auto !important;' +
       ' max-height: calc(100vh - var(--astryx-story-top, 56px) - ' + (BAR_HEIGHT + 24) + 'px) !important;' +
@@ -795,11 +725,6 @@
       untag();
       var added = document.querySelectorAll('[data-astryx-story-done]');
       for (var d = 0; d < added.length; d++) added[d].remove();
-      var musicToggles = document.querySelectorAll('[data-astryx-story-music-toggle]');
-      for (var mt = 0; mt < musicToggles.length; mt++) musicToggles[mt].remove();
-      musicStickerHidden = false;
-      musicStickerPresent = false;
-      musicStickerMetadata = '';
       try {
         if (ownInnerHeight) Object.defineProperty(window, 'innerHeight', ownInnerHeight);
         else delete window.innerHeight;

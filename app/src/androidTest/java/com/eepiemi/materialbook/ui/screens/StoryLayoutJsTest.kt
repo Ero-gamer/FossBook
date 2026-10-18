@@ -254,10 +254,9 @@ class StoryLayoutJsTest {
     }
 
     @Test
-    fun musicStickerCanBeHiddenWithoutRemovingItsTrack() {
+    fun musicStickerIsHiddenByDefault_withoutRemovingItsTrackOrAddingAControl() {
         val h = Harness()
         h.load(CREATOR + STICKER_PANEL.replace("Hotel California", "Autumn Instrumental The Lyrical Lanterns"))
-        h.eval("window.__astryxStoryHideMusic = 'Hide music sticker'; window.__astryxStoryShowMusic = 'Show music sticker';")
         h.run()
         h.eval("window.__showFrame()")
         h.eval(
@@ -268,29 +267,15 @@ class StoryLayoutJsTest {
                 " document.getElementById('box').appendChild(sticker); })()"
         )
 
-        assertTrue(h.waitFor("!!document.querySelector('#sticker-layer [data-astryx-story-music-toggle]')"))
         assertTrue(h.waitFor("document.getElementById('music-sticker').hasAttribute('data-astryx-story-music-hidden')"))
         assertEquals(
-            "Show music sticker",
-            h.eval("document.querySelector('[data-astryx-story-music-toggle]').textContent").unquoted()
+            "hidden",
+            h.eval("getComputedStyle(document.getElementById('music-sticker')).visibility").unquoted()
         )
-        h.eval("document.querySelector('[data-astryx-story-music-toggle]').click()")
-        assertTrue(h.waitFor("!document.getElementById('music-sticker').hasAttribute('data-astryx-story-music-hidden')"))
-        assertEquals("visible", h.eval("getComputedStyle(document.getElementById('music-sticker')).visibility").unquoted())
         assertTrue(h.eval("document.getElementById('music-sticker').textContent.indexOf('Autumn Instrumental') >= 0") == "true")
-        assertEquals(
-            "Hide music sticker",
-            h.eval("document.querySelector('[data-astryx-story-music-toggle]').textContent").unquoted()
-        )
-
-        h.eval("document.querySelector('[data-astryx-story-music-toggle]').click()")
-        assertTrue(h.waitFor("document.getElementById('music-sticker').hasAttribute('data-astryx-story-music-hidden')"))
-        assertEquals("hidden", h.eval("getComputedStyle(document.getElementById('music-sticker')).visibility").unquoted())
         assertTrue(h.eval("document.getElementById('music-sticker').textContent.indexOf('The Lyrical Lanterns') >= 0") == "true")
-        assertEquals(
-            "Show music sticker",
-            h.eval("document.querySelector('[data-astryx-story-music-toggle]').textContent").unquoted()
-        )
+        assertEquals("false", h.eval("!!document.querySelector('[data-astryx-story-music-toggle]')"))
+        assertTrue(h.eval("document.getElementById('sticker-layer').textContent.indexOf('Autumn Instrumental') >= 0") == "true")
     }
 
     @Test

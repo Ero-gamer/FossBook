@@ -263,11 +263,11 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   field stay.
 - The Story creator is arranged for a phone-sized preview, with its tools above the bottom
   actions. From an existing Story, **Add story** opens Facebook's in-app creator instead of its
-  prompt to open the Facebook app. When music is added, the music sticker is hidden by default
-  while its track remains selected; the sticker's options provide a **Show music sticker / Hide
-  music sticker** toggle. The tool row leaves extra space at the right so the **Alternative text**
-  label does not touch the photo's edge. Facebook's long AI-label disclosure is hidden with its
-  unused row details so it cannot spill into a vertical letter column while posting. Covered by
+  prompt to open the Facebook app. When music is added, its sticker stays hidden while the track
+  remains selected; there is no show/hide control. The tool row leaves extra space at the right
+  so the **Alternative text** label does not touch the photo's edge. Facebook's long AI-label
+  disclosure is hidden with its unused row details so it cannot spill into a vertical letter column
+  while posting. Covered by
   `AppPromptJsTest` and `StoryLayoutJsTest`.
 
 ## CI/CD

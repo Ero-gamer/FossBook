@@ -87,8 +87,6 @@
     <string name="share_media_nothing_photos">אפשר לשתף כאן רק תמונות. סרטונים אפשר לשתף בסטורי או ב-Reel.</string>
     <string name="share_media_nothing_reel">אין מה לשתף: Reels מקבלים סרטון.</string>
     <string name="story_panel_done">סיום</string>
-    <string name="story_music_sticker_hide">הסתרת מדבקת המוזיקה</string>
-    <string name="story_music_sticker_show">הצגת מדבקת המוזיקה</string>
     <plurals name="share_media_skipped">
         <item quantity="one">פריט אחד לא נכלל (גדול מדי, יותר מדי פריטים או סוג שלא נתמך)</item>
         <item quantity="two">%1$d פריטים לא נכללו (גדולים מדי, יותר מדי פריטים או סוג שלא נתמך)</item>

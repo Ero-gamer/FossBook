@@ -71,8 +71,6 @@
     <string name="share_media_nothing_photos">এখানে শুধু ছবি শেয়ার করা যায়। ভিডিও স্টোরি বা রিলে দেওয়া যায়।</string>
     <string name="share_media_nothing_reel">শেয়ার করার কিছু নেই: রিলে একটি ভিডিও লাগে।</string>
     <string name="story_panel_done">সম্পন্ন</string>
-    <string name="story_music_sticker_hide">মিউজিক স্টিকার লুকান</string>
-    <string name="story_music_sticker_show">মিউজিক স্টিকার দেখান</string>
     <plurals name="share_media_skipped">
         <item quantity="one">%1$dটি আইটেম বাদ পড়েছে (খুব বড়, খুব বেশি বা অসমর্থিত ধরন)</item>
         <item quantity="other">%1$dটি আইটেম বাদ পড়েছে (খুব বড়, খুব বেশি বা অসমর্থিত ধরন)</item>
