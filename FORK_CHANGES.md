@@ -780,7 +780,10 @@ From a hands-on pass through the app in light and dark mode on an emulator.
   for a desktop window: a sidebar beside a preview whose 9:16 frame it sizes from the window's
   height; the script reports a window height that makes Facebook size the frame to fit the screen
   (the real height comes back once the story is shared or discarded), and finds everything by its
-  role and place in the page, not its translated label. Choosing a story (before the first one,
+  role and place in the page, not its translated label. During posting, an AI-label control and
+  disclosure moved outside the sidebar are hidden to prevent their text wrapping into a vertical
+  column; the sidebar's own AI-label tool remains available to the layout. Choosing a story
+  (before the first one,
   after Discard) keeps Facebook's own page, fitted to the screen. The story page ignores *Page
   zoom*. v1.28.0 showed the whole story, but in the desktop layout: tiny text, and a music sticker
   that couldn't be moved. Covered by `StoryLayoutJsTest`.

@@ -152,6 +152,9 @@
     for (var l = 0; l < labels.length; l++) {
       var labelText = (labels[l].innerText || labels[l].textContent || '').replace(/\s+/g, ' ').toLowerCase();
       if (labelText.indexOf('add ai label') !== 0 || labelText.length > 40) continue;
+      // In the editor sidebar this is a real tool; only hide the duplicate control Facebook
+      // sometimes moves beside the posting disclosure.
+      if (labels[l].closest('[role="navigation"]')) continue;
       if (!labels[l].hasAttribute('data-astryx-story-hide')) labels[l].setAttribute('data-astryx-story-hide', '');
     }
     var candidates = document.querySelectorAll('body div, body span, body p');
