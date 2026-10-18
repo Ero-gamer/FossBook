@@ -312,17 +312,25 @@ const hideOpenAppButtons = () => {
   });
 };
 
-// The mobile Story viewer's "Add story" button only opens Facebook's app upsell sheet. Open the
-// desktop creator in Astryxbook's Story layer instead. The plus/photo glyph is shared across
-// languages; the path guard ensures we only intercept the add button inside a Story viewer.
+// Facebook's mobile Story viewer and feed send story creation to its app upsell sheet. Open the
+// desktop creator in Astryxbook instead: the viewer's plus/photo glyph is shared across languages,
+// while the feed's Create story card has a nested accessible button.
 const ADD_STORY_ICON = String.fromCodePoint(0xF31CC);
 document.addEventListener('click', event => {
-  if (!/^\/stories\/[^/]+(?:\/|$)/.test(location.pathname) || /^\/stories\/create\/?$/.test(location.pathname)) return;
+  const path = location.pathname;
+  const inStoryViewer = /^\/stories\/[^/]+(?:\/|$)/.test(path) && !/^\/stories\/create\/?$/.test(path);
+  const onFeed = path === '/' || path === '/home.php';
   const target = event.target instanceof Element ? event.target.closest('[role="button"]') : null;
-  if (!target || !target.hasAttribute('data-action-id')) return;
+  if (!target) return;
+  // The feed's Create story card has a nested, accessibly labelled button (no add-story glyph).
+  // Let it use the same in-app creator as Add story from a Story viewer instead of Facebook's
+  // mobile-site sheet that asks the user to open the Facebook app.
+  const createStoryOnFeed = onFeed && (target.getAttribute('aria-label') === 'Create story'
+    || !!target.querySelector('[role="button"][aria-label="Create story"]'));
+  if (!createStoryOnFeed && (!inStoryViewer || !target.hasAttribute('data-action-id'))) return;
   const hasAddStoryIcon = Array.from(target.querySelectorAll('span'))
     .some(span => span.textContent.includes(ADD_STORY_ICON));
-  if (!hasAddStoryIcon) return;
+  if (!createStoryOnFeed && !hasAddStoryIcon) return;
   if (!window.AstryxPage && !window.LayerBridge) return;
 
   event.preventDefault();
