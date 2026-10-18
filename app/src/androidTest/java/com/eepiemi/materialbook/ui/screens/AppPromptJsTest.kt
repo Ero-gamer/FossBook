@@ -168,6 +168,29 @@ class AppPromptJsTest {
     }
 
     @Test
+    fun createStoryOnMainFeed_opensTheInAppCreatorAndAvoidsFacebooksOpenAppSheet() {
+        val h = Harness()
+        h.load()
+        h.eval(
+            "window.__pageCalls = []; window.__facebookClicks = 0;" +
+                "window.AstryxPage = { postMessage: function (message) { window.__pageCalls.push(JSON.parse(message)); } };" +
+                "history.replaceState({}, '', '/');" +
+                "var button = document.createElement('div'); button.id = 'create-story-card';" +
+                "button.setAttribute('role', 'button'); button.setAttribute('data-action-id', '32526');" +
+                "button.innerHTML = '<img id=\"cover\"><div role=\"button\" aria-label=\"Create story\"><span>Create story</span></div>';" +
+                "button.addEventListener('click', function () { window.__facebookClicks++; });" +
+                "document.body.appendChild(button); document.getElementById('cover').click(); 1"
+        )
+
+        assertEquals("layerUrl", h.eval("window.__pageCalls[0].call").removeSurrounding("\""))
+        assertEquals(
+            "https://www.facebook.com/stories/create",
+            h.eval("window.__pageCalls[0].url").removeSurrounding("\"")
+        )
+        assertEquals("0", h.eval("window.__facebookClicks"))
+    }
+
+    @Test
     fun addStoryGlyphOutsideAStoryViewer_isLeftToFacebook() {
         val h = Harness()
         h.load()
