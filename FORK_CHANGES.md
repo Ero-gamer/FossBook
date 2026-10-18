@@ -266,8 +266,8 @@ would mostly be noise. See GitHub Releases for the actual per-version diffs.
   Astryxbook's creator instead of Facebook's prompt to open its app. When music is added, its sticker stays hidden while the track
   remains selected; there is no show/hide control. The tool row leaves extra space at the right
   so the **Alternative text** label does not touch the photo's edge. Facebook's long AI-label
-  disclosure is hidden with its unused row details so it cannot spill into a vertical letter column
-  while posting. Covered by
+  disclosure is hidden with its unused row details and by its copy if Facebook moves it elsewhere
+  during posting, so it cannot spill into a vertical letter column. Covered by
   `AppPromptJsTest` and `StoryLayoutJsTest`.
 
 ## CI/CD

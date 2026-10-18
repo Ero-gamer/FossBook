@@ -160,7 +160,7 @@ class StoryLayoutJsTest {
         h.eval(
             "(function () { var row = document.createElement('div'); row.id = 'ai-row';" +
                 " row.innerHTML = \"<div role='button' id='ai-tool'><svg width='20' height='20'></svg><span>Add AI label</span></div>\" +" +
-                " \"<div id='ai-disclosure'>We require you to label content that is AI-generated or significantly altered with AI before posting.</div>\";" +
+                " \"<div id='ai-disclosure'>We require you to label certain realistic content that’s made with AI. Learn more</div>\";" +
                 " document.getElementById('tools').appendChild(row); })()"
         )
         h.run()
@@ -170,6 +170,24 @@ class StoryLayoutJsTest {
         assertEquals("false", h.hidden("#ai-tool"))
         assertTrue(h.waitFor("!!document.getElementById('ai-disclosure').closest('[data-astryx-story-hide]')"))
         assertEquals("true", h.hidden("#ai-disclosure"))
+    }
+
+    @Test
+    fun aDisclosureMovedOutsideTheSidebar_isHiddenWhilePosting() {
+        val h = Harness()
+        h.load(CREATOR)
+        h.run()
+        h.eval("window.__showFrame()")
+        h.eval(
+            "(function () { var overlay = document.createElement('div'); overlay.id = 'posting-overlay';" +
+                " overlay.innerHTML = \"<div id='posting'>Posting</div>\" +" +
+                " \"<div id='ai-disclosure'>We require you to label certain realistic content that’s made with AI. Learn more</div>\";" +
+                " document.getElementById('main').appendChild(overlay); })()"
+        )
+
+        assertTrue(h.waitFor("!!document.getElementById('ai-disclosure').closest('[data-astryx-story-hide]')"))
+        assertEquals("true", h.hidden("#ai-disclosure"))
+        assertEquals("false", h.hidden("#posting"))
     }
 
     @Test
